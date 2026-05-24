@@ -1,0 +1,21 @@
+<%
+    const sayfaBasligi = typeof baslik !== 'undefined' ? baslik : '';
+    const yolListesi = typeof yol !== 'undefined' ? yol : [];
+%>
+
+<div class="sayfa-yolu">
+    <h3><%= sayfaBasligi %></h3>
+    <nav class="yol" aria-label="Sayfa yolu">
+        <% yolListesi.forEach((item, index) => { %>
+            <% if (index > 0) { %>
+                <span class="ayrac">›</span>
+            <% } %>
+
+            <% if (item.link && index < yolListesi.length - 1) { %>
+                <a href="<%= item.link %>"><%= item.ad %></a>
+            <% } else { %>
+                <span class="aktif-sayfa"><%= item.ad %></span>
+            <% } %>
+        <% }); %>
+    </nav>
+</div>

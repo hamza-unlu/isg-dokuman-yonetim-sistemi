@@ -1,0 +1,588 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kullanıcı Yönetimi — Ünlü İSG</title>
+    <link rel="stylesheet" href="/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <script src="/auth.js"></script>
+    <script src="/profil.js"></script> 
+    <style>
+        *, *::before, *::after { box-sizing: border-box; }
+
+        /* ─── SAYFA BAŞLIĞI ─── */
+        .sayfa-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 24px;
+            gap: 16px;
+        }
+        .sayfa-header-sol h1 {
+            font-size: 20px;
+            font-weight: 800;
+            color: #0f172a;
+            letter-spacing: -0.3px;
+            margin: 0;
+        }
+        .sayfa-header-sol p {
+            font-size: 13px;
+            color: #64748b;
+            margin: 4px 0 0;
+        }
+
+        /* ─── YENİ KULLANICI BUTONU ─── */
+        .btn-yeni-kullanici {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: #2563eb;
+            color: #fff;
+            border: none;
+            padding: 11px 20px;
+            border-radius: 10px;
+            font-size: 13.5px;
+            font-weight: 600;
+            cursor: pointer;
+            font-family: inherit;
+            transition: background .15s, box-shadow .15s, transform .1s;
+            box-shadow: 0 2px 8px rgba(37,99,235,0.25);
+            white-space: nowrap;
+            flex-shrink: 0;
+        }
+        .btn-yeni-kullanici:hover {
+            background: #1d4ed8;
+            box-shadow: 0 4px 14px rgba(37,99,235,0.35);
+            transform: translateY(-1px);
+        }
+
+        /* ─── STAT BANDI ─── */
+        .stat-bant {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 14px;
+            margin-bottom: 22px;
+        }
+        .stat-kutu {
+            background: #fff;
+            border: 1px solid #e8edf5;
+            border-radius: 12px;
+            padding: 16px 20px;
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+        .stat-ikon {
+            width: 42px; height: 42px;
+            border-radius: 10px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 17px;
+            flex-shrink: 0;
+        }
+        .stat-ikon.mavi  { background: #eff6ff; color: #2563eb; }
+        .stat-ikon.yesil { background: #f0fdf4; color: #16a34a; }
+        .stat-ikon.mor   { background: #f5f3ff; color: #7c3aed; }
+        .stat-ikon.sari  { background: #fffbeb; color: #d97706; }
+        .stat-metin .sayi  { font-size: 24px; font-weight: 800; color: #0f172a; line-height: 1; }
+        .stat-metin .etiket { font-size: 11.5px; color: #64748b; font-weight: 500; margin-top: 3px; }
+
+        /* ─── TABLO KARTI ─── */
+        .tablo-kart {
+            background: #fff;
+            border: 1px solid #e8edf5;
+            border-radius: 14px;
+            overflow: hidden;
+            box-shadow: 0 1px 6px rgba(0,0,0,0.04);
+        }
+        .tablo-kart-baslik {
+            padding: 16px 22px;
+            border-bottom: 1px solid #f1f5f9;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .baslik-ikon {
+            width: 32px; height: 32px;
+            background: #eff6ff;
+            border-radius: 8px;
+            display: flex; align-items: center; justify-content: center;
+            color: #2563eb; font-size: 14px;
+        }
+        .tablo-kart-baslik h3 {
+            font-size: 14.5px; font-weight: 700; color: #0f172a; margin: 0; flex: 1;
+        }
+        .kullanici-sayac-badge {
+            background: #f1f5f9; color: #475569;
+            font-size: 11.5px; font-weight: 600;
+            padding: 3px 10px; border-radius: 20px;
+        }
+
+        /* ─── TABLO ─── */
+        table { width: 100%; border-collapse: collapse; }
+        thead tr { background: #f8fafc; }
+        th {
+            padding: 11px 16px;
+            text-align: left;
+            font-size: 11px; font-weight: 700;
+            color: #64748b;
+            text-transform: uppercase; letter-spacing: 0.6px;
+            border-bottom: 1px solid #e2e8f0;
+        }
+        th:first-child { width: 44px; text-align: center; }
+        td {
+            padding: 14px 16px;
+            border-bottom: 1px solid #f1f5f9;
+            font-size: 13px; vertical-align: middle; color: #334155;
+        }
+        td:first-child { text-align: center; color: #cbd5e1; font-size: 12px; font-weight: 600; }
+        tr:last-child td { border-bottom: none; }
+        tr:hover td { background: #fafbff; }
+
+        /* ─── KULLANICI SATIR ─── */
+        .kullanici-satir { display: flex; align-items: center; gap: 11px; }
+        .k-avatar {
+            width: 38px; height: 38px; border-radius: 10px;
+            background: linear-gradient(135deg, #2563eb 0%, #7c3aed 100%);
+            display: flex; align-items: center; justify-content: center;
+            color: #fff; font-weight: 700; font-size: 13px; flex-shrink: 0;
+        }
+        .k-ad   { font-weight: 700; font-size: 13.5px; color: #0f172a; }
+        .k-mail { font-size: 12px; color: #64748b; margin-top: 2px; }
+        .siz-rozeti {
+            display: inline-block;
+            background: #f1f5f9; color: #94a3b8;
+            font-size: 10px; font-weight: 600;
+            padding: 1px 6px; border-radius: 4px;
+            margin-left: 5px; vertical-align: middle;
+        }
+
+        /* ─── ROL ETİKETLERİ ─── */
+        .rol-etiket {
+            display: inline-flex; align-items: center; gap: 5px;
+            padding: 4px 10px; border-radius: 6px;
+            font-size: 11.5px; font-weight: 700;
+        }
+        .rol-sistem_yoneticisi { background: #fee2e2; color: #dc2626; }
+        .rol-isg_uzmani        { background: #dbeafe; color: #1d4ed8; }
+        .rol-isyeri_hekimi     { background: #ede9fe; color: #7c3aed; }
+        .rol-isveren           { background: #dcfce7; color: #15803d; }
+        .rol-izleyici          { background: #f1f5f9; color: #475569; }
+
+        /* ─── AKTİF NOKTA ─── */
+        .aktif-nokta {
+            display: inline-flex; align-items: center; gap: 5px;
+            font-size: 12px; color: #16a34a; font-weight: 500;
+        }
+        .aktif-nokta::before {
+            content: '';
+            width: 7px; height: 7px;
+            background: #22c55e; border-radius: 50%;
+        }
+
+        /* ─── TARİH ─── */
+        .tarih-kutu {
+            font-size: 12px; color: #64748b;
+            background: #f8fafc;
+            padding: 4px 9px; border-radius: 6px;
+            display: inline-block;
+        }
+
+        /* ─── İŞLEM ALANI ─── */
+        .islem-grup { display: flex; gap: 6px; align-items: center; }
+        .rol-select {
+            border: 1px solid #e2e8f0; border-radius: 7px;
+            padding: 6px 10px; font-size: 12px; font-weight: 500;
+            font-family: inherit; cursor: pointer; outline: none;
+            color: #334155; background: #f8fafc;
+            transition: border-color .15s;
+        }
+        .rol-select:hover { border-color: #2563eb; }
+        .btn-sil {
+            width: 32px; height: 32px;
+            display: flex; align-items: center; justify-content: center;
+            background: #fee2e2; border: 1px solid #fecaca;
+            color: #dc2626; border-radius: 7px;
+            cursor: pointer; font-size: 12px;
+            transition: background .15s; flex-shrink: 0;
+        }
+        .btn-sil:hover { background: #fecaca; }
+        .degistirilemez { font-size: 11.5px; color: #94a3b8; font-style: italic; }
+
+        /* ─── MODAL ─── */
+        .modal-arka {
+            display: none; position: fixed; inset: 0;
+            background: rgba(15,23,42,0.55);
+            backdrop-filter: blur(3px);
+            z-index: 1000; align-items: center; justify-content: center;
+        }
+        .modal-arka.acik { display: flex; }
+        .modal-icerik {
+            background: #fff; padding: 28px; border-radius: 16px;
+            width: 100%; max-width: 420px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.18);
+            animation: modalGir .2s ease;
+        }
+        @keyframes modalGir {
+            from { opacity: 0; transform: translateY(12px) scale(.98); }
+            to   { opacity: 1; transform: translateY(0)   scale(1);    }
+        }
+        .modal-baslik {
+            display: flex; align-items: center;
+            justify-content: space-between; margin-bottom: 22px;
+        }
+        .modal-baslik-sol { display: flex; align-items: center; gap: 10px; }
+        .modal-b-ikon {
+            width: 36px; height: 36px; background: #eff6ff;
+            border-radius: 9px; display: flex; align-items: center;
+            justify-content: center; color: #2563eb; font-size: 15px;
+        }
+        .modal-b-yazi h4 { font-size: 15px; font-weight: 800; color: #0f172a; margin: 0; }
+        .modal-b-yazi p  { font-size: 12px; color: #64748b; margin: 1px 0 0; }
+        .btn-kapat {
+            width: 30px; height: 30px; display: flex; align-items: center;
+            justify-content: center; border-radius: 7px; background: #f1f5f9;
+            color: #64748b; cursor: pointer; font-size: 13px; border: none;
+            transition: background .15s;
+        }
+        .btn-kapat:hover { background: #e2e8f0; }
+
+        .form-grup { margin-bottom: 14px; }
+        .form-grup label {
+            display: block; font-size: 12.5px; font-weight: 600;
+            color: #374151; margin-bottom: 6px;
+        }
+        .form-grup label span { color: #dc2626; margin-left: 2px; }
+        .form-grup input, .form-grup select {
+            width: 100%; padding: 10px 13px;
+            border: 1.5px solid #e2e8f0; border-radius: 9px;
+            font-size: 13.5px; font-family: inherit; outline: none;
+            color: #0f172a; background: #fafafa;
+            transition: border-color .15s, background .15s;
+        }
+        .form-grup input:focus, .form-grup select:focus {
+            border-color: #2563eb; background: #fff;
+        }
+        .btn-kaydet {
+            width: 100%; background: #2563eb; color: #fff; border: none;
+            padding: 12px; border-radius: 10px; font-size: 14px; font-weight: 700;
+            font-family: inherit; cursor: pointer; margin-top: 8px;
+            transition: background .15s, transform .1s;
+        }
+        .btn-kaydet:hover { background: #1d4ed8; transform: translateY(-1px); }
+
+        /* ─── DURUM MESAJI ─── */
+        .durum-mesaji {
+            text-align: center; padding: 48px 20px;
+            color: #94a3b8; font-size: 14px;
+        }
+        .durum-mesaji i { font-size: 28px; display: block; margin-bottom: 10px; }
+    </style>
+</head>
+<body>
+<div class="panel-kapsayici">
+
+    <nav class="yan-menu">
+        <div class="yan-menu-baslik"><h2>🛡️ ÜNLÜ İSG</h2></div>
+        <ul class="menu-ogeleri">
+            <li><a href="/anasayfa"><i class="fa-solid fa-home"></i> ANA SAYFA</a></li>
+            <li><a href="/firmalar"><i class="fa-solid fa-building"></i> FİRMALAR</a></li>
+            <li><a href="/personel"><i class="fa-solid fa-users"></i> PERSONEL</a></li>
+            <li><a href="/egitimler"><i class="fa-solid fa-graduation-cap"></i> EĞİTİMLER</a></li>
+            <li><a href="/dokumanlar"><i class="fa-solid fa-file-alt"></i> DOKÜMANLAR</a></li>
+            <li><a href="/raporlar"><i class="fa-solid fa-chart-pie"></i> RAPORLAR</a></li>
+            <li class="aktif"><a href="/kullanicilar"><i class="fa-solid fa-users-gear"></i> KULLANICILAR</a></li>
+            <li class="menu-alt"><a href="/"><i class="fa-solid fa-sign-out-alt"></i> ÇIKIŞ</a></li>
+        </ul>
+    </nav>
+
+    <main class="ana-icerik">
+        <header class="ust-bar">
+            <div class="hosgeldin-metni"><h3>Kullanıcı Yönetimi</h3></div>
+            <div class="kullanici-profili">
+                <div class="kullanici-bilgisi">
+                    <span class="isim" id="header-isim">Yükleniyor...</span>
+                    <span class="rol"  id="header-rol">...</span>
+                </div>
+                <div class="kullanici-avatar" id="header-avatar">?</div>
+            </div>
+        </header>
+
+        <div class="icerik">
+
+            <!-- BAŞLIK + YENİ KULLANICI BUTONU -->
+            <div class="sayfa-header">
+                <div class="sayfa-header-sol">
+                    <h1>Sistem Kullanıcıları</h1>
+                    <p>Sisteme kayıtlı tüm kullanıcıları görüntüleyin ve yönetin</p>
+                </div>
+                <button class="btn-yeni-kullanici" onclick="modalAc()">
+                    <i class="fa-solid fa-user-plus"></i> Yeni Kullanıcı Ekle
+                </button>
+            </div>
+
+            <!-- STAT BANDI -->
+            <div class="stat-bant">
+                <div class="stat-kutu">
+                    <div class="stat-ikon mavi"><i class="fa-solid fa-users"></i></div>
+                    <div class="stat-metin">
+                        <div class="sayi" id="stat-toplam">—</div>
+                        <div class="etiket">Toplam Kullanıcı</div>
+                    </div>
+                </div>
+                <div class="stat-kutu">
+                    <div class="stat-ikon yesil"><i class="fa-solid fa-user-tie"></i></div>
+                    <div class="stat-metin">
+                        <div class="sayi" id="stat-isveren">—</div>
+                        <div class="etiket">İşveren</div>
+                    </div>
+                </div>
+                <div class="stat-kutu">
+                    <div class="stat-ikon mor"><i class="fa-solid fa-hard-hat"></i></div>
+                    <div class="stat-metin">
+                        <div class="sayi" id="stat-uzman">—</div>
+                        <div class="etiket">İSG Uzmanı</div>
+                    </div>
+                </div>
+                <div class="stat-kutu">
+                    <div class="stat-ikon sari"><i class="fa-solid fa-user-doctor"></i></div>
+                    <div class="stat-metin">
+                        <div class="sayi" id="stat-hekim">—</div>
+                        <div class="etiket">İşyeri Hekimi</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- KULLANICI LİSTESİ -->
+            <div class="tablo-kart">
+                <div class="tablo-kart-baslik">
+                    <div class="baslik-ikon"><i class="fa-solid fa-list-ul"></i></div>
+                    <h3>Kayıtlı Kullanıcılar</h3>
+                    <span class="kullanici-sayac-badge" id="kullanici-sayac">0 kullanıcı</span>
+                </div>
+                <div id="tablo-konteyner">
+                    <div class="durum-mesaji">
+                        <i class="fa-solid fa-spinner fa-spin"></i>
+                        Kullanıcılar yükleniyor...
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </main>
+</div>
+
+<!-- MODAL -->
+<div class="modal-arka" id="kullanici-modal">
+    <div class="modal-icerik">
+        <div class="modal-baslik">
+            <div class="modal-baslik-sol">
+                <div class="modal-b-ikon"><i class="fa-solid fa-user-plus"></i></div>
+                <div class="modal-b-yazi">
+                    <h4>Yeni Kullanıcı</h4>
+                    <p>Sisteme yeni bir kullanıcı ekleyin</p>
+                </div>
+            </div>
+            <button class="btn-kapat" onclick="modalKapat()">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+        </div>
+        <div class="form-grup">
+            <label>Ad Soyad <span>*</span></label>
+            <input type="text" id="yeni-ad" placeholder="Örn: Ahmet Yılmaz">
+        </div>
+        <div class="form-grup">
+            <label>E-posta Adresi <span>*</span></label>
+            <input type="email" id="yeni-eposta" placeholder="ornek@unluisg.com">
+        </div>
+        <div class="form-grup">
+            <label>Geçici Şifre <span>*</span></label>
+            <input type="text" id="yeni-sifre" placeholder="En az 6 karakter">
+        </div>
+        <div class="form-grup">
+            <label>Sistem Rolü</label>
+            <select id="yeni-rol">
+                <option value="isg_uzmani">İSG Uzmanı</option>
+                <option value="isyeri_hekimi">İşyeri Hekimi</option>
+                <option value="isveren">İşveren</option>
+                <option value="sistem_yoneticisi">Sistem Yöneticisi (Admin)</option>
+            </select>
+        </div>
+        <button class="btn-kaydet" onclick="kullaniciKaydet()">
+            <i class="fa-solid fa-check" style="margin-right:7px;"></i>Oluştur ve Kaydet
+        </button>
+    </div>
+</div>
+
+<%- include('partials/profil-modal') %>
+<script>
+document.addEventListener('DOMContentLoaded', async () => {
+    const kullanici = AUTH.kullaniciAl();
+    if (kullanici) {
+        document.getElementById('header-isim').textContent   = kullanici.adSoyad || kullanici.ad || 'Kullanıcı';
+        document.getElementById('header-rol').textContent    = (kullanici.rol || 'Belirsiz').replace(/_/g, ' ').toUpperCase();
+        document.getElementById('header-avatar').textContent = (kullanici.adSoyad || 'İS').substring(0, 2).toUpperCase();
+    }
+    if (!kullanici || kullanici.rol !== 'sistem_yoneticisi') {
+        alert('Bu sayfaya erişim yetkiniz yok.');
+        window.location.href = '/anasayfa';
+        return;
+    }
+    await kullanicilariYukle();
+});
+
+async function kullanicilariYukle() {
+    try {
+        const res = await AUTH.apiFetch('/api/auth/kullanicilar');
+        if (!res.ok) throw new Error(`HTTP ${res.status} — Yüklenemedi`);
+        const liste = await res.json();
+
+        document.getElementById('stat-toplam').textContent  = liste.length;
+        document.getElementById('stat-isveren').textContent = liste.filter(k => k.rol === 'isveren').length;
+        document.getElementById('stat-uzman').textContent   = liste.filter(k => k.rol === 'isg_uzmani').length;
+        document.getElementById('stat-hekim').textContent   = liste.filter(k => k.rol === 'isyeri_hekimi').length;
+        document.getElementById('kullanici-sayac').textContent = `${liste.length} kullanıcı`;
+
+        const benimId = AUTH.kullaniciAl()?._id;
+
+        const ROL_SINIF = {
+            sistem_yoneticisi: 'rol-sistem_yoneticisi',
+            isg_uzmani:        'rol-isg_uzmani',
+            isyeri_hekimi:     'rol-isyeri_hekimi',
+            isveren:           'rol-isveren',
+            izleyici:          'rol-izleyici',
+        };
+        const ROL_YAZI = {
+            sistem_yoneticisi: '<i class="fa-solid fa-crown"></i> Yönetici',
+            isg_uzmani:        '<i class="fa-solid fa-hard-hat"></i> İSG Uzmanı',
+            isyeri_hekimi:     '<i class="fa-solid fa-user-doctor"></i> İşyeri Hekimi',
+            isveren:           '<i class="fa-solid fa-user-tie"></i> İşveren',
+            izleyici:          '<i class="fa-solid fa-eye"></i> İzleyici',
+        };
+
+        const satirlar = liste.map((k, i) => {
+            const benMiyim = String(k._id) === String(benimId);
+            const sinif    = ROL_SINIF[k.rol] || 'rol-izleyici';
+            const yazi     = ROL_YAZI[k.rol]  || k.rol;
+            const tarih    = new Date(k.olusturmaTarihi || k.createdAt).toLocaleDateString('tr-TR');
+            const initials = _esc(k.adSoyad || 'İS').substring(0, 2).toUpperCase();
+
+            return `
+            <tr>
+                <td>${i + 1}</td>
+                <td>
+                    <div class="kullanici-satir">
+                        <div class="k-avatar">${initials}</div>
+                        <div>
+                            <div class="k-ad">
+                                ${_esc(k.adSoyad || k.ad)}
+                                ${benMiyim ? '<span class="siz-rozeti">Siz</span>' : ''}
+                            </div>
+                            <div class="k-mail">${_esc(k.eposta)}</div>
+                        </div>
+                    </div>
+                </td>
+                <td><span class="rol-etiket ${sinif}">${yazi}</span></td>
+                <td><span class="aktif-nokta">Aktif</span></td>
+                <td><span class="tarih-kutu">${tarih}</span></td>
+                <td>
+                    ${benMiyim
+                        ? '<span class="degistirilemez"><i class="fa-solid fa-lock" style="margin-right:4px;font-size:10px;"></i>Yetki Değiştirilemez</span>'
+                        : `<div class="islem-grup">
+                               <select class="rol-select" onchange="rolDegistir('${k._id}', this.value)">
+                                   <option value="isg_uzmani"        ${k.rol==='isg_uzmani'        ? 'selected':''}>İSG Uzmanı</option>
+                                   <option value="isyeri_hekimi"     ${k.rol==='isyeri_hekimi'     ? 'selected':''}>İşyeri Hekimi</option>
+                                   <option value="isveren"           ${k.rol==='isveren'           ? 'selected':''}>İşveren</option>
+                                   <option value="sistem_yoneticisi" ${k.rol==='sistem_yoneticisi' ? 'selected':''}>Yönetici</option>
+                               </select>
+                               <button class="btn-sil" onclick="kullanicisil('${k._id}','${_esc(k.adSoyad)}')" title="Kullanıcıyı sil">
+                                   <i class="fa-solid fa-trash"></i>
+                               </button>
+                           </div>`
+                    }
+                </td>
+            </tr>`;
+        }).join('');
+
+        document.getElementById('tablo-konteyner').innerHTML = `
+            <table>
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Kullanıcı Bilgileri</th>
+                        <th>Sistem Rolü</th>
+                        <th>Durum</th>
+                        <th>Kayıt Tarihi</th>
+                        <th>İşlemler</th>
+                    </tr>
+                </thead>
+                <tbody>${satirlar}</tbody>
+            </table>`;
+
+    } catch (e) {
+        document.getElementById('tablo-konteyner').innerHTML =
+            `<div class="durum-mesaji" style="color:#dc2626;">
+                <i class="fa-solid fa-circle-exclamation"></i>
+                Hata: ${e.message}
+             </div>`;
+    }
+}
+
+function modalAc() { document.getElementById('kullanici-modal').classList.add('acik'); }
+function modalKapat() {
+    document.getElementById('kullanici-modal').classList.remove('acik');
+    ['yeni-ad','yeni-eposta','yeni-sifre'].forEach(id => document.getElementById(id).value = '');
+    document.getElementById('yeni-rol').selectedIndex = 0;
+}
+document.getElementById('kullanici-modal').addEventListener('click', function(e) {
+    if (e.target === this) modalKapat();
+});
+
+async function kullaniciKaydet() {
+    const adSoyad = document.getElementById('yeni-ad').value.trim();
+    const eposta  = document.getElementById('yeni-eposta').value.trim();
+    const sifre   = document.getElementById('yeni-sifre').value.trim();
+    const rol     = document.getElementById('yeni-rol').value;
+    if (!adSoyad || !eposta || !sifre) { alert('Lütfen tüm alanları doldurun.'); return; }
+    if (sifre.length < 6) { alert('Şifre en az 6 karakter olmalıdır.'); return; }
+    try {
+        const res  = await AUTH.apiFetch('/api/auth/kullanicilar', {
+            method:  'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body:    JSON.stringify({ adSoyad, eposta, sifre, rol }),
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.hata || 'Bilinmeyen hata');
+        alert('✅ Kullanıcı başarıyla oluşturuldu!');
+        modalKapat();
+        kullanicilariYukle();
+    } catch (err) { alert('❌ Hata: ' + err.message); }
+}
+
+async function rolDegistir(id, yeniRol) {
+    try {
+        const res = await AUTH.apiFetch(`/api/auth/kullanicilar/${id}/rol`, {
+            method:  'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body:    JSON.stringify({ rol: yeniRol }),
+        });
+        if (!res.ok) throw new Error((await res.json()).hata);
+        await kullanicilariYukle();
+    } catch (e) { alert('❌ Hata: ' + e.message); }
+}
+
+async function kullanicisil(id, ad) {
+    if (!confirm(`"${ad}" isimli kullanıcıyı silmek istediğinize emin misiniz?`)) return;
+    try {
+        const res = await AUTH.apiFetch(`/api/auth/kullanicilar/${id}`, { method: 'DELETE' });
+        if (!res.ok) throw new Error((await res.json()).hata);
+        await kullanicilariYukle();
+    } catch (e) { alert('❌ Hata: ' + e.message); }
+}
+
+function _esc(str) {
+    return (str || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+</script>
+</body>
+</html>

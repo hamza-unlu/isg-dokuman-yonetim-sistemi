@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Eğitimler - İSG Doküman Yönetim Sistemi</title>
+    <link rel="stylesheet" href="/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+
+    <div class="panel-kapsayici">
+        
+        <nav class="yan-menu">
+            <div class="yan-menu-baslik">
+                <h2>🛡️ ÜNLÜ İSG</h2>
+            </div>
+            <ul class="menu-ogeleri">
+                <li><a href="anasayfa"><i class="fa-solid fa-home"></i> ANA SAYFA</a></li>
+                <li><a href="firmalar"><i class="fa-solid fa-building"></i> FİRMALAR</a></li>
+                <li><a href="personel"><i class="fa-solid fa-users"></i> PERSONEL</a></li>
+                <li class="aktif"><a href="egitimler"><i class="fa-solid fa-graduation-cap"></i> EĞİTİMLER</a></li>
+                <li><a href="dokumanlar"><i class="fa-solid fa-file-alt"></i> DOKÜMANLAR</a></li>
+                <li><a href="raporlar"><i class="fa-solid fa-chart-pie"></i> RAPORLAR</a></li>
+                <li class="menu-alt"><a href="index"><i class="fa-solid fa-sign-out-alt"></i> ÇIKIŞ</a></li>
+            </ul>
+        </nav>
+
+        <main class="ana-icerik">
+            
+            <header class="ust-bar">
+                <%- include('partials/breadcrumb') %>
+                <div class="kullanici-profili">
+                    <div class="kullanici-bilgisi">
+                        <span class="isim" id="header-isim">...</span>
+                        <span class="rol" id="header-rol">...</span>
+                    </div>
+                    <div class="kullanici-avatar" id="header-avatar">...</div>
+                </div>
+            </header>
+
+            <div class="islem-cubugu">
+                <div class="arama-filtreleri">
+                    <div class="arama-grubu">
+                        <i class="fa-solid fa-search"></i>
+                        <input type="text" placeholder="Eğitim veya Firma Ara...">
+                    </div>
+                </div>
+                <button class="btn-ana" onclick="ekleModalAc()">
+                    <i class="fa-solid fa-plus"></i> Yeni Eğitim Planla
+                </button>
+            </div>
+
+            <div class="tablo-bolumu">
+                <div class="tablo-kapsayici">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Eğitim Adı</th>
+                                <th>Firma</th>
+                                <th>Eğitmen</th>
+                                <th>Tarih</th>
+                                <th>Katılımcı</th>
+                                <th>Durum</th>
+                                <th>İşlemler</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- JavaScript ile doldurulacak -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+        </main>
+    </div>
+
+   <!-- YENİ EĞİTİM EKLEME MODAL -->
+<div id="egitim-ekle-modali" class="modal-dis-katman">
+    <div class="modal-kutu">
+        <div class="modal-baslik">
+            <h3><i class="fa-solid fa-plus-circle"></i> Yeni Eğitim Planla</h3>
+            <span class="kapat-butonu" onclick="ekleModalKapat()">&times;</span>
+        </div>
+
+        <div class="modal-icerik">
+            <form onsubmit="event.preventDefault(); egitimKaydet();">
+
+                <!-- ⭐ ÜST SATIR: Sağda + Yeni Tür Ekle butonu -->
+                <div style="display:flex; justify-content:flex-end; margin-bottom:12px;">
+                    <button type="button"
+                            onclick="egitimTuruEkleModalAc()"
+                            title="Listede olmayan yeni bir eğitim türü oluştur"
+                            style="background:#10b981; color:#fff;
+                                   border:none; border-radius:8px;
+                                   padding:8px 16px; cursor:pointer;
+                                   font-weight:600; font-size:13px;
+                                   display:inline-flex; align-items:center; gap:6px;">
+                        <i class="fa-solid fa-plus"></i> Yeni Eğitim Ekle
+                    </button>
+                </div>
+
+                <!-- Eğitim Adı (DB'den dinamik dolacak) -->
+                <div class="form-grubu">
+                    <label>Eğitim Adı</label>
+                    <select id="egitim-adi-select" class="filtre-secimi" style="width:100%;" required>
+                        <option value="">Eğitim Seçiniz...</option>
+                        <!-- JavaScript ile doldurulacak -->
+                    </select>
+                    <small style="color:#64748b; display:block; margin-top:5px;">
+                        💡 Listede yoksa yukarıdaki <b style="color:#10b981;">+ Yeni Tür Ekle</b> butonunu kullanın.
+                    </small>
+                </div>
+
+                <!-- Firma Seçimi -->
+                <div class="form-grubu">
+                    <label>Firma Seçimi</label>
+                    <select id="firma-secimi" class="filtre-secimi" style="width:100%;" required>
+                        <option value="">Firma Seçiniz...</option>
+                        <!-- JavaScript ile doldurulacak -->
+                    </select>
+                </div>
+
+                <!-- Eğitmen -->
+                <div class="form-grubu">
+                    <label>Eğitmen Adı Soyadı</label>
+                    <input type="text" id="egitmen-input" placeholder="Örn: Hamza Ünlü" required>
+                </div>
+
+                <!-- Tarih + Katılımcı yan yana -->
+                <div class="form-grubu-yan-yana">
+                    <div class="form-grubu">
+                        <label>Planlanan Tarih</label>
+                        <input type="date" id="tarih-input" required>
+                    </div>
+                    <div class="form-grubu">
+                        <label>Tahmini Katılımcı</label>
+                        <input type="number" id="katilimci-input" placeholder="Örn: 20" min="1" required>
+                    </div>
+                </div>
+
+                <!-- Mail gönder checkbox -->
+                <div class="mail-gonder-satir">
+                    <input type="checkbox" id="ekle-mail-at">
+                    <label for="ekle-mail-at">
+                        <i class="fa-solid fa-envelope" style="margin-right:5px;"></i>
+                        Kaydet butonuna basıldığında firmaya e-posta gönder
+                    </label>
+                </div>
+
+                <button type="submit" class="btn-kaydet" style="margin-top:16px;">
+                    <i class="fa-solid fa-paper-plane"></i> EĞİTİMİ PLANLA
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+
+    <!-- YENİ EĞİTİM TÜRÜ EKLEME MODAL -->
+<div id="egitim-turu-ekle-modali" class="modal-dis-katman">
+    <div class="modal-kutu" style="max-width:480px;">
+        <div class="modal-baslik" style="background:#10b981;">
+            <h3><i class="fa-solid fa-graduation-cap"></i> Yeni Eğitim Türü Ekle</h3>
+            <span class="kapat-butonu" onclick="egitimTuruEkleModalKapat()">&times;</span>
+        </div>
+        <div class="modal-icerik">
+            <form onsubmit="event.preventDefault(); egitimTuruKaydet();">
+                <div class="form-grubu">
+                    <label>Eğitim Adı <span style="color:#dc2626;">*</span></label>
+                    <input type="text" id="yeni-tur-ad"
+                           placeholder="Örn: Sapancı Eğitimi" required>
+                </div>
+
+                <div class="form-grubu-yan-yana">
+                    <div class="form-grubu">
+                        <label>Süre (Saat)</label>
+                        <input type="number" id="yeni-tur-sure"
+                               placeholder="Örn: 8" min="0">
+                    </div>
+                    <div class="form-grubu">
+                        <label>Geçerlilik (Ay)</label>
+                        <input type="number" id="yeni-tur-gecerlilik"
+                               placeholder="Örn: 12" min="1" value="12">
+                    </div>
+                </div>
+
+                <div class="form-grubu">
+                    <label>Tehlike Sınıfı</label>
+                    <select id="yeni-tur-tehlike" class="filtre-secimi" style="width:100%;">
+                        <option value="Genel">Genel</option>
+                        <option value="Az Tehlikeli">Az Tehlikeli</option>
+                        <option value="Tehlikeli">Tehlikeli</option>
+                        <option value="Çok Tehlikeli">Çok Tehlikeli</option>
+                    </select>
+                </div>
+
+                <div class="form-grubu">
+                    <label>Açıklama (Opsiyonel)</label>
+                    <textarea id="yeni-tur-aciklama" rows="3"
+                              placeholder="Bu eğitim hakkında kısa açıklama..."
+                              style="width:100%; padding:12px; border:2px solid #e2e8f0;
+                                     border-radius:8px; font-size:14px; resize:vertical;"></textarea>
+                </div>
+
+                <button type="submit" class="btn-kaydet"
+                        style="margin-top:8px; background:#10b981;">
+                    <i class="fa-solid fa-check"></i> EĞİTİM TÜRÜNÜ KAYDET
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+
+    <!-- EĞİTİM DETAY VE DÜZENLEME MODAL -->
+    <div id="egitim-detay-modali" class="modal-dis-katman">
+        <div class="modal-kutu">
+            <div class="modal-baslik">
+                <h3><i class="fa-solid fa-file-alt"></i> Eğitim Detayları</h3>
+                <span class="kapat-butonu" onclick="detayKapat()">&times;</span>
+            </div>
+            
+            <div class="modal-icerik">
+                <!-- Durum Badge -->
+                <div style="text-align: center; margin-bottom: 20px;">
+                    <span id="detay-durum-badge" class="etiket" style="font-size: 14px; padding: 8px 16px;">-</span>
+                </div>
+
+                <form onsubmit="event.preventDefault(); detayGuncelle();">
+                    
+                    <div class="form-grubu">
+                        <label>Eğitim Adı</label>
+                        <input type="text" id="detay-egitim-adi" required>
+                    </div>
+
+                    <div class="form-grubu">
+                        <label>Firma</label>
+                        <input type="text" id="detay-firma" required>
+                    </div>
+
+                    <div class="form-grubu">
+                        <label>Eğitmen</label>
+                        <input type="text" id="detay-egitmen" required>
+                    </div>
+
+                    <div class="form-grubu-yan-yana">
+                        <div class="form-grubu">
+                            <label>Tarih</label>
+                            <input type="date" id="detay-tarih" required>
+                        </div>
+                        <div class="form-grubu">
+                            <label>Katılımcı Sayısı</label>
+                            <input type="number" id="detay-katilimci" min="1" required>
+                        </div>
+                    </div>
+
+                    <!-- DURUM SEÇİMİ -->
+                    <div class="form-grubu">
+                        <label><i class="fa-solid fa-traffic-light"></i> Durum Değiştir</label>
+                        <select id="detay-durum-select" class="filtre-secimi" style="width: 100%;" onchange="durumDegistir()">
+                            <option value="PLANLANDI">📘 Planlandı</option>
+                            <option value="DEVAM EDİYOR">🟣 Devam Ediyor</option>
+                            <option value="TAMAMLANDI">✅ Tamamlandı</option>
+                            <option value="ERTELENDİ">⏸️ Ertelendi</option>
+                            <option value="İPTAL">❌ İptal</option>
+                        </select>
+                        <small style="color: #64748b; display: block; margin-top: 5px;">
+                            💡 Durumu değiştirdikten sonra "Kaydet" butonuna basın
+                        </small>
+                    </div>
+
+                    <div class="form-grubu">
+                        <label>Notlar / Açıklama</label>
+                        <textarea id="detay-notlar" rows="4" placeholder="Eğitim hakkında notlar, erteleme/iptal nedeni veya diğer açıklamalar..." style="width: 100%; padding: 12px; border: 2px solid #e2e8f0; border-radius: 8px; font-size: 14px; resize: vertical;"></textarea>
+                    </div>
+
+                    <!-- FİRMAYA MAİL AT -->
+                    <div class="mail-gonder-satir">
+                        <input type="checkbox" id="detay-mail-at">
+                        <label for="detay-mail-at">
+                            <i class="fa-solid fa-envelope" style="margin-right:5px;"></i>
+                            Kaydet butonuna basıldığında firmaya e-posta gönder
+                        </label>
+                    </div>
+
+                    <div style="display: flex; gap: 10px; margin-top: 16px;">
+                        <button type="submit" class="btn-kaydet" style="flex: 1; background: #3b82f6;">
+                            <i class="fa-solid fa-save"></i> KAYDET
+                        </button>
+                    </div>
+
+                    <button type="button" onclick="egitimSil()" style="width: 100%; margin-top: 10px; padding: 12px; background: #dc2626; color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer;">
+                        <i class="fa-solid fa-trash"></i> Eğitimi Sil
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- JavaScript Dosyaları -->
+    <%- include('partials/profil-modal') %>
+    <script src="/auth.js"></script>
+    <script src="/profil.js?v=1"></script>
+    <script src="/firma-verileri.js"></script>
+    <script src="/egitimler.js"></script>
+    <%- include('partials/ai-asistan') %>
+
+</body>
+</html>

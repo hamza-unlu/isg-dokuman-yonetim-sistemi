@@ -1,0 +1,1246 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dokümanlar - İSG Doküman Yönetim Sistemi</title>
+    <link rel="stylesheet" href="/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .firma-klasor-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(260px,1fr)); gap:18px; margin-bottom:10px; }
+        .firma-klasor-karti { background:#fff; border-radius:14px; box-shadow:0 4px 15px rgba(0,0,0,0.08); padding:22px 20px; cursor:pointer; transition:all 0.25s; border:2px solid transparent; display:flex; flex-direction:column; gap:10px; }
+        .firma-klasor-karti:hover { border-color:#2563eb; transform:translateY(-3px); box-shadow:0 8px 25px rgba(37,99,235,0.15); }
+        .firma-klasor-ust { display:flex; align-items:center; gap:12px; }
+        .klasor-ikon-kutu { width:46px; height:46px; border-radius:12px; background:linear-gradient(135deg,#1d4ed8,#3b82f6); display:flex; align-items:center; justify-content:center; font-size:1.3rem; color:white; flex-shrink:0; }
+        .firma-klasor-bilgi h4 { font-size:0.95rem; font-weight:700; color:#1e293b; margin-bottom:3px; }
+        .firma-klasor-bilgi span { font-size:0.78rem; color:#64748b; }
+        .firma-klasor-alt { display:flex; justify-content:space-between; align-items:center; }
+        .firma-dokuman-sayisi { font-size:0.78rem; color:#2563eb; font-weight:700; background:#dbeafe; padding:3px 10px; border-radius:12px; }
+        .dokuman-bolum-baslik { display:flex; align-items:center; justify-content:space-between; margin-bottom:15px; }
+        .dokuman-bolum-baslik h3 { font-size:1.05rem; color:#1e293b; display:flex; align-items:center; gap:8px; }
+        .btn-geri-klasor { background:#f1f5f9; border:1px solid #e2e8f0; color:#475569; padding:7px 16px; border-radius:8px; cursor:pointer; font-size:0.85rem; font-weight:600; display:flex; align-items:center; gap:6px; transition:all 0.2s; }
+        .btn-geri-klasor:hover { background:#e2e8f0; }
+       
+        .isg-sayac-kutu { display:flex; gap:8px; }
+        .isg-sayac { padding:4px 11px; border-radius:7px; font-size:0.78rem; font-weight:700; }
+        .isg-sayac.tamam { background:#166534; color:#86efac; }
+        .isg-sayac.eksik { background:#991b1b; color:#fca5a5; }
+        .ilerleme-bar-sarici { background:#f8f9fa; padding:7px 18px; display:flex; align-items:center; gap:12px; border-radius:0 0 10px 10px; margin-bottom:18px; }
+        .ilerleme-label { font-size:0.72rem; color:#94a3b8; white-space:nowrap; }
+        .ilerleme-cizgi { flex:1; height:7px; background:#334155; border-radius:4px; overflow:hidden; }
+        .ilerleme-dolu { height:100%; background:linear-gradient(90deg,#22c55e,#16a34a); border-radius:4px; transition:width 0.5s; }
+        .ilerleme-yuzde { font-size:0.78rem; color:#22c55e; font-weight:700; white-space:nowrap; }
+        .isg-bolum-baslik { display:flex; align-items:center; gap:7px; font-size:0.72rem; font-weight:700; color:#64748b; text-transform:uppercase; letter-spacing:0.08em; margin:16px 0 9px; }
+        .isg-kart-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:11px; margin-bottom:4px; }
+        .isg-kart { border-radius:11px; border:2px solid #fca5a5; background:#fff5f5; padding:11px; display:flex; flex-direction:column; gap:7px; transition:border-color 0.3s,background 0.3s; position:relative; }
+        .isg-kart.dolu { border-color:#86efac; background:#f0fdf4; }
+        .isg-kart-baslik { display:flex; align-items:center; gap:7px; }
+        .isg-kart-ikon { width:27px; height:27px; border-radius:7px; display:flex; align-items:center; justify-content:center; font-size:11px; flex-shrink:0; background:#fee2e2; color:#dc2626; transition:background 0.3s,color 0.3s; }
+        .isg-kart.dolu .isg-kart-ikon { background:#dcfce7; color:#16a34a; }
+        .isg-kart-baslik-metin { font-size:11px; font-weight:700; color:#374151; line-height:1.3; padding-right:36px; }
+        .isg-kart-durum { position:absolute; top:9px; right:9px; font-size:9px; font-weight:800; padding:2px 6px; border-radius:20px; background:#fee2e2; color:#dc2626; transition:background 0.3s,color 0.3s; }
+        .isg-kart.dolu .isg-kart-durum { background:#dcfce7; color:#16a34a; }
+        .isg-kart .mini-label { font-size:9px; font-weight:700; color:#64748b; text-transform:uppercase; letter-spacing:0.05em; margin-bottom:2px; display:block; }
+        .isg-kart input[type="text"],.isg-kart input[type="date"],.isg-kart select { width:100%; padding:5px 7px; border:1px solid #e2e8f0; border-radius:6px; font-size:11px; color:#334155; background:white; box-sizing:border-box; }
+        .isg-kart input:focus,.isg-kart select:focus { outline:none; border-color:#2563eb; }
+        .isg-kart-tarih-cift { display:grid; grid-template-columns:1fr 1fr; gap:5px; }
+        .isg-kart-alan { margin-bottom:0; }
+        .isg-kart-checkbox { display:flex; align-items:center; gap:7px; padding:5px 7px; background:rgba(255,255,255,0.7); border-radius:6px; border:1px solid #e2e8f0; }
+        .isg-kart-checkbox label { font-size:11px; color:#374151; cursor:pointer; font-weight:500; margin:0; }
+        .isg-kart-checkbox input[type="checkbox"] { width:13px!important; height:13px!important; accent-color:#2563eb; cursor:pointer; flex-shrink:0; padding:0!important; }
+        .ilkyardimci-listesi-kart { display:flex; flex-direction:column; gap:5px; }
+        .iy-satir-kart { background:white; border:1px solid #e2e8f0; border-radius:6px; padding:6px; }
+        .iy-satir-ust { display:flex; gap:5px; align-items:center; margin-bottom:5px; }
+        .iy-satir-ust input { flex:1; }
+        .btn-iy-sil { background:#fee2e2; color:#dc2626; border:none; border-radius:5px; width:24px; height:24px; cursor:pointer; font-size:11px; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+        .btn-iy-sil:hover { background:#fecaca; }
+        .btn-iy-ekle { background:#eff6ff; color:#2563eb; border:1px dashed #93c5fd; border-radius:6px; padding:5px 10px; font-size:11px; font-weight:600; cursor:pointer; width:100%; margin-top:3px; }
+        .btn-iy-ekle:hover { background:#dbeafe; }
+        .isg-kart-dokuman-alani { border-top:1px dashed #e2e8f0; padding-top:7px; margin-top:2px; }
+        #kart-rv .isg-kart-dokuman-alani,#kart-adp .isg-kart-dokuman-alani,#kart-tatbikat .isg-kart-dokuman-alani { border-top:none; padding-top:0; margin-top:0; }
+        #kart-rv .isg-kart-tarih-cift,#kart-adp .isg-kart-tarih-cift,#kart-tatbikat .isg-kart-tarih-cift { border-top:1px dashed #e2e8f0; padding-top:7px; margin-top:4px; }
+        .isg-kart-dokuman-baslik { font-size:9px; font-weight:700; color:#64748b; text-transform:uppercase; letter-spacing:0.05em; margin-bottom:5px; display:flex; align-items:center; gap:4px; }
+        .btn-belge-ekle-label { display:flex; align-items:center; gap:6px; background:linear-gradient(135deg,#eff6ff,#dbeafe); border:1.5px dashed #93c5fd; border-radius:7px; padding:6px 9px; cursor:pointer; font-size:10px; font-weight:700; color:#1d4ed8; margin-bottom:4px; transition:all 0.2s; }
+        .btn-belge-ekle-label:hover { background:linear-gradient(135deg,#dbeafe,#bfdbfe); border-color:#2563eb; }
+        .btn-klasor-ac { width:100%; padding:7px 10px; background:linear-gradient(135deg,#eff6ff,#dbeafe); border:1.5px solid #93c5fd; border-radius:8px; cursor:pointer; display:flex; align-items:center; gap:7px; transition:all 0.2s; font-size:10px; font-weight:700; color:#1d4ed8; }
+        .btn-klasor-ac:hover { background:linear-gradient(135deg,#dbeafe,#bfdbfe); border-color:#2563eb; transform:translateY(-1px); }
+        .btn-klasor-ac .klasor-ac-ikon { font-size:14px; color:#f59e0b; }
+        .btn-klasor-ac .klasor-ac-sayi { margin-left:auto; background:#2563eb; color:white; font-size:9px; font-weight:800; padding:1px 6px; border-radius:10px; min-width:18px; text-align:center; }
+        .muayene-firma-secim { width:100%; padding:5px 7px; border:1px solid #e2e8f0; border-radius:6px; font-size:11px; color:#334155; background:white; box-sizing:border-box; }
+        .muayene-firma-secim:focus { outline:none; border-color:#2563eb; }
+        .btn-muayene-kaydet { width:100%; padding:6px 10px; background:linear-gradient(135deg,#16a34a,#15803d); color:white; border:none; border-radius:7px; font-size:11px; font-weight:700; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:5px; transition:opacity 0.2s; margin-top:3px; }
+        .btn-muayene-kaydet:hover { opacity:0.85; }
+        .muayene-personel-durum { border-radius:7px; padding:5px 9px; font-size:9px; font-weight:700; display:flex; align-items:center; gap:5px; margin-top:3px; }
+        .muayene-personel-durum.gecerli { background:#f0fdf4; border:1px solid #86efac; color:#15803d; }
+        .muayene-personel-durum.uyari { background:linear-gradient(135deg,#fef3c7,#fde68a); border:1.5px solid #f59e0b; color:#92400e; animation:kurulPulse 2s infinite; }
+        .muayene-personel-durum.kritik { background:linear-gradient(135deg,#fee2e2,#fecaca); border:1.5px solid #dc2626; color:#991b1b; animation:kurulPulse 2s infinite; }
+        .btn-muayene-goruntule,.btn-egitim-goruntule,.btn-ilkyardim-goruntule,.btn-olcum-goruntule,.btn-temsilci-goruntule { width:100%; padding:7px 10px; background:linear-gradient(135deg,#eff6ff,#dbeafe); border:1.5px solid #93c5fd; border-radius:8px; cursor:pointer; display:flex; align-items:center; gap:7px; transition:all 0.2s; font-size:10px; font-weight:700; color:#1d4ed8; margin-top:3px; }
+        .btn-muayene-goruntule:hover,.btn-egitim-goruntule:hover,.btn-ilkyardim-goruntule:hover,.btn-olcum-goruntule:hover,.btn-temsilci-goruntule:hover { background:linear-gradient(135deg,#dbeafe,#bfdbfe); border-color:#2563eb; }
+        .muayene-btn-sayi,.egitim-btn-sayi,.ilkyardim-btn-sayi,.olcum-btn-sayi,.temsilci-btn-sayi { margin-left:auto; background:#2563eb; color:white; font-size:9px; font-weight:800; padding:1px 6px; border-radius:10px; min-width:18px; text-align:center; }
+        .btn-olcum-goruntule { background:linear-gradient(135deg,#f0fdf4,#dcfce7)!important; border-color:#86efac!important; color:#15803d!important; }
+        .btn-olcum-goruntule:hover { background:linear-gradient(135deg,#dcfce7,#bbf7d0)!important; border-color:#22c55e!important; }
+        .olcum-btn-sayi { background:#16a34a!important; }
+        .btn-ilkyardim-goruntule { background:linear-gradient(135deg,#fff1f2,#ffe4e6)!important; border-color:#fca5a5!important; color:#b91c1c!important; }
+        .btn-ilkyardim-goruntule:hover { background:linear-gradient(135deg,#ffe4e6,#fecaca)!important; border-color:#ef4444!important; }
+        .ilkyardim-btn-sayi { background:#dc2626!important; }
+        .btn-isg-kaydet-panel { width:100%; margin-top:18px; padding:11px; background:linear-gradient(135deg,#16a34a,#15803d); color:white; border:none; border-radius:9px; font-size:0.88rem; font-weight:700; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:8px; transition:opacity 0.2s; }
+        .btn-isg-kaydet-panel:hover { opacity:0.92; }
+        .kurul-sinif-bilgi { border-radius:7px; padding:6px 9px; font-size:9px; font-weight:700; display:flex; align-items:center; gap:5px; }
+        .kurul-sinif-bilgi.cok-tehlikeli { background:linear-gradient(135deg,#fee2e2,#fecaca); border:1px solid #fca5a5; color:#b91c1c; }
+        .kurul-sinif-bilgi.tehlikeli { background:linear-gradient(135deg,#fff7ed,#fed7aa); border:1px solid #fb923c; color:#c2410c; }
+        .kurul-sinif-bilgi.az-tehlikeli { background:linear-gradient(135deg,#f0fdf4,#dcfce7); border:1px solid #86efac; color:#15803d; }
+        .kurul-sinif-bilgi.belirsiz { background:linear-gradient(135deg,#eff6ff,#dbeafe); border:1px solid #93c5fd; color:#1d4ed8; }
+        .kurul-plan-satir { display:flex; align-items:center; gap:5px; margin-top:4px; }
+        .kurul-plan-satir input[type="date"] { flex:1; min-width:0; }
+        .btn-kurul-tamam { background:linear-gradient(135deg,#16a34a,#15803d); color:white; border:none; border-radius:6px; padding:5px 8px; font-size:9px; font-weight:800; cursor:pointer; white-space:nowrap; display:flex; align-items:center; gap:3px; flex-shrink:0; transition:opacity 0.2s; }
+        .btn-kurul-tamam:hover { opacity:0.85; }
+        .kurul-geri-sayim { border-radius:7px; padding:5px 9px; font-size:9px; font-weight:700; display:none; align-items:center; gap:5px; margin-top:3px; animation:kurulPulse 2s infinite; }
+        .kurul-geri-sayim.normal { background:#f0fdf4; border:1px solid #86efac; color:#15803d; animation:none; }
+        .kurul-geri-sayim.uyari { background:linear-gradient(135deg,#fef3c7,#fde68a); border:1.5px solid #f59e0b; color:#92400e; }
+        .kurul-geri-sayim.kritik { background:linear-gradient(135deg,#fee2e2,#fecaca); border:1.5px solid #dc2626; color:#991b1b; }
+        @keyframes kurulPulse { 0%,100%{opacity:1} 50%{opacity:0.75} }
+        .kurul-gecmis-liste { display:flex; flex-direction:column; gap:3px; margin-top:4px; max-height:80px; overflow-y:auto; }
+        .kurul-gecmis-satir { display:flex; align-items:center; gap:5px; background:#f8fafc; border:1px solid #e2e8f0; border-radius:5px; padding:3px 7px; font-size:9px; color:#64748b; }
+        .kurul-gecmis-satir i { color:#22c55e; font-size:8px; }
+        .modal-klasor-arka { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.55); z-index:9997; align-items:center; justify-content:center; }
+        .modal-klasor-arka.acik { display:flex; }
+        .modal-klasor-kutu { background:#fff; border-radius:18px; width:620px; max-width:96vw; max-height:90vh; display:flex; flex-direction:column; overflow:hidden; box-shadow:0 12px 50px rgba(0,0,0,0.25); }
+        .modal-klasor-ust { background:#0f172a; padding:16px 20px; display:flex; align-items:center; gap:12px; flex-shrink:0; }
+        .modal-klasor-ust .klasor-ust-ikon { color:#f59e0b; font-size:1.3rem; }
+        .modal-klasor-ust h3 { flex:1; color:#fff; font-size:0.95rem; margin:0; }
+        .modal-klasor-ust .modal-klasor-kapat { background:rgba(239,68,68,0.2); border:none; color:#fca5a5; padding:5px 12px; border-radius:7px; cursor:pointer; font-size:0.8rem; display:flex; align-items:center; gap:5px; }
+        .modal-klasor-ust .modal-klasor-kapat:hover { background:rgba(239,68,68,0.35); }
+        .modal-klasor-icerik { flex:1; overflow-y:auto; padding:20px; }
+        .klasor-dosya-listesi { display:flex; flex-direction:column; gap:10px; margin-bottom:16px; }
+        .klasor-dosya-satir { background:#f8fafc; border:1.5px solid #e2e8f0; border-radius:10px; padding:12px 14px; display:flex; align-items:center; gap:10px; transition:border-color 0.2s; flex-wrap:wrap; }
+        .klasor-dosya-satir:hover { border-color:#93c5fd; }
+        .klasor-dosya-satir .dosya-tip-ikon { font-size:1.2rem; flex-shrink:0; }
+        .klasor-dosya-satir .dosya-tip-ikon.pdf-ikon { color:#ef4444; }
+        .klasor-dosya-satir .dosya-tip-ikon.img-ikon { color:#8b5cf6; }
+        .klasor-dosya-satir .dosya-tip-ikon.word-ikon { color:#2563eb; }
+        .klasor-dosya-satir .dosya-tip-ikon.excel-ikon { color:#16a34a; }
+        .klasor-dosya-satir .dosya-tip-ikon.diger-ikon { color:#64748b; }
+        .klasor-dosya-bilgi { flex:1; min-width:0; }
+        .klasor-dosya-bilgi .dosya-ad { font-size:0.85rem; font-weight:600; color:#1e293b; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+        .klasor-dosya-bilgi .dosya-meta { font-size:0.72rem; color:#94a3b8; margin-top:2px; display:flex; align-items:center; gap:8px; }
+        .dosya-gecerlilik-etiketi { font-size:0.68rem; font-weight:700; padding:1px 7px; border-radius:8px; }
+        .dosya-gecerlilik-etiketi.gecerli { background:#dcfce7; color:#16a34a; }
+        .dosya-gecerlilik-etiketi.kritik { background:#fee2e2; color:#dc2626; }
+        .dosya-gecerlilik-etiketi.uyari { background:#fef3c7; color:#d97706; }
+        .dosya-gecerlilik-etiketi.belirsiz { background:#f1f5f9; color:#64748b; }
+        .klasor-dosya-aksiyonlar { display:flex; gap:5px; flex-shrink:0; }
+        .btn-dosya-onizle { background:#eff6ff; border:1px solid #bfdbfe; color:#2563eb; border-radius:6px; padding:5px 10px; cursor:pointer; font-size:0.75rem; font-weight:600; display:flex; align-items:center; gap:4px; transition:all 0.2s; }
+        .btn-dosya-onizle:hover { background:#dbeafe; }
+        .btn-dosya-duzenle { background:#f0fdf4; border:1px solid #bbf7d0; color:#16a34a; border-radius:6px; padding:5px 10px; cursor:pointer; font-size:0.75rem; font-weight:600; display:flex; align-items:center; gap:4px; transition:all 0.2s; }
+        .btn-dosya-duzenle:hover { background:#dcfce7; }
+        .btn-dosya-sil-k { background:#fff5f5; border:1px solid #fecaca; color:#dc2626; border-radius:6px; padding:5px 8px; cursor:pointer; font-size:0.75rem; font-weight:600; display:flex; align-items:center; gap:3px; transition:all 0.2s; }
+        .btn-dosya-sil-k:hover { background:#fee2e2; }
+        .klasor-yukle-alan { border:2px dashed #93c5fd; border-radius:10px; padding:18px; text-align:center; background:#eff6ff; cursor:pointer; transition:all 0.2s; margin-top:4px; }
+        .klasor-yukle-alan:hover { border-color:#2563eb; background:#dbeafe; }
+        input[type="file"].klasor-dosya-input { display:none; }
+        .dosya-duzenle-form { background:#f0fdf4; border:1.5px solid #86efac; border-radius:8px; padding:12px; margin-top:8px; display:none; flex-direction:column; gap:8px; width:100%; }
+        .dosya-duzenle-form.acik { display:flex; }
+        .dosya-duzenle-form label { font-size:10px; font-weight:700; color:#64748b; text-transform:uppercase; }
+        .dosya-duzenle-form input[type="date"],.dosya-duzenle-form input[type="text"] { padding:6px 10px; border:1px solid #bbf7d0; border-radius:6px; font-size:12px; color:#1e293b; background:white; outline:none; width:100%; box-sizing:border-box; }
+        .dosya-duzenle-form input:focus { border-color:#16a34a; }
+        .dosya-duzenle-butonlar { display:flex; gap:7px; margin-top:4px; }
+        .btn-duzenle-kaydet { flex:1; background:#16a34a; color:white; border:none; border-radius:6px; padding:6px; font-size:11px; font-weight:700; cursor:pointer; }
+        .btn-duzenle-kaydet:hover { background:#15803d; }
+        .btn-duzenle-iptal { background:#f1f5f9; color:#64748b; border:1px solid #e2e8f0; border-radius:6px; padding:6px 12px; font-size:11px; cursor:pointer; }
+        .klasor-bos { text-align:center; padding:30px 20px; color:#94a3b8; }
+        .klasor-bos i { font-size:2rem; margin-bottom:8px; display:block; color:#cbd5e1; }
+        .klasor-bos p { font-size:0.82rem; }
+        .modal-onizleme-arka { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.82); z-index:9999; align-items:center; justify-content:center; }
+        .modal-onizleme-arka.acik { display:flex; }
+        .modal-onizleme-kutu { background:#1e293b; border-radius:14px; width:92vw; max-width:960px; max-height:92vh; display:flex; flex-direction:column; overflow:hidden; box-shadow:0 20px 60px rgba(0,0,0,0.6); }
+        .modal-onizleme-ust { display:flex; align-items:center; gap:12px; padding:13px 18px; background:#0f172a; flex-shrink:0; }
+        .modal-onizleme-ust i { color:#94a3b8; font-size:1.1rem; }
+        .modal-onizleme-ust span { flex:1; color:#e2e8f0; font-size:0.88rem; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+        .modal-onizleme-ust .btn-onizleme-indir { background:rgba(255,255,255,0.1); border:none; color:white; padding:5px 13px; border-radius:7px; cursor:pointer; font-size:0.8rem; display:flex; align-items:center; gap:5px; }
+        .modal-onizleme-ust .btn-onizleme-kapat { background:rgba(239,68,68,0.2); border:none; color:#fca5a5; padding:5px 13px; border-radius:7px; cursor:pointer; font-size:0.8rem; display:flex; align-items:center; gap:5px; }
+        .modal-onizleme-icerik { flex:1; overflow:auto; display:flex; align-items:center; justify-content:center; padding:20px; background:#334155; min-height:300px; }
+        .modal-onizleme-icerik img { max-width:100%; max-height:74vh; border-radius:8px; }
+        .modal-onizleme-icerik iframe { width:100%; height:74vh; border:none; border-radius:8px; }
+        .onizleme-desteklenmiyor { text-align:center; color:#94a3b8; padding:40px; }
+        .onizleme-desteklenmiyor i { font-size:3rem; margin-bottom:14px; display:block; color:#64748b; }
+        .onizleme-desteklenmiyor a { background:#2563eb; color:white; padding:9px 20px; border-radius:8px; text-decoration:none; font-weight:600; font-size:0.85rem; }
+        .modal-muayene-arka,.modal-egitim-arka,.modal-ilkyardim-arka,.modal-olcum-arka,.modal-temsilci-arka { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.6); z-index:9998; align-items:center; justify-content:center; }
+        .modal-muayene-arka.acik,.modal-egitim-arka.acik,.modal-ilkyardim-arka.acik,.modal-olcum-arka.acik,.modal-temsilci-arka.acik { display:flex; }
+        .modal-muayene-kutu,.modal-egitim-kutu,.modal-ilkyardim-kutu,.modal-olcum-kutu,.modal-temsilci-kutu { background:#fff; border-radius:18px; width:900px; max-width:96vw; max-height:92vh; display:flex; flex-direction:column; overflow:hidden; box-shadow:0 12px 50px rgba(0,0,0,0.3); }
+        .modal-muayene-ust,.modal-egitim-ust,.modal-ilkyardim-ust,.modal-olcum-ust,.modal-temsilci-ust { background:linear-gradient(135deg,#0f172a,#1e293b); padding:16px 22px; display:flex; align-items:center; gap:14px; flex-shrink:0; }
+        .modal-muayene-ust .muayene-ust-ikon,.modal-egitim-ust .egitim-ust-ikon { width:40px; height:40px; border-radius:10px; background:rgba(37,99,235,0.3); display:flex; align-items:center; justify-content:center; font-size:1.2rem; color:#93c5fd; }
+        .modal-ilkyardim-ust .ilkyardim-ust-ikon { width:40px; height:40px; border-radius:10px; background:rgba(220,38,38,0.3); display:flex; align-items:center; justify-content:center; font-size:1.2rem; color:#fca5a5; }
+        .modal-olcum-ust .olcum-ust-ikon { width:40px; height:40px; border-radius:10px; background:rgba(22,163,74,0.3); display:flex; align-items:center; justify-content:center; font-size:1.2rem; color:#86efac; }
+        .modal-temsilci-ust .temsilci-ust-ikon { width:40px; height:40px; border-radius:10px; background:rgba(124,58,237,0.3); display:flex; align-items:center; justify-content:center; font-size:1.2rem; color:#c4b5fd; }
+        .modal-muayene-ust h3,.modal-egitim-ust h3,.modal-ilkyardim-ust h3,.modal-olcum-ust h3,.modal-temsilci-ust h3 { flex:1; color:#fff; font-size:1rem; margin:0; }
+        .modal-muayene-ust .modal-muayene-kapat,.modal-egitim-ust .modal-egitim-kapat,.modal-ilkyardim-ust .modal-ilkyardim-kapat,.modal-olcum-ust .modal-olcum-kapat,.modal-temsilci-ust .modal-temsilci-kapat { background:rgba(239,68,68,0.2); border:none; color:#fca5a5; padding:7px 14px; border-radius:8px; cursor:pointer; font-size:0.82rem; display:flex; align-items:center; gap:6px; transition:background 0.2s; }
+        .modal-muayene-ust .modal-muayene-kapat:hover,.modal-egitim-ust .modal-egitim-kapat:hover,.modal-ilkyardim-ust .modal-ilkyardim-kapat:hover,.modal-olcum-ust .modal-olcum-kapat:hover,.modal-temsilci-ust .modal-temsilci-kapat:hover { background:rgba(239,68,68,0.35); }
+        .modal-muayene-toolbar,.modal-egitim-toolbar,.modal-ilkyardim-toolbar,.modal-olcum-toolbar,.modal-temsilci-toolbar { background:#f8fafc; padding:12px 22px; border-bottom:1px solid #e2e8f0; display:flex; align-items:center; gap:12px; flex-wrap:wrap; flex-shrink:0; }
+        .muayene-ozet-bar,.egitim-ozet-bar,.ilkyardim-ozet-bar,.olcum-ozet-bar,.temsilci-ozet-bar { display:flex; gap:8px; flex:1; }
+        .muayene-ozet-chip { padding:4px 12px; border-radius:20px; font-size:11px; font-weight:700; }
+        .muayene-ozet-chip.gecerli { background:#dcfce7; color:#16a34a; }
+        .muayene-ozet-chip.uyari { background:#fef3c7; color:#d97706; }
+        .muayene-ozet-chip.kritik { background:#fee2e2; color:#dc2626; }
+        .muayene-ozet-chip.toplam { background:#dbeafe; color:#2563eb; }
+        .egitim-periyot-bilgi,.ilkyardim-periyot-bilgi { font-size:11px; font-weight:700; color:#7c3aed; background:#ede9fe; padding:4px 12px; border-radius:20px; border:1px solid #c4b5fd; }
+        .ilkyardim-periyot-bilgi { color:#b91c1c; background:#fee2e2; border-color:#fca5a5; }
+        .btn-muayene-pdf,.btn-egitim-pdf,.btn-ilkyardim-pdf,.btn-olcum-pdf,.btn-temsilci-pdf { background:linear-gradient(135deg,#ef4444,#dc2626); color:white; border:none; padding:8px 16px; border-radius:8px; font-size:11px; font-weight:700; cursor:pointer; display:flex; align-items:center; gap:6px; transition:opacity 0.2s; }
+        .btn-muayene-pdf:hover,.btn-egitim-pdf:hover,.btn-ilkyardim-pdf:hover,.btn-olcum-pdf:hover,.btn-temsilci-pdf:hover { opacity:0.88; }
+        .btn-muayene-png,.btn-egitim-png,.btn-ilkyardim-png,.btn-olcum-png,.btn-temsilci-png { background:linear-gradient(135deg,#8b5cf6,#7c3aed); color:white; border:none; padding:8px 16px; border-radius:8px; font-size:11px; font-weight:700; cursor:pointer; display:flex; align-items:center; gap:6px; transition:opacity 0.2s; }
+        .btn-muayene-png:hover,.btn-egitim-png:hover,.btn-ilkyardim-png:hover,.btn-olcum-png:hover,.btn-temsilci-png:hover { opacity:0.88; }
+        .modal-muayene-icerik,.modal-egitim-icerik,.modal-ilkyardim-icerik,.modal-olcum-icerik,.modal-temsilci-icerik { flex:1; overflow-y:auto; padding:20px 22px; }
+        .muayene-tablo-sarici,.egitim-tablo-sarici,.ilkyardim-tablo-sarici,.olcum-tablo-sarici,.temsilci-tablo-sarici { overflow-x:auto; }
+        .muayene-tablo,.egitim-modal-tablo,.ilkyardim-modal-tablo,.olcum-modal-tablo,.temsilci-modal-tablo { width:100%; border-collapse:collapse; font-size:12px; }
+        .muayene-tablo thead th,.egitim-modal-tablo thead th,.ilkyardim-modal-tablo thead th,.olcum-modal-tablo thead th,.temsilci-modal-tablo thead th { background:#0f172a; color:#94a3b8; padding:10px 12px; text-align:left; font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:0.06em; border-bottom:none; }
+        .muayene-tablo thead th:first-child,.egitim-modal-tablo thead th:first-child,.ilkyardim-modal-tablo thead th:first-child,.olcum-modal-tablo thead th:first-child,.temsilci-modal-tablo thead th:first-child { border-radius:8px 0 0 8px; }
+        .muayene-tablo thead th:last-child,.egitim-modal-tablo thead th:last-child,.ilkyardim-modal-tablo thead th:last-child,.olcum-modal-tablo thead th:last-child,.temsilci-modal-tablo thead th:last-child { border-radius:0 8px 8px 0; }
+        .muayene-tablo tbody tr,.egitim-modal-tablo tbody tr,.ilkyardim-modal-tablo tbody tr,.olcum-modal-tablo tbody tr,.temsilci-modal-tablo tbody tr { border-bottom:1px solid #f1f5f9; transition:background 0.15s; }
+        .muayene-tablo tbody tr:hover,.egitim-modal-tablo tbody tr:hover,.ilkyardim-modal-tablo tbody tr:hover,.olcum-modal-tablo tbody tr:hover,.temsilci-modal-tablo tbody tr:hover { background:#f8fafc; }
+        .muayene-tablo tbody td,.egitim-modal-tablo tbody td,.ilkyardim-modal-tablo tbody td,.olcum-modal-tablo tbody td,.temsilci-modal-tablo tbody td { padding:10px 12px; color:#334155; }
+        .personel-avatar-mini { width:28px; height:28px; background:linear-gradient(135deg,#1d4ed8,#3b82f6); color:white; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:9px; font-weight:800; flex-shrink:0; }
+        .ekipman-avatar-mini { width:28px; height:28px; background:linear-gradient(135deg,#059669,#10b981); color:white; border-radius:8px; display:flex; align-items:center; justify-content:center; font-size:10px; font-weight:800; flex-shrink:0; }
+        .personel-ad-hucre,.ekipman-ad-hucre { display:flex; align-items:center; gap:8px; }
+        .muayene-durum-etiketi { display:inline-flex; align-items:center; gap:4px; padding:3px 9px; border-radius:12px; font-size:10px; font-weight:700; }
+        .muayene-durum-etiketi.gecerli { background:#dcfce7; color:#16a34a; }
+        .muayene-durum-etiketi.uyari { background:#fef3c7; color:#d97706; animation:muayenePulse 2s infinite; }
+        .muayene-durum-etiketi.kritik { background:#fee2e2; color:#dc2626; animation:muayenePulse 1.2s infinite; }
+        .muayene-durum-etiketi.yok { background:#f1f5f9; color:#64748b; }
+        @keyframes muayenePulse { 0%,100%{opacity:1} 50%{opacity:0.65} }
+        .muayene-tarih-input { padding:4px 8px; border:1px solid #e2e8f0; border-radius:6px; font-size:11px; color:#334155; background:white; transition:border-color 0.2s; }
+        .muayene-tarih-input:focus { outline:none; border-color:#2563eb; }
+        .muayene-bos,.egitim-modal-bos,.ilkyardim-modal-bos,.olcum-modal-bos,.temsilci-modal-bos { text-align:center; padding:40px 20px; color:#94a3b8; }
+        .muayene-bos i,.egitim-modal-bos i,.ilkyardim-modal-bos i,.olcum-modal-bos i,.temsilci-modal-bos i { font-size:2.5rem; margin-bottom:12px; display:block; color:#cbd5e1; }
+        .muayene-bos p,.egitim-modal-bos p,.ilkyardim-modal-bos p,.olcum-modal-bos p,.temsilci-modal-bos p { font-size:0.88rem; }
+        #ilkyardim-kayitli-liste { max-height:110px; overflow-y:auto; }
+        .olcum-ekipman-form { background:white; border:1.5px solid #e2e8f0; border-radius:9px; padding:9px; display:flex; flex-direction:column; gap:6px; margin-bottom:5px; }
+        .olcum-ekipman-form .form-row-2 { display:grid; grid-template-columns:1fr 1fr; gap:5px; }
+        .inline-dosya-listesi { display:flex; flex-direction:column; gap:3px; margin-bottom:4px; }
+        .inline-dosya-satir { display:flex; align-items:center; gap:6px; padding:4px 7px; background:#f8fafc; border:1px solid #e2e8f0; border-radius:6px; }
+        .inline-dosya-satir:hover { border-color:#93c5fd; background:#eff6ff; }
+        .inline-dosya-ad { flex:1; font-size:10px; color:#334155; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-weight:500; }
+        .inline-dosya-onizle-btn { background:#eff6ff; border:1px solid #bfdbfe; color:#2563eb; border-radius:4px; padding:2px 6px; cursor:pointer; font-size:9px; font-weight:700; display:flex; align-items:center; gap:3px; transition:all 0.15s; flex-shrink:0; }
+        .inline-dosya-onizle-btn:hover { background:#dbeafe; }
+        .inline-dosya-sil-btn { background:#fee2e2; border:1px solid #fecaca; color:#dc2626; border-radius:4px; padding:2px 6px; cursor:pointer; font-size:9px; font-weight:700; display:flex; align-items:center; gap:3px; transition:all 0.15s; flex-shrink:0; }
+        .inline-dosya-sil-btn:hover { background:#fecaca; }
+        #kart-kkd .isg-kart-tarih-cift { border-top:1px dashed #e2e8f0; padding-top:7px; margin-top:4px; }
+        .klasor-yukle-bolumu { margin-top:8px; }
+        /* Uzman / Hekim / DSP kartı */
+.uzman-tarih-input {
+    margin-top: 4px;
+    font-size: 12px;
+    padding: 4px 6px;
+    width: 100%;
+    box-sizing: border-box;
+    border: 1px solid #d1d5db;
+    border-radius: 4px;
+}
+.btn-uzman-kaydet {
+    width: 100%;
+    padding: 8px 12px;
+    background: #16a34a;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    margin-top: 10px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    justify-content: center;
+    font-weight: 500;
+    font-size: 13px;
+}
+.btn-uzman-kaydet:hover { background: #15803d; }
+
+.btn-uzman-goruntule {
+    width: 100%;
+    padding: 7px 10px;
+    background: linear-gradient(135deg,#fff1f2,#ffe4e6);
+    border: 1.5px solid #1d4ed8;
+    border-radius: 8px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    transition: all 0.2s;
+    font-size: 10px;
+    font-weight: 700;
+    color: #1d4ed8;
+    margin-top: 3px;
+}
+.btn-uzman-goruntule:hover {
+    background: linear-gradient(135deg,#ffe4e6,#fecaca);
+    border-color: #1d4ed8;
+}
+.uzman-btn-sayi {
+    margin-left: auto;
+    background: #1d4ed8;
+    color: white;
+    font-size: 9px;
+    font-weight: 800;
+    padding: 1px 6px;
+    border-radius: 10px;
+    min-width: 18px;
+    text-align: center;
+}
+.btn-uzman-goruntule:hover { background: #fee2e2; }
+.uzman-btn-sayi {
+    margin-left: auto;
+    background: #1d4ed8;
+    color: white;
+    border-radius: 9999px;
+    padding: 2px 9px;
+    font-size: 12px;
+    font-weight: 600;
+    min-width: 24px;
+    text-align: center;
+}
+
+.uzman-tablo { width: 100%; border-collapse: collapse; }
+.uzman-tablo th, .uzman-tablo td {
+    padding: 10px 12px;
+    text-align: left;
+    border-bottom: 1px solid #e5e7eb;
+    font-size: 13px;
+}
+.uzman-tablo th { background: #f9fafb; color: #374151; font-weight: 600; }
+.uzman-tablo input[type="date"] {
+    padding: 4px 6px;
+    border: 1px solid #d1d5db;
+    border-radius: 4px;
+    font-size: 12px;
+}
+.uzman-tablo .bos-kayit { color: #9ca3af; font-style: italic; }
+.uzman-tablo .btn-sil-mini {
+    background: #fee2e2;
+    color: #dc2626;
+    border: none;
+    padding: 6px 10px;
+    border-radius: 4px;
+    cursor: pointer;
+}
+.uzman-tablo .btn-sil-mini:hover:not(:disabled) { background: #fecaca; }
+.uzman-tablo .btn-sil-mini:disabled { opacity: 0.3; cursor: not-allowed; }
+.modal {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.6);
+    z-index: 9998;
+    align-items: center;
+    justify-content: center;
+}
+.modal.acik {
+    display: flex;
+}
+.modal-icerik {
+    background: #fff;
+    border-radius: 14px;
+    width: 100%;
+    max-height: 90vh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    box-shadow: 0 12px 50px rgba(0,0,0,0.3);
+}
+.modal-baslik {
+    background: linear-gradient(135deg,#0f172a,#1e293b);
+    padding: 16px 22px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    flex-shrink: 0;
+}
+.modal-baslik h3 {
+    flex: 1;
+    color: #fff;
+    font-size: 1rem;
+    margin: 0;
+}
+.modal-kapat {
+    background: rgba(239,68,68,0.2);
+    border: none;
+    color: #fca5a5;
+    padding: 7px 14px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 0.82rem;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+.modal-kapat:hover { background: rgba(239,68,68,0.35); }
+.modal-govde {
+    flex: 1;
+    overflow-y: auto;
+    padding: 20px 22px;
+}
+    </style>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script>
+    if (window.pdfjsLib) {
+        pdfjsLib.GlobalWorkerOptions.workerSrc =
+            'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+    }
+</script>
+</head>
+<body>
+
+<div class="panel-kapsayici">
+    <nav class="yan-menu">
+        <div class="yan-menu-baslik"><h2>🛡️ ÜNLÜ İSG</h2></div>
+        <ul class="menu-ogeleri">
+            <li><a href="anasayfa"><i class="fa-solid fa-home"></i> ANA SAYFA</a></li>
+            <li><a href="firmalar"><i class="fa-solid fa-building"></i> FİRMALAR</a></li>
+            <li><a href="personel"><i class="fa-solid fa-users"></i> PERSONEL</a></li>
+            <li><a href="egitimler"><i class="fa-solid fa-graduation-cap"></i> EĞİTİMLER</a></li>
+            <li class="aktif"><a href="dokumanlar"><i class="fa-solid fa-file-alt"></i> DOKÜMANLAR</a></li>
+            <li><a href="raporlar"><i class="fa-solid fa-chart-pie"></i> RAPORLAR</a></li>
+            <li class="menu-alt"><a href="index"><i class="fa-solid fa-sign-out-alt"></i> ÇIKIŞ</a></li>
+        </ul>
+    </nav>
+
+    <main class="ana-icerik">
+        <header class="ust-bar">
+            <%- include('partials/breadcrumb') %>
+            <div class="kullanici-profili">
+                    <div class="kullanici-bilgisi">
+                        <span class="isim" id="header-isim">...</span>
+                        <span class="rol" id="header-rol">...</span>
+                    </div>
+                    <div class="kullanici-avatar" id="header-avatar">...</div>
+            </div>
+        </header>
+
+    
+ 
+
+        <div id="katman-klasorler">
+            <div class="tablo-bolumu">
+                <div class="dokuman-bolum-baslik">
+                    <h3><i class="fa-solid fa-building" style="color:#2563eb;"></i> Firma Klasörleri</h3>
+                </div>
+                <div class="firma-klasor-grid" id="firma-klasor-grid"></div>
+            </div>
+        </div>
+
+        <div id="katman-firma" style="display:none;">
+            <div class="tablo-bolumu">
+                <div class="dokuman-bolum-baslik" style="margin-bottom:18px;">
+                    <h3 id="aktif-firma-baslik"><i class="fa-solid fa-folder-open" style="color:#f59e0b;"></i></h3>
+                    <button class="btn-geri-klasor" onclick="klasorGer()">
+                        <i class="fa-solid fa-arrow-left"></i> Tüm Firmalar
+                    </button>
+                </div>
+
+                <div id="sekme-isg">
+                    <div class="isg-bolum-baslik"><i class="fa-solid fa-user-tie"></i> PERSONEL & ATAMALAR</div>
+                    <div class="isg-kart-grid">
+                        <div class="isg-kart" id="kart-uzman">
+    <div class="isg-kart-durum">EKSİK</div>
+    <div class="isg-kart-baslik">
+        <div class="isg-kart-ikon"><i class="fa-solid fa-user-doctor"></i></div>
+        <div class="isg-kart-baslik-metin">Uzman / Hekim / DSP</div>
+    </div>
+
+    <div class="isg-kart-alan">
+        <span class="mini-label">İş Güvenliği Uzmanı</span>
+        <input type="text" id="igu" placeholder="Ad Soyad" oninput="kartGuncelle('kart-uzman')">
+        <input type="date" id="igu-tarih" class="uzman-tarih-input" title="Atama Tarihi (opsiyonel)">
+    </div>
+
+    <div class="isg-kart-alan">
+        <span class="mini-label">İşyeri Hekimi</span>
+        <input type="text" id="hekim" placeholder="Ad Soyad" oninput="kartGuncelle('kart-uzman')">
+        <input type="date" id="hekim-tarih" class="uzman-tarih-input" title="Atama Tarihi (opsiyonel)">
+    </div>
+
+    <div class="isg-kart-alan">
+        <span class="mini-label">DSP</span>
+        <input type="text" id="dsp" placeholder="Ad Soyad">
+        <input type="date" id="dsp-tarih" class="uzman-tarih-input" title="Atama Tarihi (opsiyonel)">
+    </div>
+
+    <button class="btn-uzman-kaydet" onclick="uzmanKaydet()">
+        <i class="fa-solid fa-floppy-disk"></i>
+        <span>Kaydet</span>
+    </button>
+
+    <button class="btn-uzman-goruntule" id="btn-uzman-goruntule" onclick="uzmanModalAc()" style="display:none;">
+        <i class="fa-solid fa-user-doctor" style="color:#dc2626;"></i>
+        <span>Uzman / Hekim / DSP Durumunu Görüntüle</span>
+        <span class="uzman-btn-sayi" id="uzman-btn-sayi">0</span>
+    </button>
+
+    <div class="isg-kart-dokuman-alani">
+        <div class="isg-kart-dokuman-baslik"><i class="fa-solid fa-folder"></i> Belgeler</div>
+        <input type="file" class="klasor-dosya-input" id="file-uzman" accept=".pdf,.docx,.jpg,.jpeg,.png" multiple onchange="dosyaYukleKlasore('uzman',this)">
+        <button class="btn-klasor-ac" onclick="klasorModalAc('uzman')">
+            <i class="fa-solid fa-folder-open klasor-ac-ikon"></i><span>Belgeleri Yönet</span>
+            <span class="klasor-ac-sayi" id="sayi-uzman">0</span>
+        </button>
+    </div>
+</div>
+                        <!-- ÇALIŞAN TEMSİLCİSİ KARTI — YENİ TASARIM -->
+                        <div class="isg-kart" id="kart-temsilci">
+                            <div class="isg-kart-durum">EKSİK</div>
+                            <div class="isg-kart-baslik">
+                                <div class="isg-kart-ikon"><i class="fa-solid fa-users"></i></div>
+                                <div class="isg-kart-baslik-metin">Çalışan Temsilcisi</div>
+                            </div>
+                            <div class="isg-kart-alan">
+                                <span class="mini-label"><i class="fa-solid fa-user" style="margin-right:3px;"></i> Personel Seç</span>
+                                <select class="muayene-firma-secim" id="temsilci-personel-secim" onchange="temsilciPersonelSecildi()">
+                                    <option value="">— Personel Seçin —</option>
+                                </select>
+                            </div>
+                            <div class="isg-kart-tarih-cift" id="temsilci-tarih-alani" style="display:none;">
+                                <div class="isg-kart-alan"><span class="mini-label">Atama Tarihi</span>
+                                    <input type="date" id="temsilci-atama-tarih" oninput="kartGuncelle('kart-temsilci')"></div>
+                                <div class="isg-kart-alan" style="visibility:hidden;"></div>
+                            </div>
+                            <button class="btn-muayene-kaydet" id="btn-temsilci-kaydet" onclick="temsilciPersonelKaydet()" style="display:none;">
+                                <i class="fa-solid fa-floppy-disk"></i> <span>Kaydet</span>
+                            </button>
+                            <div class="muayene-personel-durum" id="temsilci-personel-durum" style="display:none;"></div>
+                            <button class="btn-temsilci-goruntule" id="btn-temsilci-goruntule" onclick="temsilciModalAc()" style="display:none;">
+                                <i class="fa-solid fa-users" style="color:#7c3aed;"></i>
+                                <span>Çalışan Temsilcisi Durumunu Görüntüle</span>
+                                <span class="temsilci-btn-sayi" id="temsilci-btn-sayi">0</span>
+                            </button>
+                            <div class="isg-kart-dokuman-alani">
+                                <div class="isg-kart-dokuman-baslik"><i class="fa-solid fa-folder"></i> Belgeler</div>
+                                <input type="file" class="klasor-dosya-input" id="file-temsilci" accept=".pdf,.docx,.jpg,.jpeg,.png" multiple onchange="dosyaYukleKlasore('temsilci',this)">
+                                <button class="btn-klasor-ac" onclick="klasorModalAc('temsilci')">
+                                    <i class="fa-solid fa-folder-open klasor-ac-ikon"></i><span>Belgeleri Yönet</span>
+                                    <span class="klasor-ac-sayi" id="sayi-temsilci">0</span>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="isg-kart" id="kart-kurul">
+                            <div class="isg-kart-durum">EKSİK</div>
+                            <div class="isg-kart-baslik">
+                                <div class="isg-kart-ikon"><i class="fa-solid fa-people-group"></i></div>
+                                <div class="isg-kart-baslik-metin">İSG Kurulu</div>
+                            </div>
+                            <div class="isg-kart-checkbox">
+                                <input type="checkbox" id="kurul-zorunlu-degil" onchange="kurulZorunluToggle()">
+                                <label for="kurul-zorunlu-degil">Kurul zorunlu değil</label>
+                            </div>
+                            <div id="kurul-alanlari">
+                                <div class="kurul-sinif-bilgi belirsiz" id="kurul-sinif-bilgi">
+                                    <i class="fa-solid fa-circle-info"></i>
+                                    <span id="kurul-sinif-yazi">Firma tehlike sınıfı yükleniyor…</span>
+                                </div>
+                                <div style="margin-top:5px;">
+                                    <span class="mini-label">Planlanan Toplantı Tarihi</span>
+                                    <div class="kurul-plan-satir">
+                                        <input type="date" id="kurul-toplanti" oninput="kurulGeriSayimGuncelle(); kartGuncelle('kart-kurul')">
+                                        <button class="btn-kurul-tamam" onclick="kurulTamamlandi()"><i class="fa-solid fa-check"></i> Tamamlandı</button>
+                                    </div>
+                                    <button class="btn-muayene-kaydet" id="btn-kurul-kaydet" onclick="kurulKaydet()" style="margin-top:5px;">
+    <i class="fa-solid fa-floppy-disk"></i> <span>Kaydet</span>
+</button>
+                                </div>
+                                <div class="kurul-geri-sayim" id="kurul-geri-sayim">
+                                    <i class="fa-solid fa-clock" id="kurul-geri-ikon"></i>
+                                    <span id="kurul-geri-yazi"></span>
+                                </div>
+                                <div id="kurul-gecmis-alani" style="display:none; margin-top:4px;">
+                                    <span class="mini-label" style="color:#64748b;">Gerçekleşen Toplantılar</span>
+                                    <div class="kurul-gecmis-liste" id="kurul-gecmis-liste"></div>
+                                </div>
+                            </div>
+                            <div class="isg-kart-dokuman-alani">
+                                <div class="isg-kart-dokuman-baslik"><i class="fa-solid fa-folder"></i> Toplantı Tutanakları</div>
+                                <input type="file" class="klasor-dosya-input" id="file-kurul" accept=".pdf,.docx,.jpg,.jpeg,.png" multiple onchange="dosyaYukleKlasore('kurul',this)">
+                                <button class="btn-klasor-ac" onclick="klasorModalAc('kurul')">
+                                    <i class="fa-solid fa-folder-open klasor-ac-ikon"></i><span>Belgeleri Yönet</span>
+                                    <span class="klasor-ac-sayi" id="sayi-kurul">0</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                        <!-- DESTEK ELEMANLARI KARTI -->
+                        <div class="isg-kart" id="kart-destek" style="grid-column: 1 / -1;">
+                            <div class="isg-kart-durum">EKSİK</div>
+                            <div class="isg-kart-baslik">
+                                <div class="isg-kart-ikon"><i class="fa-solid fa-shield-halved"></i></div>
+                                <div class="isg-kart-baslik-metin">Destek Elemanları</div>
+                            </div>
+                            <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px;">
+                                <!-- Koruma Ekibi -->
+                                <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:9px;">
+                                    <span class="mini-label" style="color:#1d4ed8;"><i class="fa-solid fa-shield" style="margin-right:3px;color:#1d4ed8;"></i> Koruma Ekibi</span>
+                                    <select class="muayene-firma-secim" id="destek-koruma-secim" onchange="destekPersonelSecildi('koruma')">
+                                        <option value="">— Personel Seçin —</option>
+                                    </select>
+                                    <div id="destek-koruma-tarih-alani" style="display:none;margin-top:5px;">
+                                        <span class="mini-label">Atama Tarihi</span>
+                                        <input type="date" id="destek-koruma-atama-tarih">
+                                    </div>
+                                    <button class="btn-muayene-kaydet" id="btn-destek-koruma-kaydet" onclick="destekPersonelKaydet('koruma')" style="display:none;margin-top:4px;">
+                                        <i class="fa-solid fa-floppy-disk"></i> <span>Kaydet</span>
+                                    </button>
+                                    <div class="muayene-personel-durum" id="destek-koruma-durum" style="display:none;margin-top:3px;"></div>
+                                </div>
+                                <!-- Kurtarma Ekibi -->
+                                <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:9px;">
+                                    <span class="mini-label" style="color:#0369a1;"><i class="fa-solid fa-person-drowning" style="margin-right:3px;color:#0369a1;"></i> Kurtarma Ekibi</span>
+                                    <select class="muayene-firma-secim" id="destek-kurtarma-secim" onchange="destekPersonelSecildi('kurtarma')">
+                                        <option value="">— Personel Seçin —</option>
+                                    </select>
+                                    <div id="destek-kurtarma-tarih-alani" style="display:none;margin-top:5px;">
+                                        <span class="mini-label">Atama Tarihi</span>
+                                        <input type="date" id="destek-kurtarma-atama-tarih">
+                                    </div>
+                                    <button class="btn-muayene-kaydet" id="btn-destek-kurtarma-kaydet" onclick="destekPersonelKaydet('kurtarma')" style="display:none;margin-top:4px;">
+                                        <i class="fa-solid fa-floppy-disk"></i> <span>Kaydet</span>
+                                    </button>
+                                    <div class="muayene-personel-durum" id="destek-kurtarma-durum" style="display:none;margin-top:3px;"></div>
+                                </div>
+                                <!-- Söndürme Ekibi -->
+                                <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:9px;">
+                                    <span class="mini-label" style="color:#b45309;"><i class="fa-solid fa-fire-extinguisher" style="margin-right:3px;color:#b45309;"></i> Söndürme Ekibi</span>
+                                    <select class="muayene-firma-secim" id="destek-sondurme-secim" onchange="destekPersonelSecildi('sondurme')">
+                                        <option value="">— Personel Seçin —</option>
+                                    </select>
+                                    <div id="destek-sondurme-tarih-alani" style="display:none;margin-top:5px;">
+                                        <span class="mini-label">Atama Tarihi</span>
+                                        <input type="date" id="destek-sondurme-atama-tarih">
+                                    </div>
+                                    <button class="btn-muayene-kaydet" id="btn-destek-sondurme-kaydet" onclick="destekPersonelKaydet('sondurme')" style="display:none;margin-top:4px;">
+                                        <i class="fa-solid fa-floppy-disk"></i> <span>Kaydet</span>
+                                    </button>
+                                    <div class="muayene-personel-durum" id="destek-sondurme-durum" style="display:none;margin-top:3px;"></div>
+                                </div>
+                                <!-- İlkyardım Ekibi -->
+                                <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:9px;">
+                                    <span class="mini-label" style="color:#dc2626;"><i class="fa-solid fa-kit-medical" style="margin-right:3px;color:#dc2626;"></i> İlkyardım Ekibi</span>
+                                    <select class="muayene-firma-secim" id="destek-ilkyardim-secim" onchange="destekPersonelSecildi('ilkyardim')">
+                                        <option value="">— Personel Seçin —</option>
+                                    </select>
+                                    <div id="destek-ilkyardim-tarih-alani" style="display:none;margin-top:5px;">
+                                        <span class="mini-label">Atama Tarihi</span>
+                                        <input type="date" id="destek-ilkyardim-atama-tarih">
+                                    </div>
+                                    <button class="btn-muayene-kaydet" id="btn-destek-ilkyardim-kaydet" onclick="destekPersonelKaydet('ilkyardim')" style="display:none;margin-top:4px;">
+                                        <i class="fa-solid fa-floppy-disk"></i> <span>Kaydet</span>
+                                    </button>
+                                    <div class="muayene-personel-durum" id="destek-ilkyardim-durum" style="display:none;margin-top:3px;"></div>
+                                </div>
+                            </div>
+                            <button class="btn-temsilci-goruntule" id="btn-destek-goruntule" onclick="destekModalAc()" style="display:none;margin-top:6px;">
+                                <i class="fa-solid fa-shield-halved" style="color:#7c3aed;"></i>
+                                <span>Destek Elemanları Durumunu Görüntüle</span>
+                                <span class="temsilci-btn-sayi" id="destek-btn-sayi">0</span>
+                            </button>
+                            <div class="isg-kart-dokuman-alani">
+                                <div class="isg-kart-dokuman-baslik"><i class="fa-solid fa-folder"></i> Belgeler</div>
+                                <input type="file" class="klasor-dosya-input" id="file-destek" accept=".pdf,.docx,.jpg,.jpeg,.png" multiple onchange="dosyaYukleKlasore('destek',this)">
+                                <button class="btn-klasor-ac" onclick="klasorModalAc('destek')">
+                                    <i class="fa-solid fa-folder-open klasor-ac-ikon"></i><span>Belgeleri Yönet</span>
+                                    <span class="klasor-ac-sayi" id="sayi-destek">0</span>
+                                </button>
+                            </div>
+                        </div>
+
+                        
+
+                    <div class="isg-bolum-baslik"><i class="fa-solid fa-heart-pulse"></i> SAĞLIK & EĞİTİM</div>
+                    <div class="isg-kart-grid">
+                        <div class="isg-kart" id="kart-muayene">
+                            <div class="isg-kart-durum">EKSİK</div>
+                            <div class="isg-kart-baslik">
+                                <div class="isg-kart-ikon"><i class="fa-solid fa-stethoscope"></i></div>
+                                <div class="isg-kart-baslik-metin">Periyodik Sağlık Muayenesi</div>
+                            </div>
+                            <div class="isg-kart-alan">
+                                <span class="mini-label"><i class="fa-solid fa-user" style="margin-right:3px;"></i> Personel Seç</span>
+                                <select class="muayene-firma-secim" id="muayene-personel-secim" onchange="muayenePersonelSecildi()">
+                                    <option value="">— Personel Seçin —</option>
+                                </select>
+                            </div>
+                            <div class="isg-kart-tarih-cift" id="muayene-tarih-alani" style="display:none;">
+                                <div class="isg-kart-alan"><span class="mini-label">Son Muayene</span>
+                                    <input type="date" id="muayene-son-tarih" oninput="muayeneSonrakiOtomatikHesapla()"></div>
+                                <div class="isg-kart-alan"><span class="mini-label">Sonraki <small style="color:#94a3b8;">(oto)</small></span>
+                                    <input type="date" id="muayene-sonraki-tarih" style="background:#f0fdf4;color:#15803d;border-color:#86efac;"></div>
+                            </div>
+                            <button class="btn-muayene-kaydet" id="btn-muayene-kaydet" onclick="muayenePersonelKaydet()" style="display:none;">
+                                <i class="fa-solid fa-floppy-disk"></i> <span>Kaydet</span>
+                            </button>
+                            <div class="muayene-personel-durum" id="muayene-personel-durum" style="display:none;"></div>
+                            <button class="btn-muayene-goruntule" id="btn-muayene-goruntule" onclick="muayeneModalAc()" style="display:none;">
+                                <i class="fa-solid fa-users" style="color:#3b82f6;"></i>
+                                <span>Personel Muayene Durumunu Görüntüle</span>
+                                <span class="muayene-btn-sayi" id="muayene-btn-sayi">0</span>
+                            </button>
+                            <div class="isg-kart-dokuman-alani">
+                                <div class="isg-kart-dokuman-baslik"><i class="fa-solid fa-folder"></i> Muayene Raporları</div>
+                                <input type="file" class="klasor-dosya-input" id="file-muayene" accept=".pdf,.docx,.jpg,.jpeg,.png" multiple onchange="dosyaYukleKlasore('muayene',this)">
+                                <button class="btn-klasor-ac" onclick="klasorModalAc('muayene')">
+                                    <i class="fa-solid fa-folder-open klasor-ac-ikon"></i><span>Belgeleri Yönet</span>
+                                    <span class="klasor-ac-sayi" id="sayi-muayene">0</span>
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="isg-kart" id="kart-egitim">
+                            <div class="isg-kart-durum">EKSİK</div>
+                            <div class="isg-kart-baslik">
+                                <div class="isg-kart-ikon"><i class="fa-solid fa-graduation-cap"></i></div>
+                                <div class="isg-kart-baslik-metin">Temel İSG Eğitimi</div>
+                            </div>
+                            <div class="isg-kart-alan">
+                                <span class="mini-label"><i class="fa-solid fa-user" style="margin-right:3px;"></i> Personel Seç</span>
+                                <select class="muayene-firma-secim" id="egitim-personel-secim" onchange="egitimPersonelSecildi()">
+                                    <option value="">— Personel Seçin —</option>
+                                </select>
+                            </div>
+                            <div class="isg-kart-tarih-cift" id="egitim-tarih-alani" style="display:none;">
+                                <div class="isg-kart-alan"><span class="mini-label">Son Eğitim</span>
+                                    <input type="date" id="egitim-son-tarih-p" oninput="egitimSonrakiOtomatikHesapla()"></div>
+                                <div class="isg-kart-alan"><span class="mini-label">Sonraki <small style="color:#94a3b8;">(oto)</small></span>
+                                    <input type="date" id="egitim-sonraki-tarih-p" style="background:#f0fdf4;color:#15803d;border-color:#86efac;"></div>
+                            </div>
+                            <button class="btn-muayene-kaydet" id="btn-egitim-kaydet" onclick="egitimPersonelKaydet()" style="display:none;">
+                                <i class="fa-solid fa-floppy-disk"></i> <span>Kaydet</span>
+                            </button>
+                            <div class="muayene-personel-durum" id="egitim-personel-durum" style="display:none;"></div>
+                            <button class="btn-egitim-goruntule" id="btn-egitim-goruntule" onclick="egitimModalAc()" style="display:none;">
+                                <i class="fa-solid fa-users" style="color:#7c3aed;"></i>
+                                <span>Personel Eğitim Durumunu Görüntüle</span>
+                                <span class="egitim-btn-sayi" id="egitim-btn-sayi">0</span>
+                            </button>
+                            <div class="isg-kart-dokuman-alani">
+                                <div class="isg-kart-dokuman-baslik"><i class="fa-solid fa-folder"></i> Eğitim Belgeleri</div>
+                                <input type="file" class="klasor-dosya-input" id="file-egitim" accept=".pdf,.docx,.jpg,.jpeg,.png" multiple onchange="dosyaYukleKlasore('egitim',this)">
+                                <button class="btn-klasor-ac" onclick="klasorModalAc('egitim')">
+                                    <i class="fa-solid fa-folder-open klasor-ac-ikon"></i><span>Belgeleri Yönet</span>
+                                    <span class="klasor-ac-sayi" id="sayi-egitim">0</span>
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="isg-kart" id="kart-ilkyardim">
+                            <div class="isg-kart-durum">EKSİK</div>
+                            <div class="isg-kart-baslik">
+                                <div class="isg-kart-ikon"><i class="fa-solid fa-kit-medical"></i></div>
+                                <div class="isg-kart-baslik-metin">İlkyardımcı Eğitimi</div>
+                            </div>
+                            <div class="isg-kart-alan">
+                                <span class="mini-label"><i class="fa-solid fa-user" style="margin-right:3px;"></i> Personel Seç</span>
+                                <select class="muayene-firma-secim" id="ilkyardim-personel-secim" onchange="ilkyardimPersonelSecildi()">
+                                    <option value="">— Personel Seçin —</option>
+                                </select>
+                            </div>
+                            <div class="isg-kart-tarih-cift" id="ilkyardim-tarih-alani" style="display:none;">
+                                <div class="isg-kart-alan"><span class="mini-label">Son Eğitim</span>
+                                    <input type="date" id="ilkyardim-son-tarih" oninput="ilkyardimSonrakiOtomatikHesapla()"></div>
+                                <div class="isg-kart-alan"><span class="mini-label">Sonraki <small style="color:#94a3b8;">(3 yıl)</small></span>
+                                    <input type="date" id="ilkyardim-sonraki-tarih" style="background:#f0fdf4;color:#15803d;border-color:#86efac;"></div>
+                            </div>
+                            <button class="btn-muayene-kaydet" id="btn-ilkyardim-kaydet" onclick="ilkyardimPersonelKaydet()" style="display:none;">
+                                <i class="fa-solid fa-floppy-disk"></i> <span>Kaydet</span>
+                            </button>
+                            <div class="muayene-personel-durum" id="ilkyardim-personel-durum" style="display:none;"></div>
+                            <div class="muayene-personel-durum" id="ilkyardim-zorunlu-uyari" style="display:none;"></div>
+                            <button class="btn-ilkyardim-goruntule" id="btn-ilkyardim-goruntule" onclick="ilkyardimModalAc()" style="display:none;">
+                                <i class="fa-solid fa-kit-medical"></i>
+                                <span>İlkyardımcı Eğitim Durumunu Görüntüle</span>
+                                <span class="ilkyardim-btn-sayi" id="ilkyardim-btn-sayi">0</span>
+                            </button>
+                            <div class="isg-kart-dokuman-alani">
+                                <div class="isg-kart-dokuman-baslik"><i class="fa-solid fa-folder"></i> Sertifikalar</div>
+                                <input type="file" class="klasor-dosya-input" id="file-ilkyardim" accept=".pdf,.docx,.jpg,.jpeg,.png" multiple onchange="dosyaYukleKlasore('ilkyardim',this)">
+                                <button class="btn-klasor-ac" onclick="klasorModalAc('ilkyardim')">
+                                    <i class="fa-solid fa-folder-open klasor-ac-ikon"></i><span>Belgeleri Yönet</span>
+                                    <span class="klasor-ac-sayi" id="sayi-ilkyardim">0</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="isg-bolum-baslik"><i class="fa-solid fa-file-shield"></i> DOKÜMANLAR & TATBİKAT</div>
+                    <div class="isg-kart-grid">
+                        <div class="isg-kart" id="kart-rv">
+                            <div class="isg-kart-durum">EKSİK</div>
+                            <div class="isg-kart-baslik">
+                                <div class="isg-kart-ikon"><i class="fa-solid fa-triangle-exclamation"></i></div>
+                                <div class="isg-kart-baslik-metin">Risk Değerlendirmesi</div>
+                            </div>
+                            <div class="isg-kart-dokuman-alani">
+                                <div class="isg-kart-dokuman-baslik"><i class="fa-solid fa-folder"></i> Risk Analiz Dosyaları</div>
+                                <label class="btn-belge-ekle-label">
+                                    <i class="fa-solid fa-plus" style="font-size:11px;"></i> Belge Ekle
+                                    <input type="file" accept=".pdf,.docx,.jpg,.jpeg,.png,.xlsx" multiple onchange="rvKartDosyaYukle(this)" style="display:none;">
+                                </label>
+                                <div class="inline-dosya-listesi" id="inline-dosyalar-rv"></div>
+                            </div>
+                            <div class="isg-kart-tarih-cift">
+                                <div class="isg-kart-alan"><span class="mini-label">Yapılma Tarihi</span>
+                                    <input type="date" id="rv-tarih" oninput="rvRevizyonOtomatik(); kartGuncelle('kart-rv')"></div>
+                                <div class="isg-kart-alan"><span class="mini-label">Revizyon <small style="color:#94a3b8;">(oto)</small></span>
+                                    <input type="date" id="rv-revizyon" style="background:#f0fdf4;color:#15803d;border-color:#86efac;"></div>
+                            </div>
+                            <button class="btn-muayene-kaydet" id="btn-rv-kaydet" onclick="rvKaydet()">
+                                <i class="fa-solid fa-floppy-disk"></i> <span>Kaydet</span>
+                            </button>
+                            <button class="btn-klasor-ac" onclick="klasorModalAc('rv')" style="margin-top:2px;">
+                                <i class="fa-solid fa-folder-open klasor-ac-ikon"></i><span>Tüm Belgeleri Görüntüle</span>
+                                <span class="klasor-ac-sayi" id="sayi-rv">0</span>
+                            </button>
+                        </div>
+
+                        <div class="isg-kart" id="kart-adp">
+                            <div class="isg-kart-durum">EKSİK</div>
+                            <div class="isg-kart-baslik">
+                                <div class="isg-kart-ikon"><i class="fa-solid fa-person-running"></i></div>
+                                <div class="isg-kart-baslik-metin">Acil Durum Planı</div>
+                            </div>
+                            <div class="isg-kart-dokuman-alani">
+                                <div class="isg-kart-dokuman-baslik"><i class="fa-solid fa-folder"></i> Plan Dosyaları</div>
+                                <label class="btn-belge-ekle-label">
+                                    <i class="fa-solid fa-plus" style="font-size:11px;"></i> Belge Ekle
+                                    <input type="file" accept=".pdf,.docx,.jpg,.jpeg,.png" multiple onchange="adpKartDosyaYukle(this)" style="display:none;">
+                                </label>
+                                <div class="inline-dosya-listesi" id="inline-dosyalar-adp"></div>
+                            </div>
+                            <div class="isg-kart-tarih-cift">
+                                <div class="isg-kart-alan"><span class="mini-label">Hazırlanma</span>
+                                    <input type="date" id="adp-tarih" oninput="adpRevizyonOtomatik(); kartGuncelle('kart-adp')"></div>
+                                <div class="isg-kart-alan"><span class="mini-label">Revizyon <small style="color:#94a3b8;">(oto)</small></span>
+                                    <input type="date" id="adp-revizyon" style="background:#f0fdf4;color:#15803d;border-color:#86efac;"></div>
+                            </div>
+                            <button class="btn-muayene-kaydet" id="btn-adp-kaydet" onclick="adpKaydet()">
+                                <i class="fa-solid fa-floppy-disk"></i> <span>Kaydet</span>
+                            </button>
+                            <button class="btn-klasor-ac" onclick="klasorModalAc('adp')" style="margin-top:2px;">
+                                <i class="fa-solid fa-folder-open klasor-ac-ikon"></i><span>Tüm Belgeleri Görüntüle</span>
+                                <span class="klasor-ac-sayi" id="sayi-adp">0</span>
+                            </button>
+                        </div>
+
+                        <div class="isg-kart" id="kart-tatbikat">
+                            <div class="isg-kart-durum">EKSİK</div>
+                            <div class="isg-kart-baslik">
+                                <div class="isg-kart-ikon"><i class="fa-solid fa-fire-extinguisher"></i></div>
+                                <div class="isg-kart-baslik-metin">Acil Durum Tatbikatı</div>
+                            </div>
+                            <div class="isg-kart-dokuman-alani">
+                                <div class="isg-kart-dokuman-baslik"><i class="fa-solid fa-folder"></i> Tatbikat Raporları</div>
+                                <label class="btn-belge-ekle-label">
+                                    <i class="fa-solid fa-plus" style="font-size:11px;"></i> Belge Ekle
+                                    <input type="file" accept=".pdf,.docx,.jpg,.jpeg,.png" multiple onchange="tatbikatKartDosyaYukle(this)" style="display:none;">
+                                </label>
+                                <div class="inline-dosya-listesi" id="inline-dosyalar-tatbikat"></div>
+                            </div>
+                            <div class="isg-kart-tarih-cift">
+                                <div class="isg-kart-alan"><span class="mini-label">Son Tatbikat</span>
+                                    <input type="date" id="tatbikat-son" oninput="tatbikatSonrakiOtomatik(); kartGuncelle('kart-tatbikat')"></div>
+                                <div class="isg-kart-alan"><span class="mini-label">Sonraki <small style="color:#94a3b8;">(1 yıl oto)</small></span>
+                                    <input type="date" id="tatbikat-sonraki" style="background:#f0fdf4;color:#15803d;border-color:#86efac;"></div>
+                            </div>
+                            <button class="btn-muayene-kaydet" id="btn-tatbikat-kaydet" onclick="tatbikatKaydet()">
+                                <i class="fa-solid fa-floppy-disk"></i> <span>Kaydet</span>
+                            </button>
+                            <button class="btn-klasor-ac" onclick="klasorModalAc('tatbikat')" style="margin-top:2px;">
+                                <i class="fa-solid fa-folder-open klasor-ac-ikon"></i><span>Tüm Belgeleri Görüntüle</span>
+                                <span class="klasor-ac-sayi" id="sayi-tatbikat">0</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="isg-bolum-baslik"><i class="fa-solid fa-ruler"></i> ÖLÇÜM & DENETİM</div>
+                    <div class="isg-kart-grid">
+                        <div class="isg-kart" id="kart-olcum">
+                            <div class="isg-kart-durum">EKSİK</div>
+                            <div class="isg-kart-baslik">
+                                <div class="isg-kart-ikon"><i class="fa-solid fa-chart-line"></i></div>
+                                <div class="isg-kart-baslik-metin">Ortam Ölçümleri</div>
+                            </div>
+                            <div class="olcum-ekipman-form">
+                                <div class="isg-kart-alan">
+                                    <span class="mini-label">Ekipman Adı</span>
+                                    <input type="text" id="olcum-ekipman-adi" placeholder="örn. Gürültü Ölçer, Toz Sayacı">
+                                </div>
+                                <div class="form-row-2">
+                                    <div class="isg-kart-alan">
+                                        <span class="mini-label">Seri No</span>
+                                        <input type="text" id="olcum-seri-no" placeholder="SN-XXXX">
+                                    </div>
+                                    <div class="isg-kart-alan">
+                                        <span class="mini-label">Rapor No</span>
+                                        <input type="text" id="olcum-rapor-no" placeholder="RPR-XXXX">
+                                    </div>
+                                </div>
+                                <div class="isg-kart-alan">
+                                    <span class="mini-label">Kontrolü Yapan Firma</span>
+                                    <input type="text" id="olcum-kurum" placeholder="Firma/Kurum Adı">
+                                </div>
+                                <div class="isg-kart-tarih-cift">
+                                    <div class="isg-kart-alan">
+                                        <span class="mini-label">Rapor Tarihi</span>
+                                         <input type="date" id="olcum-tarih" oninput="olcumGecerlilikOtomatik(); kartGuncelle('kart-olcum')">
+                                    </div>
+                                    <div class="isg-kart-alan">
+                                        <span class="mini-label">Kontrol Periyodu</span>
+                                        <select id="olcum-periyot" onchange="olcumGecerlilikOtomatik(); kartGuncelle('kart-olcum')"
+                                                style="padding:8px 10px; border:1px solid #cbd5e1; border-radius:6px; font-family:inherit; font-size:13px; background:#fff; cursor:pointer;">
+                                            <option value="6ay">6 Aylık</option>
+                                            <option value="1yil" selected>Yıllık</option>
+                                            <option value="3yil">3 Yıllık</option>
+                                            <option value="5yil">5 Yıllık</option>
+                                            <option value="10yil">10 Yıllık</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="isg-kart-alan">
+                                    <span class="mini-label">Geçerlilik <small style="color:#94a3b8;">(otomatik)</small></span>
+                                    <input type="date" id="olcum-sonraki" style="background:#f0fdf4;color:#15803d;border-color:#86efac;">
+                                </div>
+                            </div>
+                            <button class="btn-muayene-kaydet" id="btn-olcum-kaydet" onclick="olcumEkipmanKaydet()">
+                                <i class="fa-solid fa-floppy-disk"></i> <span>Kaydet</span>
+                            </button>
+                            <button class="btn-olcum-goruntule" id="btn-olcum-goruntule" onclick="olcumModalAc()" style="display:none;">
+                                <i class="fa-solid fa-chart-line" style="color:#15803d;"></i>
+                                <span>İş Ekipmanları Durumunu Görüntüle</span>
+                                <span class="olcum-btn-sayi" id="olcum-btn-sayi">0</span>
+                            </button>
+                            <div class="isg-kart-dokuman-alani">
+                                <div class="isg-kart-dokuman-baslik"><i class="fa-solid fa-folder"></i> Ölçüm Raporları</div>
+                                <input type="file" class="klasor-dosya-input" id="file-olcum" accept=".pdf,.docx,.jpg,.jpeg,.png" multiple onchange="dosyaYukleKlasore('olcum',this)">
+                                <button class="btn-klasor-ac" onclick="klasorModalAc('olcum')">
+                                    <i class="fa-solid fa-folder-open klasor-ac-ikon"></i><span>Belgeleri Yönet</span>
+                                    <span class="klasor-ac-sayi" id="sayi-olcum">0</span>
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="isg-kart" id="kart-denetim">
+                            <div class="isg-kart-durum">EKSİK</div>
+                            <div class="isg-kart-baslik">
+                                <div class="isg-kart-ikon"><i class="fa-solid fa-file-circle-exclamation"></i></div>
+                                <div class="isg-kart-baslik-metin">DİF/DÖF Takibi</div>
+                            </div>
+                            <div class="isg-kart-dokuman-alani" style="border-top:none;padding-top:0;margin-top:0;">
+                                <div class="isg-kart-dokuman-baslik"><i class="fa-solid fa-folder"></i> DİF/DÖF Belgeleri</div>
+                                <label class="btn-belge-ekle-label">
+                                    <i class="fa-solid fa-plus" style="font-size:11px;"></i> Belge Ekle
+                                    <input type="file" accept=".pdf,.docx,.jpg,.jpeg,.png,.xlsx" multiple onchange="denetimKartDosyaYukle(this)" style="display:none;">
+                                </label>
+                                <div class="inline-dosya-listesi" id="inline-dosyalar-denetim"></div>
+                            </div>
+                            <div class="isg-kart-tarih-cift" style="border-top:1px dashed #e2e8f0;padding-top:7px;margin-top:4px;">
+                                <div class="isg-kart-alan"><span class="mini-label">Hazırlanma Tarihi</span>
+                                    <input type="date" id="denetim-tarih" oninput="kartGuncelle('kart-denetim')"></div>
+                                <div class="isg-kart-alan"><span class="mini-label">Son Geçerlilik Tarihi</span>
+                                    <input type="date" id="denetim-gecerlilik" oninput="denetimGecerlilikOtomatik()"></div>
+                            </div>
+                            <div class="isg-kart-checkbox" style="margin-top:4px;">
+                                <input type="checkbox" id="denetim-mail-at">
+                                <label for="denetim-mail-at">Firmaya mail at</label>
+                            </div>
+                            <button class="btn-muayene-kaydet" id="btn-denetim-kaydet" onclick="denetimKaydet()">
+                                <i class="fa-solid fa-floppy-disk"></i> <span>Kaydet</span>
+                            </button>
+                            <button class="btn-klasor-ac" onclick="klasorModalAc('denetim')" style="margin-top:2px;">
+                                <i class="fa-solid fa-folder-open klasor-ac-ikon"></i><span>Tüm Belgeleri Görüntüle</span>
+                                <span class="klasor-ac-sayi" id="sayi-denetim">0</span>
+                            </button>
+                        </div>
+
+                        <div class="isg-kart" id="kart-kkd">
+                            <div class="isg-kart-durum">EKSİK</div>
+                            <div class="isg-kart-baslik">
+                                <div class="isg-kart-ikon"><i class="fa-solid fa-helmet-safety"></i></div>
+                                <div class="isg-kart-baslik-metin">KKD Takibi</div>
+                            </div>
+                            <div class="isg-kart-dokuman-alani" style="border-top:none;padding-top:0;margin-top:0;">
+                                <div class="isg-kart-dokuman-baslik"><i class="fa-solid fa-folder"></i> KKD Belgeleri</div>
+                                <label class="btn-belge-ekle-label">
+                                    <i class="fa-solid fa-plus" style="font-size:11px;"></i> Belge Ekle
+                                    <input type="file" accept=".pdf,.docx,.jpg,.jpeg,.png,.xlsx" multiple onchange="kkdKartDosyaYukle(this)" style="display:none;">
+                                </label>
+                                <div class="inline-dosya-listesi" id="inline-dosyalar-kkd"></div>
+                            </div>
+                            <div class="isg-kart-tarih-cift" style="border-top:1px dashed #e2e8f0;padding-top:7px;margin-top:4px;">
+                                <div class="isg-kart-alan"><span class="mini-label">Teslim Tarihi</span>
+                                    <input type="date" id="kkd-tarih" oninput="kartGuncelle('kart-kkd')"></div>
+                                <div class="isg-kart-alan"><span class="mini-label">Son Geçerlilik Tarihi</span>
+                                    <input type="date" id="kkd-gecerlilik"></div>
+                            </div>
+                            <button class="btn-muayene-kaydet" id="btn-kkd-kaydet" onclick="kkdKaydet()">
+                                <i class="fa-solid fa-floppy-disk"></i> <span>Kaydet</span>
+                            </button>
+                            <button class="btn-klasor-ac" onclick="klasorModalAc('kkd')" style="margin-top:2px;">
+                                <i class="fa-solid fa-folder-open klasor-ac-ikon"></i><span>Tüm Belgeleri Görüntüle</span>
+                                <span class="klasor-ac-sayi" id="sayi-kkd">0</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <button class="btn-isg-kaydet-panel" onclick="isgKaydet()">
+                        <i class="fa-solid fa-floppy-disk"></i> İSG Verilerini Kaydet
+                    </button>
+                    <div style="height:16px;"></div>
+                </div>
+            </div>
+        </div>
+    </main>
+</div>
+
+<!-- KLASÖR MODAL -->
+<div class="modal-klasor-arka" id="klasor-modal" onclick="klasorModalArkaKapat(event)">
+    <div class="modal-klasor-kutu">
+        <div class="modal-klasor-ust">
+            <i class="fa-solid fa-folder-open klasor-ust-ikon"></i>
+            <h3 id="klasor-modal-baslik">Belgeler</h3>
+            <button class="modal-klasor-kapat" onclick="klasorModalKapat()"><i class="fa-solid fa-xmark"></i> Kapat</button>
+        </div>
+        <div class="modal-klasor-icerik">
+            <div id="klasor-dosya-listesi-alan" class="klasor-dosya-listesi"></div>
+            <input type="file" class="klasor-dosya-input" id="file-modal-yukle" accept=".pdf,.docx,.doc,.jpg,.jpeg,.png,.xlsx,.xls" multiple onchange="dosyaYukleModaldan(this)">
+        </div>
+    </div>
+</div>
+
+<!-- DESTEK ELEMANLARI MODAL -->
+<div class="modal-temsilci-arka" id="destek-modal" onclick="if(event.target.id==='destek-modal') destekModalKapat()">
+    <div class="modal-temsilci-kutu">
+        <div class="modal-temsilci-ust">
+            <div class="temsilci-ust-ikon"><i class="fa-solid fa-shield-halved"></i></div>
+            <h3 id="destek-modal-baslik">Destek Elemanları Durumu</h3>
+            <button class="modal-temsilci-kapat" onclick="destekModalKapat()"><i class="fa-solid fa-xmark"></i> Kapat</button>
+        </div>
+        <div class="modal-temsilci-toolbar">
+            <div class="temsilci-ozet-bar">
+                <span class="muayene-ozet-chip toplam" id="destek-chip-toplam">Toplam: 0</span>
+                <span class="muayene-ozet-chip gecerli" id="destek-chip-gecerli">✓ Atandı: 0</span>
+            </div>
+            <button class="btn-temsilci-png" onclick="destekPNGIndir()"><i class="fa-solid fa-image"></i> PNG İndir</button>
+            <button class="btn-temsilci-pdf" onclick="destekPDFIndir()"><i class="fa-solid fa-file-pdf"></i> PDF İndir</button>
+        </div>
+        <div class="modal-temsilci-icerik">
+            <div class="temsilci-tablo-sarici" id="destek-tablo-sarici">
+                <div class="temsilci-modal-bos" id="destek-modal-bos-mesaj"><i class="fa-solid fa-shield-halved"></i><p>Henüz kayıtlı destek elemanı bulunmuyor.</p></div>
+                <table class="temsilci-modal-tablo" id="destek-modal-tablo" style="display:none;">
+                    <thead><tr><th>#</th><th>Ekip</th><th>Personel</th><th>Pozisyon</th><th>Atama Tarihi</th><th>İşlem</th></tr></thead>
+                    <tbody id="destek-modal-tablo-body"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ÇALIŞAN TEMSİLCİSİ MODAL -->
+<div class="modal-temsilci-arka" id="temsilci-modal" onclick="if(event.target.id==='temsilci-modal') temsilciModalKapat()">
+    <div class="modal-temsilci-kutu">
+        <div class="modal-temsilci-ust">
+            <div class="temsilci-ust-ikon"><i class="fa-solid fa-users"></i></div>
+            <h3 id="temsilci-modal-baslik">Çalışan Temsilcisi Durumu</h3>
+            <button class="modal-temsilci-kapat" onclick="temsilciModalKapat()"><i class="fa-solid fa-xmark"></i> Kapat</button>
+        </div>
+        <div class="modal-temsilci-toolbar">
+            <div class="temsilci-ozet-bar">
+                <span class="muayene-ozet-chip toplam" id="temsilci-chip-toplam">Toplam: 0</span>
+                <span class="muayene-ozet-chip gecerli" id="temsilci-chip-gecerli">✓ Atandı: 0</span>
+            </div>
+            <button class="btn-temsilci-png" onclick="temsilciPNGIndir()"><i class="fa-solid fa-image"></i> PNG İndir</button>
+            <button class="btn-temsilci-pdf" onclick="temsilciPDFIndir()"><i class="fa-solid fa-file-pdf"></i> PDF İndir</button>
+        </div>
+        <div class="modal-temsilci-icerik">
+            <div class="temsilci-tablo-sarici" id="temsilci-tablo-sarici">
+                <div class="temsilci-modal-bos" id="temsilci-modal-bos-mesaj"><i class="fa-solid fa-user-slash"></i><p>Henüz kayıtlı çalışan temsilcisi bulunmuyor.</p></div>
+                <table class="temsilci-modal-tablo" id="temsilci-modal-tablo" style="display:none;">
+                    <thead><tr><th>#</th><th>Personel</th><th>Pozisyon</th><th>Atama Tarihi</th><th>İşlem</th></tr></thead>
+                    <tbody id="temsilci-modal-tablo-body"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- PERİYODİK MUAYENE MODAL -->
+<div class="modal-muayene-arka" id="muayene-modal" onclick="if(event.target.id==='muayene-modal') muayeneModalKapat()">
+    <div class="modal-muayene-kutu">
+        <div class="modal-muayene-ust">
+            <div class="muayene-ust-ikon"><i class="fa-solid fa-stethoscope"></i></div>
+            <h3 id="muayene-modal-baslik">Periyodik Sağlık Muayenesi</h3>
+            <button class="modal-muayene-kapat" onclick="muayeneModalKapat()"><i class="fa-solid fa-xmark"></i> Kapat</button>
+        </div>
+        <div class="modal-muayene-toolbar">
+            <div class="muayene-ozet-bar">
+                <span class="muayene-ozet-chip toplam" id="chip-toplam">Toplam: 0</span>
+                <span class="muayene-ozet-chip gecerli" id="chip-gecerli">✓ Geçerli: 0</span>
+                <span class="muayene-ozet-chip uyari" id="chip-uyari">⚠ Uyarı: 0</span>
+                <span class="muayene-ozet-chip kritik" id="chip-kritik">✗ Kritik: 0</span>
+            </div>
+            <button class="btn-muayene-png" onclick="muayenePNGIndir()"><i class="fa-solid fa-image"></i> PNG İndir</button>
+            <button class="btn-muayene-pdf" onclick="muayenePDFIndir()"><i class="fa-solid fa-file-pdf"></i> PDF İndir</button>
+        </div>
+        <div class="modal-muayene-icerik">
+            <div class="muayene-tablo-sarici" id="muayene-tablo-sarici">
+                <div class="muayene-bos" id="muayene-bos-mesaj"><i class="fa-solid fa-user-slash"></i><p>Bu firmaya ait kayıtlı personel bulunamadı.</p></div>
+                <table class="muayene-tablo" id="muayene-tablo" style="display:none;">
+                    <thead><tr><th>#</th><th>Personel</th><th>Pozisyon</th><th>Muayene Tarihi</th><th>Geçerlilik Tarihi</th><th>Durum</th></tr></thead>
+                    <tbody id="muayene-tablo-body"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- İSG EĞİTİM MODAL -->
+<div class="modal-egitim-arka" id="egitim-modal" onclick="if(event.target.id==='egitim-modal') egitimModalKapat()">
+    <div class="modal-egitim-kutu">
+        <div class="modal-egitim-ust">
+            <div class="egitim-ust-ikon"><i class="fa-solid fa-graduation-cap"></i></div>
+            <h3 id="egitim-modal-baslik">İSG Eğitim Durumu</h3>
+            <button class="modal-egitim-kapat" onclick="egitimModalKapat()"><i class="fa-solid fa-xmark"></i> Kapat</button>
+        </div>
+        <div class="modal-egitim-toolbar">
+            <div class="egitim-ozet-bar">
+                <span class="muayene-ozet-chip toplam" id="egitim-chip-toplam">Toplam: 0</span>
+                <span class="muayene-ozet-chip gecerli" id="egitim-chip-gecerli">✓ Geçerli: 0</span>
+                <span class="muayene-ozet-chip uyari" id="egitim-chip-uyari">⚠ Uyarı: 0</span>
+                <span class="muayene-ozet-chip kritik" id="egitim-chip-kritik">✗ Kritik: 0</span>
+            </div>
+            <button class="btn-egitim-png" onclick="egitimPNGIndir()"><i class="fa-solid fa-image"></i> PNG İndir</button>
+            <button class="btn-egitim-pdf" onclick="egitimPDFIndir()"><i class="fa-solid fa-file-pdf"></i> PDF İndir</button>
+        </div>
+        <div class="modal-egitim-icerik">
+            <div class="egitim-tablo-sarici" id="egitim-tablo-sarici">
+                <div class="egitim-modal-bos" id="egitim-modal-bos-mesaj"><i class="fa-solid fa-user-slash"></i><p>Bu firmaya ait kayıtlı personel bulunamadı.</p></div>
+                <table class="egitim-modal-tablo" id="egitim-modal-tablo" style="display:none;">
+                    <thead><tr><th>#</th><th>Personel</th><th>Pozisyon</th><th>Eğitim Tarihi</th><th>Geçerlilik Tarihi</th><th>Durum</th></tr></thead>
+                    <tbody id="egitim-modal-tablo-body"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- İLKYARDIMCI EĞİTİM MODAL -->
+<div class="modal-ilkyardim-arka" id="ilkyardim-modal" onclick="if(event.target.id==='ilkyardim-modal') ilkyardimModalKapat()">
+    <div class="modal-ilkyardim-kutu">
+        <div class="modal-ilkyardim-ust">
+            <div class="ilkyardim-ust-ikon"><i class="fa-solid fa-kit-medical"></i></div>
+            <h3 id="ilkyardim-modal-baslik">İlkyardımcı Eğitim Durumu</h3>
+            <button class="modal-ilkyardim-kapat" onclick="ilkyardimModalKapat()"><i class="fa-solid fa-xmark"></i> Kapat</button>
+        </div>
+        <div class="modal-ilkyardim-toolbar">
+            <div class="ilkyardim-ozet-bar">
+                <span class="muayene-ozet-chip toplam" id="ilkyardim-chip-toplam">Toplam: 0</span>
+                <span class="muayene-ozet-chip gecerli" id="ilkyardim-chip-gecerli">✓ Geçerli: 0</span>
+                <span class="muayene-ozet-chip uyari" id="ilkyardim-chip-uyari">⚠ Uyarı: 0</span>
+                <span class="muayene-ozet-chip kritik" id="ilkyardim-chip-kritik">✗ Kritik: 0</span>
+            </div>
+            <span class="ilkyardim-periyot-bilgi" id="ilkyardim-modal-periyot">—</span>
+            <button class="btn-ilkyardim-png" onclick="ilkyardimPNGIndir()"><i class="fa-solid fa-image"></i> PNG İndir</button>
+            <button class="btn-ilkyardim-pdf" onclick="ilkyardimPDFIndir()"><i class="fa-solid fa-file-pdf"></i> PDF İndir</button>
+        </div>
+        <div class="modal-ilkyardim-icerik">
+            <div class="ilkyardim-tablo-sarici" id="ilkyardim-tablo-sarici">
+                <div class="ilkyardim-modal-bos" id="ilkyardim-modal-bos-mesaj"><i class="fa-solid fa-kit-medical"></i><p>Henüz kayıtlı ilkyardımcı bulunmuyor.</p></div>
+                <table class="ilkyardim-modal-tablo" id="ilkyardim-modal-tablo" style="display:none;">
+                    <thead><tr><th>#</th><th>Personel</th><th>Eğitim Tarihi</th><th>Geçerlilik Tarihi</th><th>Durum</th><th>İşlem</th></tr></thead>
+                    <tbody id="ilkyardim-modal-tablo-body"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ORTAM ÖLÇÜMLERİ MODAL -->
+<div class="modal-olcum-arka" id="olcum-modal" onclick="if(event.target.id==='olcum-modal') olcumModalKapat()">
+    <div class="modal-olcum-kutu">
+        <div class="modal-olcum-ust">
+            <div class="olcum-ust-ikon"><i class="fa-solid fa-chart-line"></i></div>
+            <h3 id="olcum-modal-baslik">İş Ekipmanları Ölçüm Durumu</h3>
+            <button class="modal-olcum-kapat" onclick="olcumModalKapat()"><i class="fa-solid fa-xmark"></i> Kapat</button>
+        </div>
+        <div class="modal-olcum-toolbar">
+            <div class="olcum-ozet-bar">
+                <span class="muayene-ozet-chip toplam" id="olcum-chip-toplam">Toplam: 0</span>
+                <span class="muayene-ozet-chip gecerli" id="olcum-chip-gecerli">✓ Geçerli: 0</span>
+                <span class="muayene-ozet-chip uyari" id="olcum-chip-uyari">⚠ Uyarı: 0</span>
+                <span class="muayene-ozet-chip kritik" id="olcum-chip-kritik">✗ Kritik: 0</span>
+            </div>
+            <button class="btn-olcum-png" onclick="olcumPNGIndir()"><i class="fa-solid fa-image"></i> PNG İndir</button>
+            <button class="btn-olcum-pdf" onclick="olcumPDFIndir()"><i class="fa-solid fa-file-pdf"></i> PDF İndir</button>
+        </div>
+        <div class="modal-olcum-icerik">
+            <div class="olcum-tablo-sarici" id="olcum-tablo-sarici">
+                <div class="olcum-modal-bos" id="olcum-modal-bos-mesaj">
+                    <i class="fa-solid fa-chart-line"></i>
+                    <p>Henüz kayıtlı ekipman ölçümü bulunmuyor.</p>
+                </div>
+                <table class="olcum-modal-tablo" id="olcum-modal-tablo" style="display:none;">
+                 <thead>
+                   <tr>
+                     <th>#</th><th>Ekipman Adı</th><th>Seri No</th><th>Rapor No</th>
+                     <th>Kontrol Firması</th><th>Rapor Tarihi</th><th>Periyot</th><th>Geçerlilik</th><th>Durum</th><th>İşlem</th>
+                  </tr>
+                 </thead>
+                 <tbody id="olcum-modal-tablo-body"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ═══ UZMAN / HEKİM / DSP MODAL ═══ -->
+<div class="modal" id="uzman-modal" style="display:none;">
+    <div class="modal-icerik" style="max-width:760px;">
+        <div class="modal-baslik">
+            <h3 id="uzman-modal-baslik">Uzman / Hekim / DSP Durumu</h3>
+            <button class="modal-kapat" onclick="const m=document.getElementById('uzman-modal'); m.style.display='none'; m.classList.remove('acik');">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+        </div>
+        <div class="modal-govde">
+            <table class="uzman-tablo">
+                <thead>
+                    <tr>
+                        <th style="width:30%;">Rol</th>
+                        <th style="width:30%;">Ad Soyad</th>
+                        <th style="width:25%;">Atama Tarihi</th>
+                        <th style="width:15%;"></th>
+                    </tr>
+                </thead>
+                <tbody id="uzman-modal-tbody"></tbody>
+            </table>
+            <p style="font-size:12px;color:#6b7280;margin-top:12px;">
+                <i class="fa-solid fa-circle-info"></i>
+                Atama tarihi opsiyoneldir, boş bırakılabilir.
+            </p>
+        </div>
+    </div>
+</div>
+
+<!-- ÖNİZLEME MODAL -->
+<div class="modal-onizleme-arka" id="onizleme-modal" onclick="if(event.target.id==='onizleme-modal') onizlemeKapat()">
+    <div class="modal-onizleme-kutu">
+        <div class="modal-onizleme-ust">
+            <i class="fa-solid fa-file" id="onizleme-tip-ikon"></i>
+            <span id="onizleme-dosya-adi">—</span>
+            <button class="btn-onizleme-indir" id="onizleme-indir-btn"><i class="fa-solid fa-download"></i> İndir</button>
+            <button class="btn-onizleme-kapat" onclick="onizlemeKapat()"><i class="fa-solid fa-xmark"></i> Kapat</button>
+        </div>
+        <div class="modal-onizleme-icerik" id="onizleme-icerik"></div>
+    </div>
+</div>
+
+
+<%- include('partials/profil-modal') %>
+<script src="/auth.js"></script>
+<script src="/profil.js?v=1"></script>
+<script src="/mevzuat-cache.js"></script>
+<script src="/dokumanlar.js"></script>
+<%- include('partials/ai-asistan') %>
+</body>
+</html>

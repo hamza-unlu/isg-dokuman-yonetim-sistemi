@@ -1,0 +1,72 @@
+[
+  {
+    "anahtar": "isg_kanunu_6331",
+    "ad": "6331 Sayılı İş Sağlığı ve Güvenliği Kanunu",
+    "pdfURL": "https://www.mevzuat.gov.tr/MevzuatMetin/1.5.6331.pdf"
+  },
+  {
+    "anahtar": "egitim_yonetmeligi",
+    "ad": "Çalışanların İSG Eğitimlerinin Usul ve Esasları Hakkında Yönetmelik",
+    "pdfURL": "https://www.mevzuat.gov.tr/MevzuatMetin/yonetmelik/7.5.45087.pdf"
+  },
+  {
+    "anahtar": "risk_degerlendirmesi_yonetmeligi",
+    "ad": "İSG Risk Değerlendirmesi Yönetmeliği",
+    "pdfURL": null
+  },
+  {
+    "anahtar": "acil_durum_yonetmeligi",
+    "ad": "İşyerlerinde Acil Durumlar Hakkında Yönetmelik",
+    "pdfURL": null
+  },
+  {
+    "anahtar": "isg_kurullari_yonetmeligi",
+    "ad": "İSG Kurulları Hakkında Yönetmelik",
+    "pdfURL": null
+  },
+  {
+    "anahtar": "ilkyardim_yonetmeligi",
+    "ad": "İlkyardım Yönetmeliği",
+    "pdfURL": "https://www.mevzuat.gov.tr/MevzuatMetin/yonetmelik/7.5.20992.pdf"
+  },
+  {
+    "anahtar": "isyeri_hekimi_yonetmeligi",
+    "ad": "İşyeri Hekimi ve Diğer Sağlık Personelinin Görev, Yetki, Sorumluluk ve Eğitimleri Yönetmeliği",
+    "pdfURL": "https://www.mevzuat.gov.tr/MevzuatMetin/yonetmelik/7.5.18615.pdf"
+  },
+  {
+    "anahtar": "isg_hizmetleri_yonetmeligi",
+    "ad": "İş Sağlığı ve Güvenliği Hizmetleri Yönetmeliği",
+    "pdfURL": "https://www.mevzuat.gov.tr/MevzuatMetin/yonetmelik/7.5.16924.pdf"
+  },
+  {
+    "anahtar": "isyeri_bina_yonetmeligi",
+    "ad": "İşyeri Bina ve Eklentilerinde Alınacak Sağlık ve Güvenlik Önlemlerine İlişkin Yönetmelik",
+    "pdfURL": null
+  },
+  {
+    "anahtar": "is_ekipmanlari_yonetmeligi",
+    "ad": "İş Ekipmanlarının Kullanımında Sağlık ve Güvenlik Şartları Yönetmeliği",
+    "pdfURL": "https://www.mevzuat.gov.tr/MevzuatMetin/yonetmelik/7.5.18318.pdf"
+  },
+  {
+    "anahtar": "kkd_yonetmeligi",
+    "ad": "Kişisel Koruyucu Donanımların İşyerlerinde Kullanılması Hakkında Yönetmelik",
+    "pdfURL": "https://www.mevzuat.gov.tr/MevzuatMetin/yonetmelik/7.5.18540.pdf"
+  },
+  {
+    "anahtar": "patlayici_ortam_yonetmeligi",
+    "ad": "Çalışanların Patlayıcı Ortamların Tehlikelerinden Korunması Hakkında Yönetmelik",
+    "pdfURL": null
+  },
+  {
+    "anahtar": "maden_isg_yonetmeligi",
+    "ad": "Maden İşyerlerinde İş Sağlığı ve Güvenliği Yönetmeliği",
+    "pdfURL": null
+  },
+  {
+    "anahtar": "yapi_isleri_isg_yonetmeligi",
+    "ad": "Yapı İşlerinde İş Sağlığı ve Güvenliği Yönetmeliği",
+    "pdfURL": null
+  }
+]

@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Personel Yönetimi - İSG Doküman Yönetim Sistemi</title>
+    <link rel="stylesheet" href="/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+
+    <div class="panel-kapsayici">
+        <nav class="yan-menu">
+            <div class="yan-menu-baslik">
+                <h2>🛡️ ÜNLÜ İSG</h2>
+            </div>
+            <ul class="menu-ogeleri">
+                <li><a href="anasayfa"><i class="fa-solid fa-home"></i> ANA SAYFA</a></li>
+                <li><a href="firmalar"><i class="fa-solid fa-building"></i> FİRMALAR</a></li>
+                <li class="aktif"><a href="personel"><i class="fa-solid fa-users"></i> PERSONEL</a></li>
+                <li><a href="egitimler"><i class="fa-solid fa-graduation-cap"></i> EĞİTİMLER</a></li>
+                <li><a href="dokumanlar"><i class="fa-solid fa-file-alt"></i> DOKÜMANLAR</a></li>
+                <li><a href="raporlar"><i class="fa-solid fa-chart-pie"></i> RAPORLAR</a></li>
+                <li class="menu-alt"><a href="index"><i class="fa-solid fa-sign-out-alt"></i> ÇIKIŞ</a></li>
+            </ul>
+        </nav>
+
+        <main class="ana-icerik">
+            <header class="ust-bar">
+                <%- include('partials/breadcrumb') %>
+                <div class="kullanici-profili">
+                    <div class="kullanici-bilgisi">
+                        <span class="isim" id="header-isim">...</span>
+                        <span class="rol" id="header-rol">...</span>
+                    </div>
+                    <div class="kullanici-avatar" id="header-avatar">...</div>
+                </div>
+            </header>
+
+            <div class="islem-cubugu">
+                <div class="arama-filtreleri">
+                    <div class="arama-grubu">
+                        <i class="fa-solid fa-search"></i>
+                        <input type="text" id="personel-ara" placeholder="Ad, Soyad veya TC No Ara...">
+                    </div>
+                    <select id="firma-filtre" class="filtre-secimi">
+                        <option value="">Tüm Firmalar</option>
+                    </select>
+                </div>
+                <div class="buton-grubu-sag">
+                    <button class="btn-ana btn-excel" onclick="excelModalAc()">
+                        <i class="fa-solid fa-file-excel"></i> Excel ile Toplu Yükle
+                    </button>
+                    <button class="btn-ana" onclick="modalAc()">
+                        <i class="fa-solid fa-user-plus"></i> Personel Ekle
+                    </button>
+                </div>
+            </div>
+
+            <div class="tablo-bolumu">
+                <div class="tablo-kapsayici">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Adı Soyadı</th>
+                                <th>TC Kimlik No</th>
+                                <th>Görevi</th>
+                                <th>Firma</th>
+                                <th>İşe Giriş Tarihi</th>
+                                <th>İşlemler</th>
+                            </tr>
+                        </thead>
+                        <tbody id="personel-tablo-govde">
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <div id="personel-ekleme" class="modal-dis-katman">
+        <div class="modal-kutu">
+            
+            <div class="modal-baslik">
+                <h3 id="modal-baslik-metni">Yeni Personel Ekle</h3>
+                <span class="kapat-butonu" onclick="modalKapat()">&times;</span>
+            </div>
+            <div class="modal-icerik">
+                <form id="personel-formu" onsubmit="event.preventDefault(); personelKaydet();">
+                    <input type="hidden" id="duzenlenen-id">
+                    <div class="form-grubu"><label>Adı Soyadı</label><input type="text" id="form-ad" placeholder="Örn: Ayşe Yılmaz" required></div>
+                    <div class="form-grubu"><label>TC Kimlik Numarası (11 Hane)</label><input type="text" id="form-tc" placeholder="Örn: 12345678901" maxlength="11" required></div>
+                    <div class="form-grubu-yan-yana">
+                        <div class="form-grubu"><label>Görevi</label><input type="text" id="form-gorev" placeholder="Örn: Kaynakçı" required></div>
+                        <div class="form-grubu"><label>İşe Giriş Tarihi</label><input type="date" id="form-tarih" required></div>
+                    </div>
+                    <div class="form-grubu">
+                        <label>Çalıştığı Firma</label>
+                        <select id="form-firma" class="filtre-secimi" style="width: 100%;" required>
+                            <option value="">Firma Seçiniz...</option>
+                        </select>
+                    </div>
+                    <button type="submit" class="btn-kaydet" id="form-buton">PERSONELİ KAYDET</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div id="excel-yukleme-modal" class="modal-dis-katman">
+        <div class="modal-kutu" style="max-width: 500px;">
+            <div class="modal-baslik" style="background-color: #16a34a;">
+                <h3><i class="fa-solid fa-file-excel"></i> Toplu Personel Yükleme</h3>
+                <span class="kapat-butonu" onclick="excelModalKapat()">&times;</span>
+            </div>
+            <div class="modal-icerik">
+                <div class="excel-bilgi-kutusu">
+                    <p>Personelleri toplu eklemek için örnek şablonu kullanın.</p>
+                    <p style="font-size:13px; color:#475569; margin-top:8px;">
+                        <strong>Sütun sırası:</strong> Ad Soyad | TC No | Görevi | Firma | İşe Giriş Tarihi
+                    </p>
+                    <a href="personel_sablon.xlsx" download class="btn-link-yesil">
+                         <i class="fa-solid fa-download"></i> Örnek Excel Şablonunu İndir
+                    </a>
+                </div>
+                <form id="excel-form" style="margin-top:0;">
+                    <div class="form-grubu" style="margin-top: 20px;">
+                        <label>Excel Dosyası (.xlsx, .xls)</label>
+                        <div class="surukle-birak-alani">
+                            <input type="file" id="excel-dosya-input" accept=".xlsx, .xls" required>
+                            <i class="fa-solid fa-cloud-arrow-up"></i>
+                            <p>Dosyayı buraya sürükleyin veya tıklayın</p>
+                        </div>
+                    </div>
+                    <button type="button" onclick="excelYukle()" class="btn-kaydet" style="background-color: #16a34a;">YÜKLEMEYİ BAŞLAT</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- SheetJS: Excel okuma kütüphanesi -->
+    <%- include('partials/profil-modal') %>
+    <script src="/auth.js?v=5"></script> 
+    <script src="/profil.js?v=1"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="/personel.js?v=5"></script>
+    <%- include('partials/ai-asistan') %>
+</body>
+</html>

@@ -1,0 +1,865 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mevzuat Yönetimi — Ünlü İSG</title>
+    <link rel="stylesheet" href="/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <script src="/auth.js"></script>
+    <script src="/profil.js"></script>
+    <style>
+        *, *::before, *::after { box-sizing: border-box; }
+
+        /* ─── SAYFA BAŞLIĞI ─── */
+        .sayfa-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 24px;
+            gap: 16px;
+        }
+        .sayfa-header-sol h1 {
+            font-size: 20px;
+            font-weight: 800;
+            color: #0f172a;
+            letter-spacing: -0.3px;
+            margin: 0;
+        }
+        .sayfa-header-sol p {
+            font-size: 13px;
+            color: #64748b;
+            margin: 4px 0 0;
+        }
+        .btn-header-sag {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 11px 18px;
+            border-radius: 10px;
+            font-size: 13.5px;
+            font-weight: 600;
+            cursor: pointer;
+            font-family: inherit;
+            transition: all .15s;
+            border: none;
+            white-space: nowrap;
+            flex-shrink: 0;
+        }
+        .btn-audit {
+            background: #1e293b;
+            color: #fff;
+            box-shadow: 0 2px 8px rgba(30,41,59,0.25);
+        }
+        .btn-audit:hover {
+            background: #0f172a;
+            transform: translateY(-1px);
+        }
+
+        /* ─── STAT BANDI ─── */
+        .stat-bant {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+            gap: 12px;
+            margin-bottom: 22px;
+        }
+        .stat-kutu {
+            background: #fff;
+            border: 1px solid #e8edf5;
+            border-radius: 12px;
+            padding: 14px 18px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .stat-ikon {
+            width: 38px; height: 38px;
+            border-radius: 10px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 15px;
+            flex-shrink: 0;
+        }
+        .stat-ikon.egitim   { background: #dbeafe; color: #1d4ed8; }
+        .stat-ikon.saglik   { background: #dcfce7; color: #15803d; }
+        .stat-ikon.risk     { background: #fef3c7; color: #b45309; }
+        .stat-ikon.tatbikat { background: #fee2e2; color: #b91c1c; }
+        .stat-ikon.diger    { background: #ede9fe; color: #6d28d9; }
+        .stat-metin .sayi   { font-size: 20px; font-weight: 800; color: #0f172a; line-height: 1; }
+        .stat-metin .etiket { font-size: 11px; color: #64748b; font-weight: 500; margin-top: 3px; text-transform: uppercase; letter-spacing: 0.4px; }
+
+        /* ─── GRUP KARTLARI ─── */
+        .grup-kart {
+            background: #fff;
+            border: 1px solid #e8edf5;
+            border-radius: 14px;
+            overflow: hidden;
+            box-shadow: 0 1px 6px rgba(0,0,0,0.04);
+            margin-bottom: 20px;
+        }
+        .grup-baslik {
+            padding: 14px 20px;
+            border-bottom: 1px solid #f1f5f9;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .grup-baslik-ikon {
+            width: 32px; height: 32px;
+            border-radius: 8px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 14px;
+        }
+        .grup-Eğitim .grup-baslik-ikon   { background: #dbeafe; color: #1d4ed8; }
+        .grup-Sağlık .grup-baslik-ikon   { background: #dcfce7; color: #15803d; }
+        .grup-Risk .grup-baslik-ikon     { background: #fef3c7; color: #b45309; }
+        .grup-Tatbikat .grup-baslik-ikon { background: #fee2e2; color: #b91c1c; }
+        .grup-Diğer .grup-baslik-ikon    { background: #ede9fe; color: #6d28d9; }
+
+        .grup-baslik h3 {
+            font-size: 14.5px;
+            font-weight: 700;
+            color: #0f172a;
+            margin: 0;
+            flex: 1;
+        }
+        .grup-sayac {
+            background: #f1f5f9;
+            color: #475569;
+            font-size: 11px;
+            font-weight: 600;
+            padding: 3px 10px;
+            border-radius: 20px;
+        }
+
+        /* ─── TABLO ─── */
+        table { width: 100%; border-collapse: collapse; }
+        thead tr { background: #f8fafc; }
+        th {
+            padding: 10px 16px;
+            text-align: left;
+            font-size: 11px; font-weight: 700;
+            color: #64748b;
+            text-transform: uppercase; letter-spacing: 0.6px;
+            border-bottom: 1px solid #e2e8f0;
+        }
+        th:first-child { width: 40px; text-align: center; }
+        td {
+            padding: 12px 16px;
+            border-bottom: 1px solid #f1f5f9;
+            font-size: 13px; vertical-align: middle; color: #334155;
+        }
+        td:first-child { text-align: center; color: #cbd5e1; font-size: 11px; font-weight: 600; }
+        tr:last-child td { border-bottom: none; }
+        tr:hover td { background: #fafbff; }
+
+        .kural-adi { font-weight: 600; color: #0f172a; font-size: 13px; }
+        .kural-aciklama { font-size: 11px; color: #64748b; margin-top: 2px; line-height: 1.4; }
+
+        /* ─── SINIF ETİKETLERİ ─── */
+        .sinif-etiket {
+            display: inline-flex;
+            padding: 3px 9px;
+            border-radius: 5px;
+            font-size: 11px;
+            font-weight: 700;
+            white-space: nowrap;
+        }
+        .sinif-az       { background: #dcfce7; color: #15803d; }
+        .sinif-tehlike  { background: #fff7ed; color: #c2410c; }
+        .sinif-cok      { background: #fee2e2; color: #dc2626; }
+        .sinif-tumu     { background: #f1f5f9; color: #475569; }
+
+        /* ─── DEĞER KUTUSU ─── */
+        .deger-kutu {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            padding: 5px 10px;
+            border-radius: 7px;
+            font-size: 13px;
+            font-weight: 700;
+            color: #0f172a;
+        }
+        .deger-kutu .birim {
+            font-size: 11px;
+            color: #64748b;
+            font-weight: 500;
+            text-transform: lowercase;
+        }
+
+        /* ─── İŞLEM BUTONLARI ─── */
+        /* ─── İŞLEM BUTONLARI ─── */
+        .islem-grup { display: flex; gap: 6px; }
+        .btn-ikon {
+         width: 34px; height: 34px;
+          display: flex; align-items: center; justify-content: center;
+        border-radius: 8px;
+     cursor: pointer;
+     font-size: 13px;
+        font-weight: 600;
+      transition: all .15s;
+        border: 1.5px solid;
+        }
+.btn-duzenle {
+    background: #2563eb;
+    border-color: #2563eb;
+    color: #ffffff;
+    box-shadow: 0 1px 3px rgba(37,99,235,0.25);
+}
+.btn-duzenle:hover {
+    background: #1d4ed8;
+    border-color: #1d4ed8;
+    transform: translateY(-1px);
+    box-shadow: 0 3px 8px rgba(37,99,235,0.35);
+}
+.btn-gecmis {
+    background: #7c3aed;
+    border-color: #7c3aed;
+    color: #ffffff;
+    box-shadow: 0 1px 3px rgba(124,58,237,0.25);
+}
+.btn-gecmis:hover {
+    background: #6d28d9;
+    border-color: #6d28d9;
+    transform: translateY(-1px);
+    box-shadow: 0 3px 8px rgba(124,58,237,0.35);
+}
+        /* ─── MODAL ─── */
+        .modal-arka {
+            display: none; position: fixed; inset: 0;
+            background: rgba(15,23,42,0.55);
+            backdrop-filter: blur(3px);
+            z-index: 1000; align-items: center; justify-content: center;
+            padding: 20px;
+        }
+        .modal-arka.acik { display: flex; }
+        .modal-icerik {
+            background: #fff; padding: 28px; border-radius: 16px;
+            width: 100%; max-width: 480px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.18);
+            animation: modalGir .2s ease;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+        .modal-icerik.genis { max-width: 720px; }
+        @keyframes modalGir {
+            from { opacity: 0; transform: translateY(12px) scale(.98); }
+            to   { opacity: 1; transform: translateY(0)   scale(1);    }
+        }
+        .modal-baslik {
+            display: flex; align-items: center;
+            justify-content: space-between; margin-bottom: 22px;
+        }
+        .modal-baslik-sol { display: flex; align-items: center; gap: 10px; }
+        .modal-b-ikon {
+            width: 36px; height: 36px; background: #eff6ff;
+            border-radius: 9px; display: flex; align-items: center;
+            justify-content: center; color: #2563eb; font-size: 15px;
+        }
+        .modal-b-yazi h4 { font-size: 15px; font-weight: 800; color: #0f172a; margin: 0; }
+        .modal-b-yazi p  { font-size: 12px; color: #64748b; margin: 1px 0 0; }
+        .btn-kapat {
+            width: 30px; height: 30px; display: flex; align-items: center;
+            justify-content: center; border-radius: 7px; background: #f1f5f9;
+            color: #64748b; cursor: pointer; font-size: 13px; border: none;
+            transition: background .15s;
+        }
+        .btn-kapat:hover { background: #e2e8f0; }
+
+        /* ─── FORM ─── */
+        .form-grup { margin-bottom: 14px; }
+        .form-grup label {
+            display: block; font-size: 12.5px; font-weight: 600;
+            color: #374151; margin-bottom: 6px;
+        }
+        .form-grup label span { color: #dc2626; margin-left: 2px; }
+        .form-grup label small { color: #94a3b8; font-weight: 400; font-size: 11px; margin-left: 4px; }
+        .form-grup input, .form-grup select, .form-grup textarea {
+            width: 100%; padding: 10px 13px;
+            border: 1.5px solid #e2e8f0; border-radius: 9px;
+            font-size: 13.5px; font-family: inherit; outline: none;
+            color: #0f172a; background: #fafafa;
+            transition: border-color .15s, background .15s;
+        }
+        .form-grup textarea { resize: vertical; min-height: 60px; }
+        .form-grup input:focus, .form-grup select:focus, .form-grup textarea:focus {
+            border-color: #2563eb; background: #fff;
+        }
+        .form-grup-yan-yana {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+        .mevcut-deger-kutu {
+            background: #f8fafc;
+            border: 1px dashed #cbd5e1;
+            border-radius: 9px;
+            padding: 10px 14px;
+            margin-bottom: 14px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 12.5px;
+            color: #64748b;
+        }
+        .mevcut-deger-kutu strong {
+            color: #0f172a;
+            font-weight: 700;
+            font-size: 13px;
+        }
+
+        .btn-kaydet {
+            width: 100%; background: #2563eb; color: #fff; border: none;
+            padding: 12px; border-radius: 10px; font-size: 14px; font-weight: 700;
+            font-family: inherit; cursor: pointer; margin-top: 8px;
+            transition: background .15s, transform .1s;
+        }
+        .btn-kaydet:hover { background: #1d4ed8; transform: translateY(-1px); }
+
+        /* ─── GEÇMİŞ LİSTESİ ─── */
+        .gecmis-liste {
+            max-height: 440px;
+            overflow-y: auto;
+            padding-right: 4px;
+        }
+        .gecmis-oge {
+            border-left: 3px solid #c4b5fd;
+            padding: 12px 16px;
+            margin-bottom: 12px;
+            background: #faf9ff;
+            border-radius: 0 9px 9px 0;
+        }
+        .gecmis-oge-ust {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            margin-bottom: 6px;
+            flex-wrap: wrap;
+        }
+        .gecmis-degisim {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: 700;
+            font-size: 13px;
+            color: #0f172a;
+        }
+        .gecmis-eski {
+            background: #fee2e2;
+            color: #991b1b;
+            padding: 2px 8px;
+            border-radius: 5px;
+            font-size: 12px;
+            text-decoration: line-through;
+        }
+        .gecmis-yeni {
+            background: #dcfce7;
+            color: #166534;
+            padding: 2px 8px;
+            border-radius: 5px;
+            font-size: 12px;
+        }
+        .gecmis-meta {
+            font-size: 11px;
+            color: #64748b;
+            margin-top: 4px;
+        }
+        .gecmis-sebep {
+            margin-top: 6px;
+            font-size: 12px;
+            color: #475569;
+            background: #fff;
+            padding: 6px 10px;
+            border-radius: 6px;
+            border: 1px solid #e2e8f0;
+            font-style: italic;
+        }
+        .gecmis-bos {
+            text-align: center;
+            padding: 36px 20px;
+            color: #94a3b8;
+            font-size: 13px;
+        }
+        .gecmis-bos i { font-size: 28px; display: block; margin-bottom: 10px; }
+
+        /* ─── DURUM MESAJI ─── */
+        .durum-mesaji {
+            text-align: center; padding: 48px 20px;
+            color: #94a3b8; font-size: 14px;
+        }
+        .durum-mesaji i { font-size: 28px; display: block; margin-bottom: 10px; }
+    </style>
+</head>
+<body>
+<div class="panel-kapsayici">
+
+    <nav class="yan-menu">
+        <div class="yan-menu-baslik"><h2>🛡️ ÜNLÜ İSG</h2></div>
+        <ul class="menu-ogeleri">
+            <li><a href="/anasayfa"><i class="fa-solid fa-home"></i> ANA SAYFA</a></li>
+            <li><a href="/firmalar"><i class="fa-solid fa-building"></i> FİRMALAR</a></li>
+            <li><a href="/personel"><i class="fa-solid fa-users"></i> PERSONEL</a></li>
+            <li><a href="/egitimler"><i class="fa-solid fa-graduation-cap"></i> EĞİTİMLER</a></li>
+            <li><a href="/dokumanlar"><i class="fa-solid fa-file-alt"></i> DOKÜMANLAR</a></li>
+            <li><a href="/raporlar"><i class="fa-solid fa-chart-pie"></i> RAPORLAR</a></li>
+            <li><a href="/kullanicilar"><i class="fa-solid fa-users-gear"></i> KULLANICILAR</a></li>
+            <li class="menu-alt"><a href="/"><i class="fa-solid fa-sign-out-alt"></i> ÇIKIŞ</a></li>
+        </ul>
+    </nav>
+
+    <main class="ana-icerik">
+        <header class="ust-bar">
+            <div class="hosgeldin-metni"><h3>Mevzuat Yönetimi</h3></div>
+            <div class="kullanici-profili">
+                <div class="kullanici-bilgisi">
+                    <span class="isim" id="header-isim">Yükleniyor...</span>
+                    <span class="rol"  id="header-rol">...</span>
+                </div>
+                <div class="kullanici-avatar" id="header-avatar">?</div>
+            </div>
+        </header>
+
+        <div class="icerik">
+
+            <!-- BAŞLIK + AUDIT TRAIL BUTONU -->
+            <div class="sayfa-header">
+                <div class="sayfa-header-sol">
+                    <h1>İSG Mevzuat Kuralları</h1>
+                    <p>Yönetmeliklerden gelen tehlike sınıfı bazlı periyot, süre ve oran kurallarını yönetin</p>
+                </div>
+                <button class="btn-header-sag btn-audit" onclick="tumGecmisiAc()">
+                    <i class="fa-solid fa-clock-rotate-left"></i> Değişiklik Geçmişi
+                </button>
+            </div>
+
+            <!-- STAT BANDI -->
+            <div class="stat-bant">
+                <div class="stat-kutu">
+                    <div class="stat-ikon egitim"><i class="fa-solid fa-graduation-cap"></i></div>
+                    <div class="stat-metin">
+                        <div class="sayi" id="stat-egitim">—</div>
+                        <div class="etiket">Eğitim</div>
+                    </div>
+                </div>
+                <div class="stat-kutu">
+                    <div class="stat-ikon saglik"><i class="fa-solid fa-stethoscope"></i></div>
+                    <div class="stat-metin">
+                        <div class="sayi" id="stat-saglik">—</div>
+                        <div class="etiket">Sağlık</div>
+                    </div>
+                </div>
+                <div class="stat-kutu">
+                    <div class="stat-ikon risk"><i class="fa-solid fa-triangle-exclamation"></i></div>
+                    <div class="stat-metin">
+                        <div class="sayi" id="stat-risk">—</div>
+                        <div class="etiket">Risk</div>
+                    </div>
+                </div>
+                <div class="stat-kutu">
+                    <div class="stat-ikon tatbikat"><i class="fa-solid fa-fire-extinguisher"></i></div>
+                    <div class="stat-metin">
+                        <div class="sayi" id="stat-tatbikat">—</div>
+                        <div class="etiket">Tatbikat</div>
+                    </div>
+                </div>
+                <div class="stat-kutu">
+                    <div class="stat-ikon diger"><i class="fa-solid fa-list"></i></div>
+                    <div class="stat-metin">
+                        <div class="sayi" id="stat-diger">—</div>
+                        <div class="etiket">Diğer</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- GRUP KARTLARI -->
+            <div id="grup-konteyner">
+                <div class="durum-mesaji">
+                    <i class="fa-solid fa-spinner fa-spin"></i>
+                    Mevzuat kuralları yükleniyor...
+                </div>
+            </div>
+
+        </div>
+    </main>
+</div>
+
+<!-- MODAL: Kural Düzenle -->
+<div class="modal-arka" id="duzenle-modal">
+    <div class="modal-icerik">
+        <div class="modal-baslik">
+            <div class="modal-baslik-sol">
+                <div class="modal-b-ikon"><i class="fa-solid fa-pen"></i></div>
+                <div class="modal-b-yazi">
+                    <h4 id="duzenle-baslik">Kuralı Düzenle</h4>
+                    <p id="duzenle-aciklama">Mevzuat değişikliği doğrultusunda güncelleme yapın</p>
+                </div>
+            </div>
+            <button class="btn-kapat" onclick="duzenleKapat()">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+        </div>
+
+        <input type="hidden" id="duzenle-id">
+
+        <div class="mevcut-deger-kutu">
+            <i class="fa-solid fa-circle-info" style="color: #64748b;"></i>
+            <span>Mevcut değer:</span>
+            <strong id="duzenle-mevcut">—</strong>
+        </div>
+
+        <div class="form-grup-yan-yana">
+            <div class="form-grup">
+                <label>Yeni Değer <span>*</span></label>
+                <input type="number" id="duzenle-deger" min="0" step="0.5" placeholder="3">
+            </div>
+            <div class="form-grup">
+                <label>Birim <span>*</span></label>
+                <select id="duzenle-birim">
+                    <option value="yıl">yıl</option>
+                    <option value="ay">ay</option>
+                    <option value="saat">saat</option>
+                    <option value="oran">oran (X kişide 1)</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="form-grup">
+            <label>Değişiklik Sebebi <small>(denetim izi için önerilir)</small></label>
+            <textarea id="duzenle-sebep" rows="2"
+                placeholder="Örn: 15.03.2026 tarihli R.G.'de yayımlanan yönetmelik değişikliği"></textarea>
+        </div>
+
+        <div class="form-grup">
+            <label>Yürürlük Tarihi <small>(boş bırakılırsa bugünün tarihi)</small></label>
+            <input type="date" id="duzenle-yururluk">
+        </div>
+
+        <button class="btn-kaydet" onclick="kuralKaydet()">
+            <i class="fa-solid fa-check" style="margin-right:7px;"></i>Değişikliği Kaydet
+        </button>
+    </div>
+</div>
+
+<!-- MODAL: Geçmiş -->
+<div class="modal-arka" id="gecmis-modal">
+    <div class="modal-icerik genis">
+        <div class="modal-baslik">
+            <div class="modal-baslik-sol">
+                <div class="modal-b-ikon" style="background:#f5f3ff; color:#7c3aed;">
+                    <i class="fa-solid fa-clock-rotate-left"></i>
+                </div>
+                <div class="modal-b-yazi">
+                    <h4 id="gecmis-baslik">Değişiklik Geçmişi</h4>
+                    <p id="gecmis-aciklama">Kuralın tarihsel değişim kaydı</p>
+                </div>
+            </div>
+            <button class="btn-kapat" onclick="gecmisKapat()">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+        </div>
+        <div class="gecmis-liste" id="gecmis-liste">
+            <div class="durum-mesaji">
+                <i class="fa-solid fa-spinner fa-spin"></i>
+                Geçmiş yükleniyor...
+            </div>
+        </div>
+    </div>
+</div>
+
+<%- include('partials/profil-modal') %>
+<script>
+// ═══════════════════════════════════════════════════════════════════════════
+// MEVZUAT YÖNETİM SAYFASI
+// ═══════════════════════════════════════════════════════════════════════════
+
+let tumKurallar = [];
+
+const GRUP_IKONLARI = {
+    'Eğitim':   'fa-graduation-cap',
+    'Sağlık':   'fa-stethoscope',
+    'Risk':     'fa-triangle-exclamation',
+    'Tatbikat': 'fa-fire-extinguisher',
+    'Diğer':    'fa-list',
+};
+const GRUP_SIRASI = ['Eğitim', 'Sağlık', 'Risk', 'Tatbikat', 'Diğer'];
+
+// ─── SAYFA YÜKLENDİĞİNDE ────────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', async () => {
+    const kullanici = AUTH.kullaniciAl();
+    if (kullanici) {
+        document.getElementById('header-isim').textContent   = kullanici.adSoyad || 'Kullanıcı';
+        document.getElementById('header-rol').textContent    = (kullanici.rol || '').replace(/_/g, ' ').toUpperCase();
+        document.getElementById('header-avatar').textContent = (kullanici.adSoyad || 'İS').substring(0, 2).toUpperCase();
+    }
+    if (!kullanici || kullanici.rol !== 'sistem_yoneticisi') {
+        alert('Bu sayfaya erişim yetkiniz yok.');
+        window.location.href = '/anasayfa';
+        return;
+    }
+    await kurallariYukle();
+});
+
+// ─── KURALLARI BACKEND'DEN ÇEK ──────────────────────────────────────────
+async function kurallariYukle() {
+    try {
+        const res = await AUTH.apiFetch('/api/mevzuat');
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const data = await res.json();
+        tumKurallar = data.veri || [];
+
+        // İstatistikler
+        document.getElementById('stat-egitim').textContent   = tumKurallar.filter(k => k.grup === 'Eğitim').length;
+        document.getElementById('stat-saglik').textContent   = tumKurallar.filter(k => k.grup === 'Sağlık').length;
+        document.getElementById('stat-risk').textContent     = tumKurallar.filter(k => k.grup === 'Risk').length;
+        document.getElementById('stat-tatbikat').textContent = tumKurallar.filter(k => k.grup === 'Tatbikat').length;
+        document.getElementById('stat-diger').textContent    = tumKurallar.filter(k => k.grup === 'Diğer').length;
+
+        gruplariRenderle();
+    } catch (e) {
+        document.getElementById('grup-konteyner').innerHTML =
+            `<div class="durum-mesaji" style="color:#dc2626;">
+                <i class="fa-solid fa-circle-exclamation"></i>
+                Hata: ${_esc(e.message)}
+             </div>`;
+    }
+}
+
+// ─── GRUPLARI TABLO HALİNDE ÇİZ ─────────────────────────────────────────
+function gruplariRenderle() {
+    const konteyner = document.getElementById('grup-konteyner');
+    konteyner.innerHTML = '';
+
+    const SINIF_CLASS = {
+        'Az Tehlikeli':  'sinif-az',
+        'Tehlikeli':     'sinif-tehlike',
+        'Çok Tehlikeli': 'sinif-cok',
+        'Tümü':          'sinif-tumu',
+    };
+
+    GRUP_SIRASI.forEach(grupAdi => {
+        const grupKurallar = tumKurallar.filter(k => k.grup === grupAdi);
+        if (grupKurallar.length === 0) return;
+
+        // Kural adına göre grupla (aynı kural 3 farklı sınıf için olabilir)
+        const kuralGruplari = {};
+        grupKurallar.forEach(k => {
+            if (!kuralGruplari[k.kuralAdi]) kuralGruplari[k.kuralAdi] = [];
+            kuralGruplari[k.kuralAdi].push(k);
+        });
+
+        const satirlar = Object.entries(kuralGruplari).flatMap(([kuralAdi, kurallar]) =>
+            kurallar.map((k, idx) => {
+                const sinifClass = SINIF_CLASS[k.tehlikeSinifi] || 'sinif-tumu';
+                // Aynı kural adı için sadece ilk satırda kural adını göster
+                // Kural adını sadece ilk satırda göster, ama açıklamayı HER satırda göster
+                const kuralAdiHucresi = idx === 0
+                 ? `<div class="kural-adi">${_esc(k.kuralAdi)}</div>
+                  ${k.aciklama ? `<div class="kural-aciklama">${_esc(k.aciklama)}</div>` : ''}`
+                  : `<div class="kural-adi" style="color:#cbd5e1; display:flex; align-items:center; gap:8px;">
+                  <span>↳</span>
+                   ${k.aciklama ? `<span class="kural-aciklama" style="color:#64748b; margin:0; font-weight:normal;">${_esc(k.aciklama)}</span>` : ''}
+                    </div>`;
+                return `
+                <tr>
+                    <td>${idx === 0 ? Object.keys(kuralGruplari).indexOf(kuralAdi) + 1 : ''}</td>
+                    <td>${kuralAdiHucresi}</td>
+                    <td><span class="sinif-etiket ${sinifClass}">${_esc(k.tehlikeSinifi)}</span></td>
+                    <td>
+                        <span class="deger-kutu">
+                            ${k.deger} <span class="birim">${_esc(k.birim)}</span>
+                        </span>
+                    </td>
+                    <td>
+                        <div class="islem-grup">
+                            <button class="btn-ikon btn-duzenle"
+                                onclick='duzenleAc(${JSON.stringify(k)})'
+                                title="Düzenle">
+                                <i class="fa-solid fa-pen"></i>
+                            </button>
+                            <button class="btn-ikon btn-gecmis"
+                                onclick="gecmisAc('${k._id}', '${_esc(k.kuralAdi)} — ${_esc(k.tehlikeSinifi)}')"
+                                title="Değişiklik geçmişi">
+                                <i class="fa-solid fa-clock-rotate-left"></i>
+                            </button>
+                        </div>
+                    </td>
+                </tr>`;
+            })
+        ).join('');
+
+        konteyner.insertAdjacentHTML('beforeend', `
+            <div class="grup-kart grup-${grupAdi}">
+                <div class="grup-baslik">
+                    <div class="grup-baslik-ikon">
+                        <i class="fa-solid ${GRUP_IKONLARI[grupAdi]}"></i>
+                    </div>
+                    <h3>${grupAdi}</h3>
+                    <span class="grup-sayac">${grupKurallar.length} kural</span>
+                </div>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Kural Adı</th>
+                            <th>Tehlike Sınıfı</th>
+                            <th>Değer</th>
+                            <th>İşlemler</th>
+                        </tr>
+                    </thead>
+                    <tbody>${satirlar}</tbody>
+                </table>
+            </div>`);
+    });
+}
+
+// ─── DÜZENLE MODALINI AÇ ────────────────────────────────────────────────
+function duzenleAc(kural) {
+    document.getElementById('duzenle-id').value       = kural._id;
+    document.getElementById('duzenle-deger').value    = kural.deger;
+    document.getElementById('duzenle-birim').value    = kural.birim;
+    document.getElementById('duzenle-sebep').value    = '';
+    document.getElementById('duzenle-yururluk').value = '';
+    document.getElementById('duzenle-mevcut').textContent =
+        `${kural.kuralAdi} — ${kural.tehlikeSinifi}: ${kural.deger} ${kural.birim}`;
+    document.getElementById('duzenle-modal').classList.add('acik');
+}
+
+function duzenleKapat() {
+    document.getElementById('duzenle-modal').classList.remove('acik');
+}
+
+// ─── KURALI KAYDET (güncelleme) ─────────────────────────────────────────
+async function kuralKaydet() {
+    const id             = document.getElementById('duzenle-id').value;
+    const deger          = document.getElementById('duzenle-deger').value;
+    const birim          = document.getElementById('duzenle-birim').value;
+    const sebep          = document.getElementById('duzenle-sebep').value.trim();
+    const yururlukTarihi = document.getElementById('duzenle-yururluk').value;
+
+    if (deger === '' || isNaN(Number(deger)) || Number(deger) < 0) {
+        alert('Lütfen geçerli bir değer girin.');
+        return;
+    }
+
+    try {
+        const res = await AUTH.apiFetch(`/api/mevzuat/${id}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                deger,
+                birim,
+                degisiklikSebebi: sebep,
+                yururlukTarihi: yururlukTarihi || undefined,
+            }),
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.hata || 'Bilinmeyen hata');
+
+        alert('✅ Mevzuat kuralı güncellendi!');
+        duzenleKapat();
+        await kurallariYukle();
+    } catch (err) {
+        alert('❌ Hata: ' + err.message);
+    }
+}
+
+// ─── GEÇMİŞ MODALINI AÇ ─────────────────────────────────────────────────
+async function gecmisAc(kuralId, baslik) {
+    document.getElementById('gecmis-baslik').textContent    = 'Değişiklik Geçmişi';
+    document.getElementById('gecmis-aciklama').textContent  = baslik;
+    document.getElementById('gecmis-modal').classList.add('acik');
+    document.getElementById('gecmis-liste').innerHTML =
+        `<div class="durum-mesaji"><i class="fa-solid fa-spinner fa-spin"></i>Yükleniyor...</div>`;
+
+    try {
+        const res = await AUTH.apiFetch(`/api/mevzuat/${kuralId}/gecmis`);
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const data = await res.json();
+        gecmisListesiniRenderle(data.veri || []);
+    } catch (err) {
+        document.getElementById('gecmis-liste').innerHTML =
+            `<div class="durum-mesaji" style="color:#dc2626;"><i class="fa-solid fa-circle-exclamation"></i>Hata: ${_esc(err.message)}</div>`;
+    }
+}
+
+// ─── TÜM GEÇMİŞİ AÇ (audit trail) ───────────────────────────────────────
+async function tumGecmisiAc() {
+    document.getElementById('gecmis-baslik').textContent    = 'Tüm Değişiklik Geçmişi';
+    document.getElementById('gecmis-aciklama').textContent  = 'Sistemdeki tüm mevzuat değişikliklerinin audit trail\'i';
+    document.getElementById('gecmis-modal').classList.add('acik');
+    document.getElementById('gecmis-liste').innerHTML =
+        `<div class="durum-mesaji"><i class="fa-solid fa-spinner fa-spin"></i>Yükleniyor...</div>`;
+
+    try {
+        const res = await AUTH.apiFetch('/api/mevzuat/gecmis');
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const data = await res.json();
+        gecmisListesiniRenderle(data.veri || [], true);
+    } catch (err) {
+        document.getElementById('gecmis-liste').innerHTML =
+            `<div class="durum-mesaji" style="color:#dc2626;"><i class="fa-solid fa-circle-exclamation"></i>Hata: ${_esc(err.message)}</div>`;
+    }
+}
+
+// ─── GEÇMİŞ LİSTESİNİ ÇİZ ────────────────────────────────────────────────
+function gecmisListesiniRenderle(gecmis, tumGecmisMi = false) {
+    const alan = document.getElementById('gecmis-liste');
+
+    if (gecmis.length === 0) {
+        alan.innerHTML = `
+            <div class="gecmis-bos">
+                <i class="fa-solid fa-inbox"></i>
+                <div>Henüz değişiklik kaydı yok</div>
+                <div style="font-size:11px; margin-top:4px;">Bu kural ilk oluşturulduğundan bu yana değiştirilmemiş</div>
+            </div>`;
+        return;
+    }
+
+    alan.innerHTML = gecmis.map(g => {
+        const tarih = new Date(g.olusturmaTarihi).toLocaleString('tr-TR');
+        const yururluk = g.yururlukTarihi ? new Date(g.yururlukTarihi).toLocaleDateString('tr-TR') : '';
+        return `
+            <div class="gecmis-oge">
+                <div class="gecmis-oge-ust">
+                    <div class="gecmis-degisim">
+                        ${tumGecmisMi ? `<span style="color:#7c3aed;">${_esc(g.kuralOzeti)}:</span>` : ''}
+                        <span class="gecmis-eski">${g.eskiDeger} ${_esc(g.eskiBirim)}</span>
+                        <i class="fa-solid fa-arrow-right" style="color:#94a3b8;"></i>
+                        <span class="gecmis-yeni">${g.yeniDeger} ${_esc(g.yeniBirim)}</span>
+                    </div>
+                </div>
+                <div class="gecmis-meta">
+                    <i class="fa-solid fa-user" style="margin-right:3px;"></i>
+                    ${_esc(g.degistirenAd || 'Bilinmiyor')}
+                    <span style="margin:0 6px; color:#cbd5e1;">•</span>
+                    <i class="fa-solid fa-clock" style="margin-right:3px;"></i>
+                    ${tarih}
+                    ${yururluk ? `<span style="margin:0 6px; color:#cbd5e1;">•</span>
+                        <i class="fa-solid fa-calendar-check" style="margin-right:3px;"></i>Yürürlük: ${yururluk}` : ''}
+                </div>
+                ${g.degisiklikSebebi ? `<div class="gecmis-sebep">"${_esc(g.degisiklikSebebi)}"</div>` : ''}
+            </div>`;
+    }).join('');
+}
+
+function gecmisKapat() {
+    document.getElementById('gecmis-modal').classList.remove('acik');
+}
+
+// Modal dışına tıkla kapat
+document.getElementById('duzenle-modal').addEventListener('click', function(e) {
+    if (e.target === this) duzenleKapat();
+});
+document.getElementById('gecmis-modal').addEventListener('click', function(e) {
+    if (e.target === this) gecmisKapat();
+});
+
+function _esc(str) {
+    return (str || '').toString().replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+}
+</script>
+</body>
+</html>

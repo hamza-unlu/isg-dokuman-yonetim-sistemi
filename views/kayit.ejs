@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kayıt Ol - İSG Doküman Yönetim Sistemi</title>
+    <link rel="stylesheet" href="/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        .mesaj-kutu {
+            display: none; padding: 10px 14px; border-radius: 8px;
+            font-size: 13px; margin-bottom: 12px;
+        }
+        .mesaj-kutu.basarili { background: #dcfce7; color: #166534; border: 1px solid #86efac; display: block; }
+        .mesaj-kutu.hata     { background: #fef2f2; color: #dc2626; border: 1px solid #fecaca; display: block; }
+        .rol-secim { display: flex; gap: 10px; margin-top: 6px; }
+        .rol-secenek {
+            flex: 1; padding: 12px; border: 2px solid #e2e8f0; border-radius: 10px;
+            text-align: center; cursor: pointer; font-size: 13px; font-weight: 600;
+            color: #475569; transition: all 0.2s; background: #fafafa;
+        }
+        .rol-secenek.secili { border-color: #2563eb; background: #eff6ff; color: #1d4ed8; }
+        .rol-secenek-ikon { font-size: 20px; display: block; margin-bottom: 4px; }
+    </style>
+</head>
+<body>
+    <div class="giris-kapsayici">
+        <div class="giris-baslik">
+            <h2 class="logo-yazisi">🛡️ ÜNLÜ İSG</h2>
+            <h3>Yeni Hesap Oluştur</h3>
+            <p>İSG uzmanı veya işyeri hekimi olarak kayıt olun</p>
+        </div>
+
+        <form class="giris-formu" id="kayit-formu">
+            <div id="mesaj-kutu" class="mesaj-kutu"></div>
+
+            <div class="form-grubu">
+                <label for="adSoyad">Ad Soyad</label>
+                <input type="text" id="adSoyad" required placeholder="Ad Soyad">
+            </div>
+
+            <div class="form-grubu">
+                <label for="email">E-posta Adresi</label>
+                <input type="email" id="email" required placeholder="ornek@unluosgb.com">
+            </div>
+
+            <div class="form-grubu">
+                <label>Rolünüz</label>
+                <div class="rol-secim">
+                    <div class="rol-secenek secili" data-rol="isg_uzmani">
+                        <span class="rol-secenek-ikon">🛡️</span>
+                        İş Güvenliği Uzmanı
+                    </div>
+                    <div class="rol-secenek" data-rol="isyeri_hekimi">
+                        <span class="rol-secenek-ikon">🩺</span>
+                        İşyeri Hekimi
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-grubu">
+                <label for="sifre">Şifre</label>
+                <input type="password" id="sifre" required minlength="6" placeholder="En az 6 karakter">
+            </div>
+
+            <div class="form-grubu">
+                <label for="sifreTekrar">Şifre (Tekrar)</label>
+                <input type="password" id="sifreTekrar" required minlength="6" placeholder="Şifrenizi tekrar girin">
+            </div>
+
+            <button type="submit" class="giris-butonu" id="kayit-btn">HESAP OLUŞTUR</button>
+
+            <div class="form-alt-linkler">
+                <a href="/">Zaten hesabım var, giriş yap</a>
+            </div>
+        </form>
+    </div>
+
+<script>
+let seciliRol = 'isg_uzmani';
+
+document.querySelectorAll('.rol-secenek').forEach(el => {
+    el.addEventListener('click', () => {
+        document.querySelectorAll('.rol-secenek').forEach(r => r.classList.remove('secili'));
+        el.classList.add('secili');
+        seciliRol = el.dataset.rol;
+    });
+});
+
+document.getElementById('kayit-formu').addEventListener('submit', async (e) => {
+    e.preventDefault();
+
+    const adSoyad     = document.getElementById('adSoyad').value.trim();
+    const eposta      = document.getElementById('email').value.trim();
+    const sifre       = document.getElementById('sifre').value;
+    const sifreTekrar = document.getElementById('sifreTekrar').value;
+    const mesajKutu   = document.getElementById('mesaj-kutu');
+    const btn         = document.getElementById('kayit-btn');
+
+    mesajKutu.className = 'mesaj-kutu';
+    mesajKutu.style.display = 'none';
+
+    if (sifre !== sifreTekrar) {
+        mesajKutu.textContent = 'Şifreler eşleşmiyor.';
+        mesajKutu.classList.add('hata');
+        return;
+    }
+    if (sifre.length < 6) {
+        mesajKutu.textContent = 'Şifre en az 6 karakter olmalıdır.';
+        mesajKutu.classList.add('hata');
+        return;
+    }
+
+    btn.disabled = true;
+    btn.textContent = 'Oluşturuluyor...';
+
+    try {
+        const res  = await fetch('/api/auth/kayit', {
+            method:  'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body:    JSON.stringify({ adSoyad, eposta, sifre, sifreTekrar, rol: seciliRol }),
+        });
+        const veri = await res.json();
+
+        if (!res.ok) throw new Error(veri.hata || 'Kayıt başarısız.');
+
+        // Otomatik giriş
+        localStorage.setItem('isg_token',     veri.token);
+        localStorage.setItem('isg_kullanici', JSON.stringify(veri.kullanici));
+
+        mesajKutu.textContent = 'Hesabınız oluşturuldu! Yönlendiriliyorsunuz...';
+        mesajKutu.classList.add('basarili');
+
+        setTimeout(() => { window.location.href = '/anasayfa'; }, 1500);
+
+    } catch (hata) {
+        mesajKutu.textContent = hata.message;
+        mesajKutu.classList.add('hata');
+        btn.disabled = false;
+        btn.textContent = 'HESAP OLUŞTUR';
+    }
+});
+</script>
+</body>
+</html>

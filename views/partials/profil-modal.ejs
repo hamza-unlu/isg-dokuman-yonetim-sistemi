@@ -1,0 +1,134 @@
+
+
+<div id="profil-modal" class="profil-modal-katman">
+    <div class="profil-modal-kutu">
+
+        <!-- Üst başlık -->
+        <div class="profil-modal-baslik">
+            <h3><i class="fa-solid fa-user-circle"></i> Profil Bilgilerim</h3>
+            <span class="profil-kapat-btn" onclick="profilModalKapat()">&times;</span>
+        </div>
+
+        <!-- Sekme başlıkları -->
+        <div class="profil-sekme-bar">
+            <button type="button" class="profil-sekme-btn aktif" data-sekme="foto">
+                <i class="fa-solid fa-image"></i> Profil Fotoğrafı
+            </button>
+            <button type="button" class="profil-sekme-btn" data-sekme="sifre">
+                <i class="fa-solid fa-lock"></i> Şifre Değiştir
+            </button>
+        </div>
+
+        <!-- Sekme içerikleri -->
+        <div class="profil-modal-icerik">
+
+            <!-- ═══════════════ FOTO SEKMESİ ═══════════════ -->
+            <div class="profil-sekme-panel aktif" data-panel="foto">
+
+                <!-- Avatar önizleme -->
+                <div class="profil-foto-onizleme-alani">
+                    <div class="profil-foto-cerceve" id="profil-foto-cerceve">
+                        <!-- JS ile doldurulur: img ya da baş harfler -->
+                    </div>
+                    <div class="profil-foto-isim" id="profil-foto-isim">...</div>
+                    <div class="profil-foto-rol"  id="profil-foto-rol">...</div>
+                </div>
+
+                <!-- Yükleme alanı -->
+                <div class="profil-foto-yukleme-alani" id="profil-foto-drop-alani"
+                     onclick="document.getElementById('profil-foto-input').click()">
+                    <i class="fa-solid fa-cloud-arrow-up"></i>
+                    <div class="profil-drop-baslik">Fotoğraf Seçin veya Sürükleyip Bırakın</div>
+                    <div class="profil-drop-alt">JPG, PNG, WEBP — Maksimum 2 MB</div>
+                    <input type="file" id="profil-foto-input" accept="image/jpeg,image/png,image/webp"
+                           style="display:none;" onchange="profilFotoSecildi(this)">
+                </div>
+
+                <!-- Seçilen dosya bilgi bandı -->
+                <div class="profil-secilen-dosya" id="profil-secilen-dosya" style="display:none;">
+                    <i class="fa-solid fa-image"></i>
+                    <span id="profil-secilen-dosya-adi">dosya.jpg</span>
+                    <button type="button" class="profil-sec-iptal" onclick="profilFotoSeciminiIptal()">
+                        <i class="fa-solid fa-xmark"></i>
+                    </button>
+                </div>
+
+                <!-- Hata / başarı mesajı -->
+                <div class="profil-mesaj" id="profil-foto-mesaj" style="display:none;"></div>
+
+                <!-- Aksiyon butonları -->
+                <div class="profil-aksiyon-satiri">
+                    <button type="button" class="profil-btn-sil" id="btn-profil-foto-sil"
+                            onclick="profilFotoSil()">
+                        <i class="fa-solid fa-trash"></i> Fotoğrafı Kaldır
+                    </button>
+                    <button type="button" class="profil-btn-kaydet" id="btn-profil-foto-kaydet"
+                            onclick="profilFotoYukle()" disabled>
+                        <i class="fa-solid fa-check"></i> Kaydet
+                    </button>
+                </div>
+            </div>
+
+            <!-- ═══════════════ ŞİFRE SEKMESİ ═══════════════ -->
+            <div class="profil-sekme-panel" data-panel="sifre">
+
+                <form id="profil-sifre-formu" onsubmit="event.preventDefault(); profilSifreDegistir();">
+
+                    <div class="profil-form-grubu">
+                        <label for="profil-mevcut-sifre">
+                            <i class="fa-solid fa-key"></i> Mevcut Şifre
+                        </label>
+                        <div class="profil-sifre-kutu">
+                            <input type="password" id="profil-mevcut-sifre"
+                                   placeholder="Mevcut şifrenizi girin" required>
+                            <button type="button" class="profil-goz-btn" onclick="profilSifreGozToggle('profil-mevcut-sifre', this)">
+                                <i class="fa-solid fa-eye"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="profil-form-grubu">
+                        <label for="profil-yeni-sifre">
+                            <i class="fa-solid fa-lock"></i> Yeni Şifre
+                        </label>
+                        <div class="profil-sifre-kutu">
+                            <input type="password" id="profil-yeni-sifre"
+                                   placeholder="En az 6 karakter" minlength="6" required
+                                   oninput="profilSifreGucluGuncelle()">
+                            <button type="button" class="profil-goz-btn" onclick="profilSifreGozToggle('profil-yeni-sifre', this)">
+                                <i class="fa-solid fa-eye"></i>
+                            </button>
+                        </div>
+                        <!-- Güç göstergesi -->
+                        <div class="profil-guc-cubuk">
+                            <div class="profil-guc-dolum" id="profil-guc-dolum"></div>
+                        </div>
+                        <div class="profil-guc-yazi" id="profil-guc-yazi">Şifre giriniz</div>
+                    </div>
+
+                    <div class="profil-form-grubu">
+                        <label for="profil-yeni-sifre-tekrar">
+                            <i class="fa-solid fa-lock"></i> Yeni Şifre (Tekrar)
+                        </label>
+                        <div class="profil-sifre-kutu">
+                            <input type="password" id="profil-yeni-sifre-tekrar"
+                                   placeholder="Yeni şifrenizi tekrar girin" minlength="6" required
+                                   oninput="profilSifreEslesmeKontrol()">
+                            <button type="button" class="profil-goz-btn" onclick="profilSifreGozToggle('profil-yeni-sifre-tekrar', this)">
+                                <i class="fa-solid fa-eye"></i>
+                            </button>
+                        </div>
+                        <div class="profil-eslesme-yazi" id="profil-eslesme-yazi"></div>
+                    </div>
+
+                    <div class="profil-mesaj" id="profil-sifre-mesaj" style="display:none;"></div>
+
+                    <button type="submit" class="profil-btn-kaydet profil-btn-tam">
+                        <i class="fa-solid fa-shield-halved"></i> Şifreyi Değiştir
+                    </button>
+                </form>
+            </div>
+
+        </div>
+    </div>
+</div>

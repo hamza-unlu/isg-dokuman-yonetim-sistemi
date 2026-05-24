@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Firmalar - İSG Doküman Yönetim Sistemi</title>
+    <link rel="stylesheet" href="/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .modal-kutu { max-width: 580px !important; width: 95% !important; }
+        .modal-icerik { max-height: 76vh; overflow-y: auto; padding-right: 4px; }
+
+        /* Tablo sütunlarını sayfaya sığdırmak için */
+        #firma-tablosu {
+            table-layout: fixed;
+            width: 100%;
+            font-size: 0.82rem;
+        }
+
+        #firma-tablosu th,
+        #firma-tablosu td {
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            padding: 10px 8px;
+            vertical-align: top;
+        }
+
+        /* Sütun genişlikleri */
+        #firma-tablosu col.col-no       { width: 36px; }
+        #firma-tablosu col.col-firma    { width: 110px; }
+        #firma-tablosu col.col-sinif    { width: 100px; }
+        #firma-tablosu col.col-personel { width: 62px; }
+        #firma-tablosu col.col-yetkili  { width: 110px; }
+        #firma-tablosu col.col-mail     { width: 150px; }
+        #firma-tablosu col.col-sgk      { width: 180px; }
+        #firma-tablosu col.col-islem    { width: 72px; }
+
+        /* Yetkili + telefon alt satırda, ortalanmış */
+        .yetkili-hucre {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 2px;
+            white-space: normal;
+            text-align: center;
+        }
+        .yetkili-hucre .yetkili-isim {
+            font-weight: 600;
+            color: #1e293b;
+        }
+        .yetkili-hucre .yetkili-tel {
+            font-size: 0.76rem;
+            color: #64748b;
+        }
+
+        /* SGK + Adres alt satırda */
+        .sgk-adres-hucre {
+            display: flex;
+            flex-direction: column;
+            gap: 3px;
+            white-space: normal;
+        }
+        .sgk-adres-hucre .sgk-deger {
+            font-size: 0.8rem;
+            color: #334155;
+        }
+        .sgk-adres-hucre .adres-deger {
+            font-size: 0.75rem;
+            color: #64748b;
+        }
+
+        /* SGK alanı form stili — modal içinde */
+        .sgk-adres-grup {
+            display: grid;
+            grid-template-columns: 1fr 2fr;
+            gap: 12px;
+            margin-bottom: 14px;
+        }
+        .sgk-adres-grup .form-grubu {
+            margin-bottom: 0;
+        }
+        /* Adres textarea */
+        #inp-adres {
+            resize: vertical;
+            min-height: 60px;
+            font-family: inherit;
+            font-size: 0.88rem;
+            padding: 8px 10px;
+            border: 1px solid #cbd5e1;
+            border-radius: 6px;
+            width: 100%;
+            box-sizing: border-box;
+            color: #334155;
+            transition: border-color 0.2s;
+        }
+        #inp-adres:focus {
+            outline: none;
+            border-color: #2563eb;
+        }
+
+        /* Tablo td'de white-space normal olması gereken hücreler */
+        #firma-tablosu td.td-yetkili,
+        #firma-tablosu td.td-sgk-adres {
+            white-space: normal;
+        }
+    </style>
+</head>
+<body>
+
+<div class="panel-kapsayici">
+    <nav class="yan-menu">
+        <div class="yan-menu-baslik"><h2>🛡️ ÜNLÜ İSG</h2></div>
+        <ul class="menu-ogeleri">
+            <li><a href="anasayfa"><i class="fa-solid fa-home"></i> ANA SAYFA</a></li>
+            <li class="aktif"><a href="firmalar"><i class="fa-solid fa-building"></i> FİRMALAR</a></li>
+            <li><a href="personel"><i class="fa-solid fa-users"></i> PERSONEL</a></li>
+            <li><a href="egitimler"><i class="fa-solid fa-graduation-cap"></i> EĞİTİMLER</a></li>
+            <li><a href="dokumanlar"><i class="fa-solid fa-file-alt"></i> DOKÜMANLAR</a></li>
+            <li><a href="raporlar"><i class="fa-solid fa-chart-pie"></i> RAPORLAR</a></li>
+            <li class="menu-alt"><a href="index"><i class="fa-solid fa-sign-out-alt"></i> ÇIKIŞ</a></li>
+        </ul>
+    </nav>
+
+    <main class="ana-icerik">
+        <header class="ust-bar">
+            <%- include('partials/breadcrumb') %>
+            <div class="kullanici-profili">
+                    <div class="kullanici-bilgisi">
+                        <span class="isim" id="header-isim">...</span>
+                        <span class="rol" id="header-rol">...</span>
+                    </div>
+                    <div class="kullanici-avatar" id="header-avatar">...</div>
+            </div>
+        </header>
+
+        <div class="islem-cubugu">
+            <div class="arama-filtreleri">
+                <div class="arama-grubu">
+                    <i class="fa-solid fa-search"></i>
+                    <input type="text" placeholder="Firma Adı İle Ara...">
+                </div>
+            </div>
+            <button class="btn-ana" onclick="modalAc('yeni')">
+                <i class="fa-solid fa-plus"></i> Yeni Firma Ekle
+            </button>
+        </div>
+
+        <div class="tablo-bolumu">
+            <div class="tablo-kapsayici">
+                <table id="firma-tablosu">
+                    <colgroup>
+                        <col class="col-no">
+                        <col class="col-firma">
+                        <col class="col-sinif">
+                        <col class="col-personel">
+                        <col class="col-yetkili">
+                        <col class="col-mail">
+                        <col class="col-sgk">
+                        <col class="col-islem">
+                    </colgroup>
+                    <thead>
+                        <tr>
+                            <th>No</th>
+                            <th>Firma Adı</th>
+                            <th>Tehlike Sınıfı</th>
+                            <th>Personel</th>
+                            <th>Yetkili Kişi</th>
+                            <th>E-posta</th>
+                            <th>SGK Sicil / Adres</th>
+                            <th>İşlemler</th>
+                        </tr>
+                    </thead>
+                    <tbody id="firma-listesi-govdesi"></tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+</div>
+
+<!-- =========== FİRMA EKLE / DÜZENLE MODAL =========== -->
+<div id="firma-ekle-modali" class="modal-dis-katman">
+    <div class="modal-kutu">
+        <div class="modal-baslik">
+            <h3 id="modal-baslik-yazisi">Yeni Firma Ekle</h3>
+            <span class="kapat-butonu" onclick="modalKapat()">&times;</span>
+        </div>
+        <div class="modal-icerik">
+            <form id="firmaFormu" onsubmit="event.preventDefault(); islemTamamla();">
+
+                <!-- Firma Adı -->
+                <div class="form-grubu">
+                    <label>Firma Adı</label>
+                    <input type="text" id="inp-firma-adi" required placeholder="Firma tam adını giriniz">
+                </div>
+
+                <!-- Yetkili + Personel -->
+                <div class="form-grubu-yan-yana">
+                    <div class="form-grubu">
+                        <label>Yetkili Adı Soyadı</label>
+                        <input type="text" id="inp-yetkili" required placeholder="Ad Soyad">
+                    </div>
+                    <div class="form-grubu">
+                        <label>Personel Sayısı</label>
+                        <input type="number" id="inp-personel" required placeholder="0">
+                    </div>
+                </div>
+
+                <!-- Telefon + Mail -->
+                <div class="form-grubu-yan-yana">
+                    <div class="form-grubu">
+                        <label>Yetkili Telefon Numarası</label>
+                        <input type="tel" id="inp-telefon" placeholder="0212 555 0000">
+                    </div>
+                    <div class="form-grubu">
+                        <label>Firma/Yetkili Mail Adresi</label>
+                        <input type="email" id="inp-firma-mail" required placeholder="ornek@firma.com">
+                    </div>
+                </div>
+
+                <!-- SGK Sicil No + Adres -->
+                <div class="sgk-adres-grup">
+                    <div class="form-grubu">
+                        <label>
+                            <i class="fa-solid fa-id-card" style="color:#2563eb; margin-right:4px;"></i>
+                            SGK İşyeri Sicil No
+                        </label>
+                        <input type="text" id="inp-sgk-sicil" placeholder="örn. 01-123456-7890">
+                    </div>
+                    <div class="form-grubu">
+                        <label>
+                            <i class="fa-solid fa-location-dot" style="color:#2563eb; margin-right:4px;"></i>
+                            Firma Adresi
+                        </label>
+                        <textarea id="inp-adres" placeholder="Açık adres giriniz..."></textarea>
+                    </div>
+                </div>
+
+                <div class="form-grubu">
+                    <label for="inp-detsis-no">
+                            DETSİS Numarası
+                        <small style="color:#64748b; font-weight:normal;">(opsiyonel — sadece kamu kurumları için)</small>
+                    </label>
+                    <input type="text" id="inp-detsis-no" maxlength="8"
+                        placeholder="Örn: 12345678">
+                </div>
+
+                <!-- NACE Kodu -->
+                <div class="nace-alani">
+                    <div class="form-grubu" style="flex: 1;">
+                        <label>NACE Kodu</label>
+                        <input type="text" id="nace-kodu-input" placeholder="41.20.02">
+                    </div>
+                    <button type="button" class="btn-sorgula" onclick="naceSorgula()">Sorgula</button>
+                </div>
+
+                <!-- Otomatik Doldurulan Alanlar -->
+                <div class="otomatik-bilgi-kutusu">
+                    <div class="form-grubu">
+                        <label>Ana Faaliyet Alanı</label>
+                        <textarea id="faaliyet-alani-cikti" rows="2" readonly
+                            placeholder="NACE sorgusu ile dolar..."></textarea>
+                    </div>
+                    <div class="form-grubu">
+                        <label>Tehlike Sınıfı</label>
+                        <input type="text" id="tehlike-sinifi-cikti" readonly
+                            placeholder="Otomatik belirlenir">
+                    </div>
+                </div>
+
+                <button type="submit" class="btn-kaydet" id="btn-form-kaydet">FİRMAYI KAYDET</button>
+                <button type="button" id="btn-firma-sil"
+                    style="display:none; width:100%; margin-top:10px;
+                           background-color:#be123c; color:white; border:none;
+                           padding:10px; border-radius:6px; cursor:pointer; font-weight:bold;">
+                    FİRMAYI SİL
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+<%- include('partials/profil-modal') %>
+<script src="/auth.js?v=5"></script>
+<script src="/profil.js?v=1"></script>
+<script src="/firmalar.js?v=5"></script>
+<%- include('partials/ai-asistan') %>
+</body>
+</html>

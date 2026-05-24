@@ -1,0 +1,2518 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mevzuat Otomatik Takip — Ünlü İSG</title>
+    <link rel="stylesheet" href="/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <script src="/auth.js"></script>
+    <script src="/profil.js"></script>
+    <style>
+        *, *::before, *::after { box-sizing: border-box; }
+
+        /* ─── SAYFA BAŞLIĞI ─── */
+        .sayfa-header {
+            display: flex; align-items: center; justify-content: space-between;
+            margin-bottom: 24px; gap: 16px; flex-wrap: wrap;
+        }
+        .sayfa-header-sol h1 {
+            font-size: 20px; font-weight: 800; color: #0f172a;
+            letter-spacing: -0.3px; margin: 0;
+        }
+        .sayfa-header-sol p {
+            font-size: 13px; color: #64748b; margin: 4px 0 0;
+        }
+        .btn-header {
+            display: inline-flex; align-items: center; gap: 8px;
+            padding: 11px 18px; border-radius: 10px;
+            font-size: 13.5px; font-weight: 600; cursor: pointer;
+            font-family: inherit; transition: all .15s;
+            border: none; white-space: nowrap;
+        }
+        .btn-tara {
+            background: #16a34a; color: #fff;
+            box-shadow: 0 2px 8px rgba(22,163,74,0.25);
+        }
+        .btn-tara:hover { background: #15803d; transform: translateY(-1px); }
+        .btn-tara:disabled { background: #94a3b8; cursor: not-allowed; transform: none; }
+        .btn-yeni {
+            background: #2563eb; color: #fff;
+            box-shadow: 0 2px 8px rgba(37,99,235,0.25);
+        }
+        .btn-yeni:hover { background: #1d4ed8; transform: translateY(-1px); }
+
+        /* ─── STAT BANDI ─── */
+        .stat-bant {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 12px; margin-bottom: 22px;
+        }
+        .stat-kutu {
+            background: #fff; border: 1px solid #e8edf5;
+            border-radius: 12px; padding: 16px 20px;
+            display: flex; align-items: center; gap: 14px;
+        }
+        .stat-ikon {
+            width: 44px; height: 44px; border-radius: 11px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 17px; flex-shrink: 0;
+        }
+        .stat-ikon.toplam   { background: #dbeafe; color: #1d4ed8; }
+        .stat-ikon.aktif    { background: #dcfce7; color: #15803d; }
+        .stat-ikon.hatali   { background: #fee2e2; color: #b91c1c; }
+        .stat-ikon.bekleyen { background: #fef3c7; color: #b45309; }
+        .stat-metin .sayi   { font-size: 22px; font-weight: 800; color: #0f172a; line-height: 1; }
+        .stat-metin .etiket {
+            font-size: 11px; color: #64748b; font-weight: 500;
+            margin-top: 4px; text-transform: uppercase; letter-spacing: 0.4px;
+        }
+
+        /* ─── SCHEDULER KARTI ─── */
+        .scheduler-kart {
+            background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+            border: 1px solid #bae6fd;
+            border-radius: 14px; padding: 18px 22px; margin-bottom: 22px;
+            display: flex; align-items: center; justify-content: space-between;
+            gap: 16px; flex-wrap: wrap;
+        }
+        .scheduler-bilgi {
+            display: flex; align-items: center; gap: 14px; flex: 1;
+        }
+        .scheduler-ikon {
+            width: 48px; height: 48px; background: #0284c7; color: #fff;
+            border-radius: 12px; display: flex; align-items: center; justify-content: center;
+            font-size: 20px; flex-shrink: 0;
+        }
+        .scheduler-yazi h3 { margin: 0; font-size: 15px; color: #0c4a6e; }
+        .scheduler-yazi p { margin: 4px 0 0; font-size: 12.5px; color: #075985; }
+        .scheduler-yazi .durum-rozeti {
+            display: inline-block; padding: 2px 8px; border-radius: 5px;
+            font-size: 11px; font-weight: 700; margin-left: 6px;
+        }
+        .durum-aktif { background: #16a34a; color: #fff; }
+        .durum-pasif { background: #94a3b8; color: #fff; }
+
+        /* ─── FİLTRELER ─── */
+        .filtre-bant {
+            display: flex; gap: 10px; margin-bottom: 16px; flex-wrap: wrap;
+        }
+        .filtre-bant input, .filtre-bant select {
+            padding: 9px 12px; border: 1.5px solid #e2e8f0; border-radius: 9px;
+            font-size: 13px; font-family: inherit; outline: none;
+            background: #fff;
+        }
+        .filtre-bant input { flex: 1; min-width: 200px; }
+        .filtre-bant input:focus, .filtre-bant select:focus { border-color: #2563eb; }
+
+        /* ─── TABLO ─── */
+        .tablo-kart {
+            background: #fff; border: 1px solid #e8edf5;
+            border-radius: 14px; overflow: hidden;
+            box-shadow: 0 1px 6px rgba(0,0,0,0.04);
+            margin-bottom: 20px;
+        }
+        table { width: 100%; border-collapse: collapse; }
+        thead tr { background: #f8fafc; }
+        th {
+            padding: 12px 16px; text-align: left;
+            font-size: 11px; font-weight: 700; color: #64748b;
+            text-transform: uppercase; letter-spacing: 0.6px;
+            border-bottom: 1px solid #e2e8f0;
+        }
+        td {
+            padding: 13px 16px; border-bottom: 1px solid #f1f5f9;
+            font-size: 13px; vertical-align: middle; color: #334155;
+        }
+        tr:last-child td { border-bottom: none; }
+        tr:hover td { background: #fafbff; }
+
+        .mevzuat-adi { font-weight: 600; color: #0f172a; }
+        .mevzuat-aciklama { font-size: 11.5px; color: #64748b; margin-top: 2px; }
+
+        /* ─── DURUM ETİKETLERİ ─── */
+        .durum-etiket {
+            display: inline-flex; align-items: center; gap: 5px;
+            padding: 3px 10px; border-radius: 5px;
+            font-size: 11px; font-weight: 700; white-space: nowrap;
+        }
+        .durum-aktif-et    { background: #dcfce7; color: #15803d; }
+        .durum-hatali-et   { background: #fee2e2; color: #b91c1c; }
+        .durum-hazir-et    { background: #fef3c7; color: #b45309; }
+        .durum-pasif-et    { background: #f1f5f9; color: #475569; }
+        .durum-erisilemez-et { background: #fed7aa; color: #c2410c; }
+
+        .kategori-etiket {
+            display: inline-block; padding: 3px 9px;
+            background: #ede9fe; color: #6d28d9;
+            border-radius: 5px; font-size: 11px; font-weight: 600;
+        }
+
+        /* ─── İŞLEM BUTONLARI ─── */
+        .islem-grup { display: flex; gap: 5px; }
+        .btn-ikon {
+            width: 32px; height: 32px;
+            display: flex; align-items: center; justify-content: center;
+            border-radius: 7px; cursor: pointer;
+            font-size: 12px; font-weight: 600;
+            transition: all .15s; border: 1.5px solid;
+        }
+        .btn-duzenle {
+            background: #2563eb; border-color: #2563eb; color: #fff;
+        }
+        .btn-duzenle:hover { background: #1d4ed8; transform: translateY(-1px); }
+        .btn-tekrar {
+            background: #f59e0b; border-color: #f59e0b; color: #fff;
+        }
+        .btn-tekrar:hover { background: #d97706; transform: translateY(-1px); }
+        .btn-gecmis {
+            background: #7c3aed; border-color: #7c3aed; color: #fff;
+        }
+        .btn-gecmis:hover { background: #6d28d9; transform: translateY(-1px); }
+        .btn-sil {
+            background: #ef4444; border-color: #ef4444; color: #fff;
+        }
+        .btn-sil:hover { background: #dc2626; transform: translateY(-1px); }
+
+        /* ─── MODAL ─── */
+        .modal-arka {
+            display: none; position: fixed; inset: 0;
+            background: rgba(15,23,42,0.55); backdrop-filter: blur(3px);
+            z-index: 1000; align-items: center; justify-content: center;
+            padding: 20px;
+        }
+        .modal-arka.acik { display: flex; }
+        .modal-icerik {
+            background: #fff; padding: 28px; border-radius: 16px;
+            width: 100%; max-width: 580px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.18);
+            animation: modalGir .2s ease;
+            max-height: 90vh; overflow-y: auto;
+        }
+        .modal-icerik.genis { max-width: 760px; }
+        @keyframes modalGir {
+            from { opacity: 0; transform: translateY(12px) scale(.98); }
+            to   { opacity: 1; transform: translateY(0)   scale(1);    }
+        }
+        .modal-baslik {
+            display: flex; align-items: center;
+            justify-content: space-between; margin-bottom: 22px;
+        }
+        .modal-baslik-sol { display: flex; align-items: center; gap: 10px; }
+        .modal-b-ikon {
+            width: 40px; height: 40px; background: #eff6ff;
+            border-radius: 10px; display: flex; align-items: center;
+            justify-content: center; color: #2563eb; font-size: 16px;
+        }
+        .modal-b-yazi h4 { font-size: 16px; font-weight: 800; color: #0f172a; margin: 0; }
+        .modal-b-yazi p { font-size: 12px; color: #64748b; margin: 1px 0 0; }
+        .btn-kapat {
+            width: 32px; height: 32px; display: flex;
+            align-items: center; justify-content: center;
+            border-radius: 8px; background: #f1f5f9;
+            color: #64748b; cursor: pointer; font-size: 14px; border: none;
+            transition: background .15s;
+        }
+        .btn-kapat:hover { background: #e2e8f0; }
+
+        /* ─── FORM ─── */
+        .form-grup { margin-bottom: 14px; }
+        .form-grup label {
+            display: block; font-size: 12.5px; font-weight: 600;
+            color: #374151; margin-bottom: 6px;
+        }
+        .form-grup label .gerekli { color: #dc2626; margin-left: 2px; }
+        .form-grup label small {
+            color: #94a3b8; font-weight: 400; font-size: 11px; margin-left: 6px;
+        }
+        .form-grup input, .form-grup select, .form-grup textarea {
+            width: 100%; padding: 10px 13px;
+            border: 1.5px solid #e2e8f0; border-radius: 9px;
+            font-size: 13.5px; font-family: inherit; outline: none;
+            color: #0f172a; background: #fafafa;
+            transition: border-color .15s, background .15s;
+        }
+        .form-grup textarea { resize: vertical; min-height: 60px; }
+        .form-grup input:focus, .form-grup select:focus, .form-grup textarea:focus {
+            border-color: #2563eb; background: #fff;
+        }
+        .form-grup input[readonly] {
+            background: #f1f5f9; color: #64748b; cursor: not-allowed;
+        }
+
+        .bilgi-kutu {
+            background: #eff6ff; border: 1px solid #bfdbfe;
+            border-radius: 10px; padding: 10px 14px;
+            font-size: 12.5px; color: #1e40af;
+            margin-bottom: 16px;
+            display: flex; gap: 8px; align-items: flex-start;
+        }
+        .bilgi-kutu i { margin-top: 2px; flex-shrink: 0; }
+
+        .test-sonuc {
+            margin-top: 8px; padding: 8px 12px; border-radius: 8px;
+            font-size: 12px; display: none;
+        }
+        .test-sonuc.basarili {
+            display: block; background: #dcfce7; color: #15803d;
+            border: 1px solid #86efac;
+        }
+        .test-sonuc.basarisiz {
+            display: block; background: #fee2e2; color: #991b1b;
+            border: 1px solid #fca5a5;
+        }
+
+        .modal-butonlar {
+            display: flex; gap: 10px; margin-top: 16px;
+        }
+        .btn-form {
+            padding: 11px 18px; border-radius: 10px; border: none;
+            font-size: 14px; font-weight: 700; cursor: pointer;
+            font-family: inherit; transition: all .15s;
+            flex: 1;
+        }
+        .btn-test {
+            background: #f59e0b; color: #fff;
+        }
+        .btn-test:hover { background: #d97706; }
+        .btn-kaydet {
+            background: #16a34a; color: #fff;
+        }
+        .btn-kaydet:hover { background: #15803d; }
+
+        /* ─── ⭐ LINK BİLGİ KUTUSU (YENİ) ─── */
+        .link-bilgi {
+            display: none; margin-top: 8px; padding: 10px 12px;
+            border-radius: 8px; font-size: 12.5px;
+            border: 1px solid;
+            display: flex; gap: 8px; align-items: flex-start;
+        }
+        .link-bilgi.acik { display: flex; }
+        .link-bilgi.basarili {
+            background: #dcfce7; border-color: #86efac; color: #15803d;
+        }
+        .link-bilgi.uyari {
+            background: #fef3c7; border-color: #fcd34d; color: #78350f;
+        }
+        .link-bilgi.hata {
+            background: #fee2e2; border-color: #fca5a5; color: #991b1b;
+        }
+        .link-bilgi i { margin-top: 2px; flex-shrink: 0; }
+
+        /* ─── ⭐ GELİŞMİŞ AYARLAR ACCORDION (YENİ) ─── */
+        .gelismis-accordion {
+            margin-top: 12px;
+            border: 1px solid #e2e8f0;
+            border-radius: 10px;
+            overflow: hidden;
+            background: #fafafa;
+        }
+        .gelismis-baslik {
+            width: 100%;
+            background: transparent;
+            color: #475569;
+            padding: 11px 14px;
+            border: none;
+            text-align: left;
+            cursor: pointer;
+            font-size: 12.5px;
+            font-weight: 600;
+            font-family: inherit;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: background 0.15s;
+        }
+        .gelismis-baslik:hover { background: #f1f5f9; }
+        .gelismis-baslik .accordion-ok {
+            transition: transform 0.2s;
+            font-size: 11px;
+        }
+        .gelismis-accordion.acik .accordion-ok {
+            transform: rotate(180deg);
+        }
+        .gelismis-icerik {
+            display: none;
+            padding: 14px;
+            border-top: 1px solid #e2e8f0;
+            background: #fff;
+        }
+        .gelismis-accordion.acik .gelismis-icerik {
+            display: block;
+        }
+        .bilgi-rapor {
+            background: #f8fafc; border: 1px solid #e2e8f0;
+            border-radius: 8px; padding: 10px 12px;
+            font-size: 11.5px; font-family: 'Consolas', monospace;
+            color: #475569; line-height: 1.7;
+        }
+        .bilgi-rapor strong { color: #0f172a; }
+        .bilgi-rapor .alan-deger {
+            color: #0f172a; word-break: break-all;
+        }
+
+        /* ─── DURUM MESAJI ─── */
+        .durum-mesaji {
+            text-align: center; padding: 48px 20px;
+            color: #94a3b8; font-size: 14px;
+        }
+        .durum-mesaji i { font-size: 28px; display: block; margin-bottom: 10px; }
+
+        /* ─── HATA MESAJI BANT ─── */
+        .hata-bant {
+            background: #fee2e2; border: 1px solid #fecaca;
+            border-radius: 8px; padding: 8px 12px;
+            font-size: 12px; color: #991b1b;
+            margin-top: 4px;
+        }
+
+        /* ─── BAŞARI BİLDİRİMİ (toast) ─── */
+        .toast {
+            position: fixed; top: 24px; right: 24px; z-index: 2000;
+            background: #16a34a; color: #fff;
+            padding: 14px 20px; border-radius: 10px;
+            font-size: 14px; font-weight: 600;
+            box-shadow: 0 8px 24px rgba(22,163,74,0.35);
+            animation: toastIn .3s ease;
+            display: none;
+        }
+        .toast.hata { background: #dc2626; }
+        .toast.gor { display: block; }
+        @keyframes toastIn {
+            from { opacity: 0; transform: translateY(-12px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+
+        /* ─── ONAY BEKLEYEN STAT KARTI TIKLANABİLİR ─── */
+        .stat-kutu.tiklanabilir {
+            cursor: pointer; transition: all .15s;
+            border: 2px solid transparent;
+        }
+        .stat-kutu.tiklanabilir:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 16px rgba(0,0,0,0.08);
+            border-color: #fbbf24;
+        }
+        .stat-kutu.tiklanabilir.aktif {
+            border-color: #f59e0b;
+            box-shadow: 0 4px 12px rgba(245,158,11,0.2);
+        }
+
+        /* ─── ONAY BEKLEYENLER BÖLÜMÜ ─── */
+        .bekleyenler-bolum {
+            background: #fffbeb; border: 1.5px solid #fcd34d;
+            border-radius: 14px; padding: 18px 22px; margin-bottom: 22px;
+            display: none;
+        }
+        .bekleyenler-bolum.acik { display: block; }
+        .bekleyenler-baslik {
+            font-size: 15px; font-weight: 700; color: #78350f;
+            margin-bottom: 14px; display: flex; align-items: center; gap: 8px;
+        }
+        .bekleyen-kart {
+            background: #fff; border: 1px solid #fcd34d;
+            border-radius: 10px; padding: 14px 16px; margin-bottom: 10px;
+            display: flex; align-items: center; justify-content: space-between;
+            gap: 12px; flex-wrap: wrap;
+        }
+        .bekleyen-kart-sol { flex: 1; min-width: 250px; }
+        .bekleyen-kart .ad {
+            font-size: 14px; font-weight: 700; color: #0f172a; margin-bottom: 4px;
+        }
+        .bekleyen-kart .meta {
+            font-size: 11.5px; color: #64748b;
+        }
+        .btn-incele {
+            background: #f59e0b; color: #fff; border: none;
+            padding: 9px 16px; border-radius: 8px; font-weight: 600;
+            font-size: 13px; cursor: pointer; font-family: inherit;
+            display: inline-flex; align-items: center; gap: 6px;
+            transition: all .15s;
+        }
+        .btn-incele:hover { background: #d97706; transform: translateY(-1px); }
+
+        /* ─── ONAY MODAL — KURAL SATIRLARI ─── */
+        .kural-satir {
+            background: #f8fafc; border: 1px solid #e2e8f0;
+            border-radius: 10px; padding: 12px 14px; margin-bottom: 10px;
+        }
+        .kural-satir-baslik {
+            display: flex; justify-content: space-between; align-items: center;
+            margin-bottom: 10px;
+        }
+        .kural-satir-no {
+            font-size: 11px; font-weight: 700; color: #475569;
+            text-transform: uppercase; letter-spacing: 0.5px;
+        }
+        .btn-kural-sil {
+            width: 26px; height: 26px;
+            display: flex; align-items: center; justify-content: center;
+            border-radius: 6px; background: #fee2e2; color: #b91c1c;
+            border: none; cursor: pointer; font-size: 11px;
+            transition: all .15s;
+        }
+        .btn-kural-sil:hover { background: #fecaca; }
+        .kural-bilgi-eski {
+            background: #eff6ff; border: 1px solid #bfdbfe;
+            border-radius: 6px; padding: 6px 10px; margin-bottom: 8px;
+            font-size: 12px; color: #1e40af;
+        }
+        .yeni-deger-row {
+            display: grid; grid-template-columns: 1fr 1fr; gap: 8px;
+        }
+        .btn-kural-ekle {
+            background: #dbeafe; color: #1d4ed8; border: 1.5px dashed #93c5fd;
+            padding: 10px 14px; border-radius: 8px; cursor: pointer;
+            font-size: 13px; font-weight: 600; font-family: inherit;
+            display: flex; align-items: center; justify-content: center; gap: 6px;
+            width: 100%; margin-bottom: 12px;
+            transition: all .15s;
+        }
+        .btn-kural-ekle:hover { background: #bfdbfe; }
+
+        /* ─── ONAY BUTONLARI ─── */
+        .onay-butonlar {
+            display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px;
+            margin-top: 14px;
+        }
+        .btn-reddet-onay {
+            background: #fee2e2; color: #991b1b; border: 1.5px solid #fca5a5;
+        }
+        .btn-reddet-onay:hover { background: #fecaca; }
+        .btn-sadece-onayla {
+            background: #f1f5f9; color: #475569; border: 1.5px solid #cbd5e1;
+        }
+        .btn-sadece-onayla:hover { background: #e2e8f0; }
+        .btn-onayla-uygula {
+            background: #16a34a; color: #fff; border: 1.5px solid #16a34a;
+        }
+        .btn-onayla-uygula:hover { background: #15803d; }
+
+        /* ─── İÇERİK FARKLILIKLARI (DİFF) ─── */
+        .diff-bolum {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 0;
+            margin: 14px 0;
+            overflow: hidden;
+        }
+        .diff-baslik {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 12px 16px;
+            background: #1e293b;
+            color: #f1f5f9;
+            cursor: pointer;
+            user-select: none;
+            transition: background 0.2s;
+        }
+        .diff-baslik:hover { background: #334155; }
+        .diff-baslik-sol {
+            display: flex; align-items: center; gap: 10px;
+            font-weight: 600; font-size: 13.5px;
+        }
+        .diff-baslik-ok {
+            transition: transform 0.2s;
+            font-size: 11px;
+        }
+        .diff-bolum.acik .diff-baslik-ok {
+            transform: rotate(180deg);
+        }
+
+        /* İstatistik rozetleri */
+        .diff-istatistik {
+            display: flex; gap: 8px; align-items: center;
+            font-size: 12px;
+        }
+        .diff-rozet {
+            display: inline-flex; align-items: center; gap: 4px;
+            padding: 3px 9px; border-radius: 6px;
+            font-weight: 600; font-size: 11.5px;
+        }
+        .diff-rozet.eklenen { background: #16a34a; color: #fff; }
+        .diff-rozet.silinen { background: #dc2626; color: #fff; }
+        .diff-rozet.aynı    { background: #475569; color: #fff; }
+
+        /* İçerik alanı */
+        .diff-icerik {
+            display: none;
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease;
+        }
+        .diff-bolum.acik .diff-icerik {
+            display: block;
+            max-height: 600px;
+            overflow-y: auto;
+        }
+        .diff-icerik-inner {
+            padding: 14px 16px;
+            font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+            font-size: 12.5px;
+            line-height: 1.7;
+            white-space: pre-wrap;
+            word-break: break-word;
+        }
+
+        /* Her diff parçası */
+        .diff-parca {
+            padding: 4px 10px;
+            border-radius: 4px;
+            margin-bottom: 2px;
+            position: relative;
+        }
+        .diff-parca.esit {
+            color: #475569;
+        }
+        .diff-parca.eklendi {
+            background: #dcfce7;
+            color: #166534;
+            border-left: 3px solid #16a34a;
+        }
+        .diff-parca.eklendi::before {
+            content: '+';
+            display: inline-block;
+            width: 16px;
+            font-weight: 700;
+            color: #16a34a;
+        }
+        .diff-parca.silindi {
+            background: #fee2e2;
+            color: #991b1b;
+            border-left: 3px solid #dc2626;
+            text-decoration: line-through;
+            text-decoration-color: #dc2626;
+        }
+        .diff-parca.silindi::before {
+            content: '-';
+            display: inline-block;
+            width: 16px;
+            font-weight: 700;
+            color: #dc2626;
+            text-decoration: none;
+        }
+
+        /* Diff yüklenirken */
+        .diff-yukleniyor {
+            padding: 30px; text-align: center;
+            color: #64748b; font-size: 13px;
+        }
+
+        /* Hiç fark yok mesajı */
+        .diff-bos {
+            padding: 40px 20px; text-align: center;
+            color: #64748b;
+        }
+        .diff-bos i {
+            font-size: 32px; color: #cbd5e1; margin-bottom: 10px; display: block;
+        }
+    
+        /* ─── TARAMA BİLDİRİM KUTUSU ─── */
+        .tarama-bildirim {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            width: 360px;
+            background: #a3f772;
+            border-radius: 14px;
+            box-shadow: 0 10px 40px rgba(15, 23, 42, 0.2), 0 2px 8px rgba(15, 23, 42, 0.08);
+            border: 1px solid #e2e8f0;
+            z-index: 9999;
+            transform: translateX(420px);
+            opacity: 0;
+            transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.3s;
+            font-family: inherit;
+        }
+        .tarama-bildirim.gorunur {
+            transform: translateX(0);
+            opacity: 1;
+        }
+        .tarama-bildirim-baslik {
+            padding: 14px 18px 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #f1f5f9;
+        }
+        .tarama-bildirim-baslik-sol {
+            display: flex; align-items: center; gap: 10px;
+        }
+        .tarama-bildirim-ikon {
+            width: 36px; height: 36px; border-radius: 10px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 16px;
+        }
+        .tarama-bildirim.devam-ediyor .tarama-bildirim-ikon {
+            background: #dbeafe; color: #1d4ed8;
+        }
+        .tarama-bildirim.tamamlandi .tarama-bildirim-ikon {
+            background: #dcfce7; color: #16a34a;
+        }
+        .tarama-bildirim.hata .tarama-bildirim-ikon {
+            background: #fee2e2; color: #dc2626;
+        }
+        .tarama-bildirim-baslik h4 {
+            margin: 0; font-size: 14px; font-weight: 700; color: #0f172a;
+        }
+        .tarama-bildirim-baslik-alt {
+            font-size: 11.5px; color: #64748b; margin-top: 1px;
+        }
+        .tarama-bildirim-kapat {
+            background: transparent; border: none; cursor: pointer;
+            width: 28px; height: 28px; border-radius: 6px;
+            display: flex; align-items: center; justify-content: center;
+            color: #64748b; font-size: 14px;
+            transition: all 0.15s;
+        }
+        .tarama-bildirim-kapat:hover {
+            background: #f1f5f9; color: #0f172a;
+        }
+        .tarama-bildirim-icerik {
+            padding: 14px 18px;
+        }
+
+        /* İlerleme satırı */
+        .tarama-ilerleme-info {
+            display: flex; justify-content: space-between; align-items: center;
+            font-size: 12px; color: #475569; margin-bottom: 8px;
+        }
+        .tarama-ilerleme-info strong { color: #0f172a; font-size: 13px; }
+        .tarama-progress-bar {
+            width: 100%; height: 6px; background: #f1f5f9;
+            border-radius: 3px; overflow: hidden;
+        }
+        .tarama-progress-dolum {
+            height: 100%; background: linear-gradient(90deg, #3b82f6, #2563eb);
+            border-radius: 3px;
+            transition: width 0.5s ease;
+            position: relative;
+        }
+        .tarama-progress-dolum::after {
+            content: '';
+            position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+            animation: kayan-isik 1.5s linear infinite;
+        }
+        @keyframes kayan-isik {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(100%); }
+        }
+        .tarama-bildirim.tamamlandi .tarama-progress-dolum {
+            background: #16a34a;
+        }
+        .tarama-bildirim.tamamlandi .tarama-progress-dolum::after {
+            display: none;
+        }
+
+        /* Sonuç istatistikleri */
+        .tarama-ozet-grid {
+            display: grid; grid-template-columns: 1fr 1fr; gap: 8px;
+            margin-bottom: 12px;
+        }
+        .tarama-ozet-item {
+            background: #f8fafc; border: 1px solid #e2e8f0;
+            border-radius: 8px; padding: 8px 10px;
+            display: flex; align-items: center; gap: 8px;
+        }
+        .tarama-ozet-item.degisti {
+            background: #fef3c7; border-color: #fcd34d;
+        }
+        .tarama-ozet-item.hata {
+            background: #fee2e2; border-color: #fca5a5;
+        }
+        .tarama-ozet-ikon {
+            font-size: 14px;
+        }
+        .tarama-ozet-yazi {
+            display: flex; flex-direction: column;
+        }
+        .tarama-ozet-deger {
+            font-size: 14px; font-weight: 700; color: #0f172a; line-height: 1;
+        }
+        .tarama-ozet-etiket {
+            font-size: 10.5px; color: #64748b; margin-top: 2px;
+        }
+
+        /* Aksiyon butonları */
+        .tarama-bildirim-butonlar {
+            display: flex; gap: 6px; margin-top: 6px;
+        }
+        .tarama-bildirim-btn {
+            flex: 1;
+            padding: 8px 12px;
+            border-radius: 8px;
+            font-size: 12.5px; font-weight: 600;
+            cursor: pointer; border: none;
+            font-family: inherit;
+            transition: all 0.15s;
+        }
+        .tarama-bildirim-btn.primer {
+            background: #2563eb; color: #fff;
+        }
+        .tarama-bildirim-btn.primer:hover { background: #1d4ed8; }
+        .tarama-bildirim-btn.ikincil {
+            background: #f1f5f9; color: #475569;
+        }
+        .tarama-bildirim-btn.ikincil:hover { background: #e2e8f0; }
+
+        /* Şimdi Tara butonu — devam ederken görsel feedback */
+        .btn-tara:disabled {
+            opacity: 0.65; cursor: not-allowed;
+        }
+        .btn-tara.tarama-devam .fa-rotate {
+            animation: doner 1.5s linear infinite;
+        }
+        @keyframes doner {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+<div class="panel-kapsayici">
+
+    <nav class="yan-menu">
+        <div class="yan-menu-baslik"><h2>🛡️ ÜNLÜ İSG</h2></div>
+        <ul class="menu-ogeleri">
+            <li><a href="/anasayfa"><i class="fa-solid fa-home"></i> ANA SAYFA</a></li>
+            <li><a href="/firmalar"><i class="fa-solid fa-building"></i> FİRMALAR</a></li>
+            <li><a href="/personel"><i class="fa-solid fa-users"></i> PERSONEL</a></li>
+            <li><a href="/egitimler"><i class="fa-solid fa-graduation-cap"></i> EĞİTİMLER</a></li>
+            <li><a href="/dokumanlar"><i class="fa-solid fa-file-alt"></i> DOKÜMANLAR</a></li>
+            <li><a href="/raporlar"><i class="fa-solid fa-chart-pie"></i> RAPORLAR</a></li>
+            <li><a href="/kullanicilar"><i class="fa-solid fa-users-gear"></i> KULLANICILAR</a></li>
+            <li class="aktif"><a href="/mevzuat-takip"><i class="fa-solid fa-satellite-dish"></i> MEVZUAT TAKİP</a></li>
+            <li class="menu-alt"><a href="/"><i class="fa-solid fa-sign-out-alt"></i> ÇIKIŞ</a></li>
+        </ul>
+    </nav>
+
+    <main class="ana-icerik">
+        <header class="ust-bar">
+            <div class="hosgeldin-metni"><h3>Mevzuat Otomatik Takip</h3></div>
+            <div class="kullanici-profili" onclick="profilModalAc()" style="cursor:pointer;" title="Profil ayarlarını aç">
+            <div class="kullanici-bilgisi">
+                    <span class="isim" id="header-isim">Yükleniyor...</span>
+                    <span class="rol"  id="header-rol">...</span>
+            </div>
+            <div class="kullanici-avatar" id="header-avatar">?</div>
+            </div>
+        </header>
+
+        <div class="icerik">
+
+            <!-- BAŞLIK + AKSİYON BUTONLARI -->
+            <div class="sayfa-header">
+                <div class="sayfa-header-sol">
+                    <h1>Mevzuat Otomatik Takip</h1>
+                    <p>Resmi mevzuat sayfalarının periyodik takibi, değişiklik tespiti ve onay yönetimi</p>
+                </div>
+                <div style="display: flex; gap: 10px;">
+                    <button class="btn-header btn-tara" id="btn-tara" onclick="simdiTara()">
+                        <i class="fa-solid fa-rotate"></i> Şimdi Tara
+                    </button>
+                    <button class="btn-header btn-yeni" onclick="ekleModalAc()">
+                        <i class="fa-solid fa-plus"></i> Yeni Mevzuat
+                    </button>
+                </div>
+            </div>
+
+            <!-- STAT BANDI -->
+            <div class="stat-bant">
+                <div class="stat-kutu">
+                    <div class="stat-ikon toplam"><i class="fa-solid fa-list"></i></div>
+                    <div class="stat-metin">
+                        <div class="sayi" id="stat-toplam">—</div>
+                        <div class="etiket">Toplam Takipte</div>
+                    </div>
+                </div>
+                <div class="stat-kutu">
+                    <div class="stat-ikon aktif"><i class="fa-solid fa-check-circle"></i></div>
+                    <div class="stat-metin">
+                        <div class="sayi" id="stat-aktif">—</div>
+                        <div class="etiket">Aktif Takip</div>
+                    </div>
+                </div>
+                <div class="stat-kutu">
+                    <div class="stat-ikon hatali"><i class="fa-solid fa-triangle-exclamation"></i></div>
+                    <div class="stat-metin">
+                        <div class="sayi" id="stat-hatali">—</div>
+                        <div class="etiket">URL Hatalı</div>
+                    </div>
+                </div>
+                <div class="stat-kutu tiklanabilir" id="stat-bekleyen-kart" onclick="bekleyenlerToggle()">
+                    <div class="stat-ikon bekleyen"><i class="fa-solid fa-bell"></i></div>
+                    <div class="stat-metin">
+                        <div class="sayi" id="stat-bekleyen">—</div>
+                        <div class="etiket">Onay Bekleyen <i class="fa-solid fa-chevron-down" style="font-size:9px; opacity:0.5;"></i></div>
+                    </div>
+                </div>
+            </div>
+
+           <!-- SCHEDULER DURUM KARTI -->
+<div class="scheduler-kart">
+    <div class="scheduler-bilgi">
+        <div class="scheduler-ikon">
+            <i class="fa-solid fa-satellite-dish"></i>
+        </div>
+        <div class="scheduler-yazi">
+            <h3>
+                Otomatik Tarama Sistemi
+                <span class="durum-rozeti durum-aktif" id="scheduler-rozet">AKTİF</span>
+            </h3>
+            <p id="scheduler-detay">Yükleniyor...</p>
+        </div>
+    </div>
+    <button class="btn-header" style="background:#0284c7; color:#fff; box-shadow:0 2px 8px rgba(2,132,199,0.25);" onclick="ayarModalAc()">
+        <i class="fa-solid fa-gear"></i> Sıklığı Değiştir
+    </button>
+</div>
+
+<!-- ONAY BEKLEYENLER (gizli, tıklayınca açılır) -->
+<div class="bekleyenler-bolum" id="bekleyenler-bolum">
+    <div class="bekleyenler-baslik">
+        <i class="fa-solid fa-bell" style="color:#f59e0b;"></i>
+        Admin Onayı Bekleyen Değişiklikler
+        <span id="bekleyenler-sayi" style="background:#f59e0b; color:#fff; padding:1px 8px; border-radius:8px; font-size:11px;">0</span>
+    </div>
+    <div id="bekleyenler-listesi">
+        <div class="durum-mesaji"><i class="fa-solid fa-spinner fa-spin"></i>Yükleniyor...</div>
+    </div>
+</div>
+
+            <!-- FİLTRELER -->
+            <div class="filtre-bant">
+                <input type="text" id="arama-input" placeholder="🔍 Mevzuat adında ara...">
+                <select id="durum-filtre">
+                    <option value="">Tüm Durumlar</option>
+                    <option value="aktif">✅ Aktif</option>
+                    <option value="url-hatasi">⚠️ URL Hatalı</option>
+                    <option value="hazır">🆕 Hazır</option>
+                    <option value="pasif">⏸️ Pasif</option>
+                </select>
+                <select id="kategori-filtre">
+                    <option value="">Tüm Kategoriler</option>
+                    <option value="Kanun">Kanun</option>
+                    <option value="Yönetmelik">Yönetmelik</option>
+                    <option value="Tebliğ">Tebliğ</option>
+                    <option value="Genelge">Genelge</option>
+                </select>
+            </div>
+
+            <!-- TABLO -->
+            <div class="tablo-kart">
+                <table>
+                    <thead>
+                        <tr>
+                            <th style="width:35%;">Mevzuat</th>
+                            <th>Kategori</th>
+                            <th>Durum</th>
+                            <th>Son Tarama</th>
+                            <th>Başarı</th>
+                            <th style="text-align:right;">İşlemler</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tablo-govde">
+                        <tr><td colspan="6" class="durum-mesaji"><i class="fa-solid fa-spinner fa-spin"></i>Mevzuat yükleniyor...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+
+        </div>
+    </main>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════════════ -->
+<!-- ⭐ MODAL: Yeni Ekle / Düzenle (SADELEŞTİRİLMİŞ) -->
+<!-- ═══════════════════════════════════════════════════════════════════════ -->
+<div class="modal-arka" id="form-modal">
+    <div class="modal-icerik">
+        <div class="modal-baslik">
+            <div class="modal-baslik-sol">
+                <div class="modal-b-ikon"><i class="fa-solid fa-plus"></i></div>
+                <div class="modal-b-yazi">
+                    <h4 id="form-modal-baslik">Yeni Mevzuat Ekle</h4>
+                    <p id="form-modal-aciklama">mevzuat.gov.tr linkini yapıştırın, gerisini sistem halleder</p>
+                </div>
+            </div>
+            <button class="btn-kapat" onclick="formModalKapat()"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+
+        <!-- Form state — gizli hidden inputlar -->
+        <input type="hidden" id="form-id">
+        <input type="hidden" id="form-anahtar">
+        <input type="hidden" id="form-pdfurl">
+        <input type="hidden" id="form-htmlurl">
+        <input type="hidden" id="form-mevzuatno">
+        <input type="hidden" id="form-tur" value="7">
+
+        <div class="bilgi-kutu">
+            <i class="fa-solid fa-info-circle"></i>
+            <div>mevzuat.gov.tr'de aradığınız yönetmeliği açın, tarayıcı çubuğundaki adresi aşağıya yapıştırın ve <strong>URL Test Et</strong>'e basın.</div>
+        </div>
+
+        <!-- 1. MEVZUAT LİNKİ (ana alan) -->
+        <div class="form-grup">
+            <label>Mevzuat Linki <span class="gerekli">*</span></label>
+            <input type="url" id="form-link" placeholder="https://www.mevzuat.gov.tr/mevzuat?MevzuatNo=..." oninput="linkDegisti()">
+            <div id="link-bilgi" class="link-bilgi">
+                <i class="fa-solid fa-circle-info"></i>
+                <span id="link-bilgi-yazi"></span>
+            </div>
+        </div>
+
+        <!-- 2. MEVZUAT ADI -->
+        <div class="form-grup">
+            <label>Mevzuat Adı <span class="gerekli">*</span></label>
+            <input type="text" id="form-ad" placeholder="Örn: Çalışanların İSG Eğitimleri Yönetmeliği">
+        </div>
+
+        <!-- 3. KATEGORİ -->
+        <div class="form-grup">
+            <label>Kategori <span class="gerekli">*</span></label>
+            <select id="form-kategori">
+                <option value="Kanun">Kanun</option>
+                <option value="Yönetmelik" selected>Yönetmelik</option>
+                <option value="Tebliğ">Tebliğ</option>
+                <option value="Genelge">Genelge</option>
+                <option value="Yönerge">Yönerge</option>
+                <option value="Diğer">Diğer</option>
+            </select>
+        </div>
+
+        <!-- 4. AÇIKLAMA -->
+        <div class="form-grup">
+            <label>Açıklama <small>(neyin kuralına dayanak olduğu)</small></label>
+            <textarea id="form-aciklama" rows="2" placeholder="Bu mevzuatın hangi periyot/oran kurallarına dayanak olduğunu kısaca yazın"></textarea>
+        </div>
+
+        <!-- ⭐ GELİŞMİŞ AYARLAR ACCORDION (kapalı default — sadece debug için) -->
+        <div class="gelismis-accordion" id="gelismis-accordion">
+            <button type="button" class="gelismis-baslik" onclick="gelismisToggle()">
+                <span><i class="fa-solid fa-gear"></i> Gelişmiş — Tespit Edilen Bilgiler</span>
+                <i class="fa-solid fa-chevron-down accordion-ok"></i>
+            </button>
+            <div class="gelismis-icerik">
+                <div style="font-size:11.5px; color:#64748b; margin-bottom:10px;">
+                    Bu alanlar mevzuat linkinden <strong>otomatik üretilir</strong>. Sorun gidermek istiyorsanız aşağıdaki bilgileri kontrol edin.
+                </div>
+                <div class="bilgi-rapor">
+                    <div>Sistem Anahtarı: <span class="alan-deger" id="bilgi-anahtar">—</span></div>
+                    <div>PDF URL:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <span class="alan-deger" id="bilgi-pdfurl">—</span></div>
+                    <div>HTML URL:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <span class="alan-deger" id="bilgi-htmlurl">—</span></div>
+                    <div>Mevzuat No:&nbsp;&nbsp;&nbsp;&nbsp; <span class="alan-deger" id="bilgi-mevzuatno">—</span></div>
+                    <div>Tertip:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <span class="alan-deger" id="bilgi-tertip">5</span></div>
+                </div>
+            </div>
+        </div>
+
+        <div id="test-sonuc" class="test-sonuc"></div>
+
+        <div class="modal-butonlar">
+            <button class="btn-form btn-test" onclick="urlTestEt()">
+                <i class="fa-solid fa-flask"></i> URL Test Et
+            </button>
+            <button class="btn-form btn-kaydet" onclick="formKaydet()">
+                <i class="fa-solid fa-check"></i> <span id="form-buton-yazi">Ekle ve Takibe Al</span>
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL: Versiyon Geçmişi -->
+<div class="modal-arka" id="gecmis-modal">
+    <div class="modal-icerik genis">
+        <div class="modal-baslik">
+            <div class="modal-baslik-sol">
+                <div class="modal-b-ikon" style="background:#f5f3ff; color:#7c3aed;">
+                    <i class="fa-solid fa-clock-rotate-left"></i>
+                </div>
+                <div class="modal-b-yazi">
+                    <h4>Versiyon Geçmişi</h4>
+                    <p id="gecmis-mevzuat-adi">—</p>
+                </div>
+            </div>
+            <button class="btn-kapat" onclick="gecmisKapat()"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <div id="gecmis-icerik">
+            <div class="durum-mesaji"><i class="fa-solid fa-spinner fa-spin"></i>Yükleniyor...</div>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL: Cron Ayarları -->
+<div class="modal-arka" id="ayar-modal">
+    <div class="modal-icerik">
+        <div class="modal-baslik">
+            <div class="modal-baslik-sol">
+                <div class="modal-b-ikon" style="background:#e0f2fe; color:#0284c7;">
+                    <i class="fa-solid fa-gear"></i>
+                </div>
+                <div class="modal-b-yazi">
+                    <h4>Otomatik Tarama Sıklığı</h4>
+                    <p>Sistem yükünü minimize eden sakin saat seçenekleri</p>
+                </div>
+            </div>
+            <button class="btn-kapat" onclick="ayarModalKapat()"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+
+        <div class="bilgi-kutu">
+            <i class="fa-solid fa-shield-halved"></i>
+            <div>
+                <strong>Neden sınırlı seçenek?</strong> Taramalar internet trafiğinin düşük olduğu <strong>gece saatlerinde</strong> yapılır. Bu, kurumsal disiplini korur ve mevzuat.gov.tr sunucusuna saygılı bir kullanım sağlar.
+            </div>
+        </div>
+
+        <div class="form-grup">
+            <label>Tarama Periyodu <span class="gerekli">*</span></label>
+            <select id="ayar-siklik" onchange="onizlemeyiGuncelle()" style="font-size:14px;">
+                <option value="0 3 * * 0" data-yazi="Her Pazar sabah 03:00" selected>🌙 Her Pazar sabah 03:00 (Önerilen)</option>
+                <option value="0 3 * * 1" data-yazi="Her Pazartesi sabah 03:00">🌙 Her Pazartesi sabah 03:00</option>
+                <option value="0 23 * * 5" data-yazi="Her Cuma gece 23:00">🌃 Her Cuma gece 23:00</option>
+                <option value="0 3 1 * *" data-yazi="Her ayın 1'i gece 03:00">📅 Her ayın 1'i gece 03:00</option>
+            </select>
+        </div>
+
+        <div id="ayar-onizleme" style="background:#f0fdf4; border:1px solid #86efac; border-radius:10px; padding:14px 16px; margin-top:8px; display:flex; gap:10px; align-items:center;">
+            <i class="fa-solid fa-eye" style="color:#15803d; font-size:18px;"></i>
+            <div>
+                <div style="font-size:11px; color:#15803d; font-weight:600; letter-spacing:0.4px; text-transform:uppercase;">Önizleme</div>
+                <div id="ayar-onizleme-yazi" style="font-size:15px; color:#0f172a; font-weight:600; margin-top:2px;">Her Pazar sabah 03:00</div>
+            </div>
+        </div>
+
+        <div style="background:#fffbeb; border:1px solid #fcd34d; border-radius:10px; padding:11px 14px; margin-top:12px; display:flex; gap:9px; align-items:flex-start;">
+            <i class="fa-solid fa-bolt" style="color:#b45309; margin-top:2px;"></i>
+            <div style="font-size:12.5px; color:#78350f;">
+                <strong>İpucu:</strong> Acil durumlar (örn: mevzuat değişikliği duyurusu) için ana sayfadaki <strong>"Şimdi Tara"</strong> butonunu kullanın — anlık tarama yapar.
+            </div>
+        </div>
+
+        <div class="modal-butonlar">
+            <button class="btn-form" style="background:#f1f5f9; color:#475569;" onclick="ayarModalKapat()">İptal</button>
+            <button class="btn-form btn-kaydet" onclick="ayarKaydet()">
+                <i class="fa-solid fa-check"></i> Kaydet ve Uygula
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL: İncele & Onayla -->
+<div class="modal-arka" id="onay-modal">
+    <div class="modal-icerik genis">
+        <div class="modal-baslik">
+            <div class="modal-baslik-sol">
+                <div class="modal-b-ikon" style="background:#fef3c7; color:#b45309;">
+                    <i class="fa-solid fa-clipboard-check"></i>
+                </div>
+                <div class="modal-b-yazi">
+                    <h4 id="onay-modal-baslik">Değişikliği İncele & Onayla</h4>
+                    <p id="onay-modal-aciklama">Mevzuat değişikliğini detaylı incele ve etkilenen kuralları güncelle</p>
+                </div>
+            </div>
+            <button class="btn-kapat" onclick="onayModalKapat()"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+
+        <input type="hidden" id="onay-versiyon-id">
+
+        <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:10px; padding:14px; margin-bottom:16px;">
+            <div style="font-size:12px; color:#64748b; font-weight:600; margin-bottom:8px; text-transform:uppercase; letter-spacing:0.5px;">📄 PDF Karşılaştırma</div>
+            <div id="pdf-karsilastirma" style="display:flex; gap:10px; flex-wrap:wrap;"></div>
+        </div>
+
+        <div class="diff-bolum" id="diff-bolum">
+            <div class="diff-baslik" onclick="diffToggle()">
+                <div class="diff-baslik-sol">
+                    <i class="fa-solid fa-code-compare"></i>
+                    <span>İçerik Farklılıkları</span>
+                    <span id="diff-istatistik" class="diff-istatistik">
+                        <span style="opacity:0.6; font-size:11px;">tıklayın</span>
+                    </span>
+                </div>
+                <i class="fa-solid fa-chevron-down diff-baslik-ok"></i>
+            </div>
+            <div class="diff-icerik">
+                <div class="diff-icerik-inner" id="diff-icerik-inner">
+                    <div class="diff-yukleniyor">
+                        <i class="fa-solid fa-spinner fa-spin"></i> Yükleniyor...
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div style="font-size:13px; font-weight:700; color:#0f172a; margin-bottom:10px; display:flex; align-items:center; gap:6px;">
+            🔧 Etkilenen Kuralları Güncelle
+            <span style="font-size:11px; color:#64748b; font-weight:400;">(opsiyonel — kural değişmedi ise boş bırakabilirsiniz)</span>
+        </div>
+
+        <div id="kural-satirlari"></div>
+
+        <button class="btn-kural-ekle" onclick="kuralSatiriEkle()">
+            <i class="fa-solid fa-plus"></i> Etkilenen Kural Ekle
+        </button>
+
+        <div class="form-grup">
+            <label>Genel Not <small>(opsiyonel — örn: R.G. tarihi, madde bilgisi)</small></label>
+            <textarea id="onay-genel-not" rows="2" placeholder="Örnek: 6331 sayılı kanunun 17. maddesi R.G. 13.05.2026 ile güncellendi"></textarea>
+        </div>
+
+        <div class="bilgi-kutu">
+            <i class="fa-solid fa-info-circle"></i>
+            <div>
+                <strong>Onayla & Uygula:</strong> Hem PDF onaylanır, hem yukarıda seçilen kurallar güncellenir, hem değişiklik geçmişine kayıt atılır.<br>
+                <strong>Sadece Onayla:</strong> Sadece PDF değişikliği onaylanır, kurallarda değişiklik yapılmaz (örn: sadece dilbilgisi düzeltmesi).
+            </div>
+        </div>
+
+        <div class="onay-butonlar">
+            <button class="btn-form btn-reddet-onay" onclick="degisikligiReddet()">
+                <i class="fa-solid fa-xmark"></i> Reddet
+            </button>
+            <button class="btn-form btn-sadece-onayla" onclick="sadeceOnayla()">
+                <i class="fa-solid fa-check"></i> Sadece Onayla
+            </button>
+            <button class="btn-form btn-onayla-uygula" onclick="onaylaVeUygula()">
+                <i class="fa-solid fa-circle-check"></i> Onayla & Uygula
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- TARAMA BİLDİRİM KUTUSU -->
+<div class="tarama-bildirim" id="tarama-bildirim">
+    <div class="tarama-bildirim-baslik">
+        <div class="tarama-bildirim-baslik-sol">
+            <div class="tarama-bildirim-ikon" id="tarama-bildirim-ikon">
+                <i class="fa-solid fa-satellite-dish"></i>
+            </div>
+            <div>
+                <h4 id="tarama-bildirim-baslik-yazi">Tarama devam ediyor...</h4>
+                <div class="tarama-bildirim-baslik-alt" id="tarama-bildirim-altYazi">Mevzuatlar kontrol ediliyor</div>
+            </div>
+        </div>
+        <button class="tarama-bildirim-kapat" onclick="taramaBildirimKapat()">
+            <i class="fa-solid fa-xmark"></i>
+        </button>
+    </div>
+
+    <div class="tarama-bildirim-icerik">
+        <div id="tarama-ilerleme-alani">
+            <div class="tarama-ilerleme-info">
+                <span><strong id="tarama-gecen-sure">0</strong> saniye geçti</span>
+                <span><strong id="tarama-yuzde">0%</strong></span>
+            </div>
+            <div class="tarama-progress-bar">
+                <div class="tarama-progress-dolum" id="tarama-progress-dolum" style="width: 0%;"></div>
+            </div>
+        </div>
+
+        <div id="tarama-ozet-alani" style="display:none;">
+            <div class="tarama-ozet-grid">
+                <div class="tarama-ozet-item">
+                    <span class="tarama-ozet-ikon">🆕</span>
+                    <div class="tarama-ozet-yazi">
+                        <span class="tarama-ozet-deger" id="ozet-yeni">0</span>
+                        <span class="tarama-ozet-etiket">Yeni</span>
+                    </div>
+                </div>
+                <div class="tarama-ozet-item degisti">
+                    <span class="tarama-ozet-ikon">🔔</span>
+                    <div class="tarama-ozet-yazi">
+                        <span class="tarama-ozet-deger" id="ozet-degisti">0</span>
+                        <span class="tarama-ozet-etiket">Değişti</span>
+                    </div>
+                </div>
+                <div class="tarama-ozet-item">
+                    <span class="tarama-ozet-ikon">✓</span>
+                    <div class="tarama-ozet-yazi">
+                        <span class="tarama-ozet-deger" id="ozet-degismemis">0</span>
+                        <span class="tarama-ozet-etiket">Değişmemiş</span>
+                    </div>
+                </div>
+                <div class="tarama-ozet-item">
+                    <span class="tarama-ozet-ikon">⏭️</span>
+                    <div class="tarama-ozet-yazi">
+                        <span class="tarama-ozet-deger" id="ozet-mukerrer">0</span>
+                        <span class="tarama-ozet-etiket">Mükerrer</span>
+                    </div>
+                </div>
+                <div class="tarama-ozet-item hata" style="grid-column: 1 / -1;">
+                    <span class="tarama-ozet-ikon">❌</span>
+                    <div class="tarama-ozet-yazi">
+                        <span class="tarama-ozet-deger" id="ozet-hata">0</span>
+                        <span class="tarama-ozet-etiket">URL hatalı mevzuat</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="tarama-bildirim-butonlar">
+                <button class="tarama-bildirim-btn ikincil" onclick="taramaBildirimKapat()">Kapat</button>
+                <button class="tarama-bildirim-btn primer" id="btn-sonuc-incele" onclick="taramaSonucIncele()">
+                    <i class="fa-solid fa-arrow-right"></i> Onay Bekleyenler
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- TOAST BİLDİRİMİ -->
+<div class="toast" id="toast"></div>
+
+<%- include('partials/profil-modal') %>
+<script>
+// ═══════════════════════════════════════════════════════════════════════════
+// MEVZUAT OTOMATİK TAKİP — Frontend
+// ═══════════════════════════════════════════════════════════════════════════
+
+let tumMevzuatlar = [];
+let scheduler = null;
+
+// ─── SAYFA YÜKLENDİĞİNDE ────────────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', async () => {
+    const kullanici = AUTH.kullaniciAl();
+    if (kullanici) {
+        document.getElementById('header-isim').textContent = kullanici.adSoyad || 'Kullanıcı';
+        document.getElementById('header-rol').textContent = (kullanici.rol || '').replace(/_/g, ' ').toUpperCase();
+
+        const avatarEl = document.getElementById('header-avatar');
+        const fotoUrl = kullanici.profilFotoUrl || kullanici.fotoUrl || kullanici.profilFoto;
+        if (fotoUrl) {
+            avatarEl.innerHTML = `<img src="${fotoUrl}" alt="${kullanici.adSoyad || ''}" style="width:100%; height:100%; object-fit:cover; border-radius:50%;">`;
+        } else {
+            const adSoyad = kullanici.adSoyad || 'İS';
+            const harfler = adSoyad
+                .split(' ')
+                .filter(p => p.length > 0)
+                .map(p => p[0].toUpperCase())
+                .slice(0, 2)
+                .join('');
+            avatarEl.textContent = harfler;
+        }
+    }
+    await verileriYukle();
+
+    document.getElementById('arama-input').addEventListener('input', tabloyuYenidenCiz);
+    document.getElementById('durum-filtre').addEventListener('change', tabloyuYenidenCiz);
+    document.getElementById('kategori-filtre').addEventListener('change', tabloyuYenidenCiz);
+
+    document.getElementById('form-modal').addEventListener('click', function(e) {
+        if (e.target === this) formModalKapat();
+    });
+    document.getElementById('gecmis-modal').addEventListener('click', function(e) {
+        if (e.target === this) gecmisKapat();
+    });
+
+    setInterval(durumYenile, 30000);
+});
+
+// ─── VERİLERİ YÜKLE ─────────────────────────────────────────────────────────
+async function verileriYukle() {
+    try {
+        const [durumRes, listeRes] = await Promise.all([
+            AUTH.apiFetch('/api/mevzuat-takip/durum'),
+            AUTH.apiFetch('/api/mevzuat-takip/liste'),
+        ]);
+
+        const durumData = await durumRes.json();
+        const listeData = await listeRes.json();
+
+        if (durumData.basarili) {
+            scheduler = durumData.scheduler;
+            statKartlariCiz(durumData.ozet);
+            schedulerKartiCiz(durumData.scheduler);
+        }
+
+        if (listeData.basarili) {
+            tumMevzuatlar = listeData.veri;
+            tabloyuYenidenCiz();
+        }
+    } catch (err) {
+        toastGoster('Veriler yüklenemedi: ' + err.message, true);
+    }
+}
+
+async function durumYenile() {
+    try {
+        const res = await AUTH.apiFetch('/api/mevzuat-takip/durum');
+        const data = await res.json();
+        if (data.basarili) {
+            statKartlariCiz(data.ozet);
+            schedulerKartiCiz(data.scheduler);
+        }
+    } catch {}
+}
+
+function statKartlariCiz(ozet) {
+    document.getElementById('stat-toplam').textContent = ozet.takipEdilenMevzuat || 0;
+    document.getElementById('stat-aktif').textContent = ozet.aktifSayi || 0;
+    document.getElementById('stat-hatali').textContent = ozet.hataliSayi || 0;
+    document.getElementById('stat-bekleyen').textContent = ozet.onayBekleyenDegisiklik || 0;
+}
+
+function schedulerKartiCiz(sch) {
+    const rozet = document.getElementById('scheduler-rozet');
+    const detay = document.getElementById('scheduler-detay');
+
+    rozet.textContent = sch.aktif ? 'AKTİF' : 'PASİF';
+    rozet.className = 'durum-rozeti ' + (sch.aktif ? 'durum-aktif' : 'durum-pasif');
+
+    let metin = sch.cronAciklama + ' • ' + sch.zamanDilimi;
+    if (sch.sonCalismaTarihi) {
+        const tarih = new Date(sch.sonCalismaTarihi);
+        metin += ' • Son tarama: ' + tarih.toLocaleString('tr-TR');
+    }
+    detay.textContent = metin;
+}
+
+function tabloyuYenidenCiz() {
+    const arama = document.getElementById('arama-input').value.toLowerCase().trim();
+    const durumFiltre = document.getElementById('durum-filtre').value;
+    const kategoriFiltre = document.getElementById('kategori-filtre').value;
+
+    let filtreli = tumMevzuatlar.filter(m => {
+        const adUyuyor = !arama || m.ad.toLowerCase().includes(arama);
+        const durumUyuyor = !durumFiltre ||
+            (durumFiltre === 'pasif' ? !m.aktif : m.takipDurumu === durumFiltre);
+        const kategoriUyuyor = !kategoriFiltre || m.kategori === kategoriFiltre;
+        return adUyuyor && durumUyuyor && kategoriUyuyor;
+    });
+
+    const tbody = document.getElementById('tablo-govde');
+
+    if (filtreli.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="6" class="durum-mesaji"><i class="fa-solid fa-inbox"></i>Kriterlere uygun mevzuat bulunamadı</td></tr>';
+        return;
+    }
+
+    tbody.innerHTML = filtreli.map(m => {
+        const durumClass = {
+            'aktif': 'durum-aktif-et',
+            'url-hatasi': 'durum-hatali-et',
+            'hazır': 'durum-hazir-et',
+            'pasif': 'durum-pasif-et',
+            'erisilemez': 'durum-erisilemez-et',
+        }[m.takipDurumu] || 'durum-pasif-et';
+
+        const durumYazi = {
+            'aktif': '✅ Aktif',
+            'url-hatasi': '⚠️ URL Hatalı',
+            'hazır': '🆕 Hazır',
+            'pasif': '⏸️ Pasif',
+            'erisilemez': '🔌 Erişilemez',
+        }[m.takipDurumu] || m.takipDurumu;
+
+        const sonTarama = m.sonTaramaTarihi
+            ? new Date(m.sonTaramaTarihi).toLocaleString('tr-TR', { dateStyle: 'short', timeStyle: 'short' })
+            : '—';
+
+        const basariOrani = m.toplamTaramaSayisi > 0
+            ? Math.round((m.basariliTaramaSayisi / m.toplamTaramaSayisi) * 100)
+            : null;
+        const basariYazi = basariOrani !== null
+            ? `${basariOrani}% <small style="color:#94a3b8;">(${m.basariliTaramaSayisi}/${m.toplamTaramaSayisi})</small>`
+            : '<small style="color:#cbd5e1;">Henüz taranmadı</small>';
+
+        const hataMesaji = m.sonHataMesaji
+            ? `<div class="hata-bant"><i class="fa-solid fa-circle-exclamation"></i> ${_esc(m.sonHataMesaji)}</div>`
+            : '';
+
+        return `
+            <tr>
+                <td>
+                    <div class="mevzuat-adi">${_esc(m.ad)}</div>
+                    ${m.aciklama ? `<div class="mevzuat-aciklama">${_esc(m.aciklama)}</div>` : ''}
+                    ${hataMesaji}
+                </td>
+                <td><span class="kategori-etiket">${_esc(m.kategori)}</span></td>
+                <td><span class="durum-etiket ${durumClass}">${durumYazi}</span></td>
+                <td style="font-size:12px; color:#64748b;">${sonTarama}</td>
+                <td style="font-size:12px;">${basariYazi}</td>
+                <td>
+                    <div class="islem-grup" style="justify-content:flex-end;">
+                        <button class="btn-ikon btn-duzenle" title="Düzenle" onclick='duzenleModalAc(${JSON.stringify(m)})'>
+                            <i class="fa-solid fa-pen"></i>
+                        </button>
+                        <button class="btn-ikon btn-tekrar" title="Tekrar Tara" onclick="tekrarDene('${m._id}')">
+                            <i class="fa-solid fa-rotate-right"></i>
+                        </button>
+                        <button class="btn-ikon btn-gecmis" title="Versiyon Geçmişi" onclick="gecmisAc('${m.anahtar}', '${_esc(m.ad).replace(/'/g, "\\'")}')">
+                            <i class="fa-solid fa-clock-rotate-left"></i>
+                        </button>
+                        <button class="btn-ikon btn-sil" title="Sil" onclick="mevzuatSil('${m._id}', '${_esc(m.ad).replace(/'/g, "\\'")}')">
+                            <i class="fa-solid fa-trash"></i>
+                        </button>
+                    </div>
+                </td>
+            </tr>
+        `;
+    }).join('');
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// ⭐ URL ANALİZ HELPER (Yeni)
+// ═══════════════════════════════════════════════════════════════════════════
+// Yapıştırılan mevzuat.gov.tr URL'ini parse eder, payload alanlarını üretir.
+//
+// Desteklenen formatlar:
+//   1. https://www.mevzuat.gov.tr/mevzuat?MevzuatNo=17031&MevzuatTur=7&MevzuatTertip=5
+//   2. https://www.mevzuat.gov.tr/MevzuatMetin/7.5.45087.pdf
+//   3. https://www.mevzuat.gov.tr/File/GeneratePdf?mevzuatNo=17031&mevzuatTur=KurumVeKurulusYonetmeligi&mevzuatTertip=5
+//   4. https://mevzuat.gov.tr/anasayfa/MevzuatFihristDetayIframe?MevzuatTur=7&MevzuatNo=18371&MevzuatTertip=5
+
+function urlAnaliz(url) {
+    if (!url || !url.trim()) return null;
+    url = url.trim();
+
+    const sonuc = {
+        pdfURL: '',
+        htmlURL: '',
+        mevzuatNo: '',
+        tertip: '5',
+        anahtar: '',
+        gecerli: true, // ⭐ artık her zaman true — engelleme yok
+        mevzuatSitesi: false,
+    };
+
+    try {
+        const mevzuatSitesi = url.toLowerCase().includes('mevzuat.gov.tr');
+        sonuc.mevzuatSitesi = mevzuatSitesi;
+
+        const pdfBelirtileri = ['.pdf', 'GeneratePdf', '/MevzuatMetin/'];
+        const pdfMu = pdfBelirtileri.some(b => url.toLowerCase().includes(b.toLowerCase()));
+
+        if (pdfMu) {
+            sonuc.pdfURL = url;
+        } else {
+            sonuc.htmlURL = url;
+        }
+
+        try {
+            const u = new URL(url);
+            const params = {};
+            for (const [key, value] of u.searchParams.entries()) {
+                params[key.toLowerCase()] = value;
+            }
+            if (params['mevzuatno']) sonuc.mevzuatNo = params['mevzuatno'];
+            if (params['mevzuattertip']) sonuc.tertip = params['mevzuattertip'];
+        } catch {}
+
+        if (!sonuc.mevzuatNo) {
+            const m = url.match(/(\d+)\.(\d+)\.(\d+)\.pdf/);
+            if (m) {
+                sonuc.mevzuatNo = m[3];
+                sonuc.tertip = m[2];
+            }
+        }
+
+        if (sonuc.mevzuatNo) {
+            sonuc.anahtar = `mevzuat_${sonuc.mevzuatNo}`;
+        }
+
+        return sonuc;
+    } catch (err) {
+        console.warn('URL parse hatası:', err);
+        return sonuc;
+    }
+}
+
+function linkDegisti() {
+    const link = document.getElementById('form-link').value.trim();
+    const bilgiEl = document.getElementById('link-bilgi');
+    const bilgiYazi = document.getElementById('link-bilgi-yazi');
+
+    if (!link) {
+        bilgiEl.classList.remove('acik', 'basarili', 'uyari', 'hata');
+        return;
+    }
+
+    const sonuc = urlAnaliz(link);
+    if (!sonuc) return;
+
+    // ⭐ Her durumda hidden alanları doldur
+    document.getElementById('form-pdfurl').value = sonuc.pdfURL;
+    document.getElementById('form-htmlurl').value = sonuc.htmlURL;
+    document.getElementById('form-mevzuatno').value = sonuc.mevzuatNo;
+    if (sonuc.anahtar) {
+        document.getElementById('form-anahtar').value = sonuc.anahtar;
+    }
+
+    // Gelişmiş paneli güncelle
+    document.getElementById('bilgi-anahtar').textContent = sonuc.anahtar || '—';
+    document.getElementById('bilgi-pdfurl').textContent = sonuc.pdfURL || '—';
+    document.getElementById('bilgi-htmlurl').textContent = sonuc.htmlURL || '—';
+    document.getElementById('bilgi-mevzuatno').textContent = sonuc.mevzuatNo || '—';
+    document.getElementById('bilgi-tertip').textContent = sonuc.tertip || '5';
+
+    // mevzuat.gov.tr değilse sarı uyarı göster ama kaydetmeyi engelleme
+    if (!sonuc.mevzuatSitesi) {
+        bilgiEl.classList.remove('basarili', 'hata');
+        bilgiEl.classList.add('acik', 'uyari');
+        bilgiYazi.innerHTML = `
+            <i class="fa-solid fa-triangle-exclamation"></i>
+            Bu mevzuat.gov.tr linki gibi görünmüyor. Lütfen kontrol edin.
+        `;
+    } else {
+        bilgiEl.classList.remove('uyari', 'hata');
+        bilgiEl.classList.add('acik', 'basarili');
+        const detay = sonuc.pdfURL ? '📄 PDF linki' : '🌐 HTML sayfa linki';
+        bilgiYazi.innerHTML = `
+            <i class="fa-solid fa-check-circle"></i>
+            <strong>Link tanındı.</strong> ${detay}
+            ${sonuc.mevzuatNo ? ` • Mevzuat No: ${sonuc.mevzuatNo}` : ''}.
+            <strong>"URL Test Et"</strong> ile doğrulayın.
+        `;
+    }
+}
+
+function gelismisToggle() {
+    document.getElementById('gelismis-accordion').classList.toggle('acik');
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// 📡 ŞİMDİ TARA + BİLDİRİM KUTUSU
+// ═══════════════════════════════════════════════════════════════════════════
+
+let taramaInterval = null;
+let taramaBaslangic = null;
+
+async function simdiTara() {
+    const btn = document.getElementById('btn-tara');
+    if (btn) {
+        btn.disabled = true;
+        btn.classList.add('tarama-devam');
+    }
+
+    taramaBildirimBaslat();
+
+    try {
+        const res = await AUTH.apiFetch('/api/mevzuat-takip/tara', { method: 'POST' });
+        const data = await res.json();
+
+        if (!data.basarili) {
+            taramaBildirimHata(data.hata || 'Tarama başlatılamadı');
+            if (btn) { btn.disabled = false; btn.classList.remove('tarama-devam'); }
+            return;
+        }
+
+        taramaPollingBaslat();
+
+    } catch (err) {
+        taramaBildirimHata('Bağlantı hatası: ' + err.message);
+        if (btn) { btn.disabled = false; btn.classList.remove('tarama-devam'); }
+    }
+}
+
+function taramaBildirimBaslat() {
+    taramaBaslangic = Date.now();
+    const bildirim = document.getElementById('tarama-bildirim');
+
+    bildirim.classList.remove('tamamlandi', 'hata');
+    bildirim.classList.add('devam-ediyor');
+
+    document.getElementById('tarama-bildirim-baslik-yazi').textContent = 'Tarama devam ediyor...';
+    document.getElementById('tarama-bildirim-altYazi').textContent = 'Mevzuat kontrol ediliyor';
+    document.getElementById('tarama-bildirim-ikon').innerHTML = '<i class="fa-solid fa-satellite-dish"></i>';
+    document.getElementById('tarama-gecen-sure').textContent = '0';
+    document.getElementById('tarama-yuzde').textContent = '0%';
+    document.getElementById('tarama-progress-dolum').style.width = '0%';
+
+    document.getElementById('tarama-ilerleme-alani').style.display = 'block';
+    document.getElementById('tarama-ozet-alani').style.display = 'none';
+
+    setTimeout(() => bildirim.classList.add('gorunur'), 50);
+}
+
+function taramaPollingBaslat() {
+    let aramaSayisi = 0;
+    const maxArama = 90;
+
+    taramaInterval = setInterval(async () => {
+        aramaSayisi++;
+        if (aramaSayisi > maxArama) {
+            clearInterval(taramaInterval);
+            taramaBildirimHata('Tarama çok uzun sürdü, zaman aşımı');
+            return;
+        }
+
+        const gecenSn = Math.floor((Date.now() - taramaBaslangic) / 1000);
+        document.getElementById('tarama-gecen-sure').textContent = gecenSn;
+
+        const tahminiYuzde = Math.min(Math.floor((gecenSn / 35) * 100), 95);
+        document.getElementById('tarama-yuzde').textContent = tahminiYuzde + '%';
+        document.getElementById('tarama-progress-dolum').style.width = tahminiYuzde + '%';
+
+        try {
+            const res = await AUTH.apiFetch('/api/mevzuat-takip/durum');
+            const data = await res.json();
+
+            if (data.basarili && !data.ozet.islemDevamEdiyor) {
+                clearInterval(taramaInterval);
+                taramaBildirimTamamla(gecenSn);
+            }
+        } catch (err) {}
+    }, 2000);
+}
+
+async function taramaBildirimTamamla(gecenSn) {
+    const btn = document.getElementById('btn-tara');
+    if (btn) {
+        btn.disabled = false;
+        btn.classList.remove('tarama-devam');
+    }
+
+    const bildirim = document.getElementById('tarama-bildirim');
+    bildirim.classList.remove('devam-ediyor');
+    bildirim.classList.add('tamamlandi');
+
+    document.getElementById('tarama-progress-dolum').style.width = '100%';
+    document.getElementById('tarama-yuzde').textContent = '100%';
+
+    document.getElementById('tarama-bildirim-baslik-yazi').textContent = '✅ Tarama tamamlandı!';
+    document.getElementById('tarama-bildirim-altYazi').textContent = `${gecenSn} saniyede bitti`;
+    document.getElementById('tarama-bildirim-ikon').innerHTML = '<i class="fa-solid fa-circle-check"></i>';
+
+    setTimeout(async () => {
+        try {
+            const res = await AUTH.apiFetch('/api/mevzuat-takip/durum');
+            const data = await res.json();
+            const ozet = data.ozet || {};
+
+            document.getElementById('ozet-yeni').textContent = ozet.yeniSayi || 0;
+            document.getElementById('ozet-degisti').textContent = ozet.onayBekleyenDegisiklik || 0;
+            document.getElementById('ozet-degismemis').textContent = ozet.aktifSayi || 0;
+            document.getElementById('ozet-mukerrer').textContent = '—';
+            document.getElementById('ozet-hata').textContent = ozet.hataliSayi || 0;
+
+            const degistiSayi = ozet.onayBekleyenDegisiklik || 0;
+            const incelBtn = document.getElementById('btn-sonuc-incele');
+            if (degistiSayi > 0) {
+                incelBtn.style.display = 'inline-flex';
+                incelBtn.innerHTML = `<i class="fa-solid fa-arrow-right"></i> ${degistiSayi} Onay Bekleyen`;
+            } else {
+                incelBtn.style.display = 'none';
+            }
+        } catch (err) {
+            console.warn('Özet alınamadı:', err);
+        }
+
+        document.getElementById('tarama-ilerleme-alani').style.display = 'none';
+        document.getElementById('tarama-ozet-alani').style.display = 'block';
+
+        if (typeof verileriYukle === 'function') {
+            await verileriYukle();
+        }
+    }, 800);
+}
+
+function taramaBildirimHata(mesaj) {
+    if (taramaInterval) clearInterval(taramaInterval);
+
+    const bildirim = document.getElementById('tarama-bildirim');
+    bildirim.classList.remove('devam-ediyor', 'tamamlandi');
+    bildirim.classList.add('hata');
+
+    document.getElementById('tarama-bildirim-baslik-yazi').textContent = '❌ Tarama hatası';
+    document.getElementById('tarama-bildirim-altYazi').textContent = mesaj;
+    document.getElementById('tarama-bildirim-ikon').innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i>';
+
+    setTimeout(taramaBildirimKapat, 6000);
+}
+
+function taramaBildirimKapat() {
+    if (taramaInterval) {
+        clearInterval(taramaInterval);
+        taramaInterval = null;
+    }
+    document.getElementById('tarama-bildirim').classList.remove('gorunur');
+}
+
+function taramaSonucIncele() {
+    taramaBildirimKapat();
+    if (typeof bekleyenlerToggle === 'function') {
+        const bolum = document.getElementById('bekleyenler-bolum');
+        if (bolum && !bolum.classList.contains('acik')) {
+            bekleyenlerToggle();
+        }
+        setTimeout(() => {
+            const hedef = document.getElementById('bekleyenler-bolum');
+            if (hedef) hedef.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }, 200);
+    }
+}
+
+async function tekrarDene(id) {
+    try {
+        const res = await AUTH.apiFetch(`/api/mevzuat-takip/tekrar-dene/${id}`, { method: 'POST' });
+        const data = await res.json();
+        if (data.basarili) {
+            toastGoster('Tarama başarılı');
+        } else {
+            toastGoster('Hata: ' + (data.sonuc?.hata || data.hata || 'Bilinmeyen'), true);
+        }
+        await verileriYukle();
+    } catch (err) {
+        toastGoster('Hata: ' + err.message, true);
+    }
+}
+
+async function mevzuatSil(id, ad) {
+    if (!confirm(`"${ad}" mevzuatını takip listesinden çıkarmak istediğinize emin misiniz?\n\n(Versiyon geçmişi korunacak)`)) return;
+
+    try {
+        const res = await AUTH.apiFetch(`/api/mevzuat-takip/sil/${id}`, { method: 'DELETE' });
+        const data = await res.json();
+        if (data.basarili) {
+            toastGoster('Mevzuat silindi');
+            await verileriYukle();
+        } else {
+            toastGoster(data.hata || 'Silme başarısız', true);
+        }
+    } catch (err) {
+        toastGoster('Hata: ' + err.message, true);
+    }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// ⭐ EKLE / DÜZENLE MODAL (Sadeleştirilmiş)
+// ═══════════════════════════════════════════════════════════════════════════
+
+function ekleModalAc() {
+    document.getElementById('form-modal-baslik').textContent = 'Yeni Mevzuat Ekle';
+    document.getElementById('form-modal-aciklama').textContent = 'mevzuat.gov.tr linkini yapıştırın, gerisini sistem halleder';
+    document.getElementById('form-buton-yazi').textContent = 'Ekle ve Takibe Al';
+
+    // Tüm form alanlarını sıfırla
+    document.getElementById('form-id').value = '';
+    document.getElementById('form-link').value = '';
+    document.getElementById('form-ad').value = '';
+    document.getElementById('form-aciklama').value = '';
+    document.getElementById('form-kategori').value = 'Yönetmelik';
+    document.getElementById('form-anahtar').value = '';
+    document.getElementById('form-pdfurl').value = '';
+    document.getElementById('form-htmlurl').value = '';
+    document.getElementById('form-mevzuatno').value = '';
+    document.getElementById('form-tur').value = '7';
+
+    // Gelişmiş alanı sıfırla
+    document.getElementById('bilgi-anahtar').textContent = '—';
+    document.getElementById('bilgi-pdfurl').textContent = '—';
+    document.getElementById('bilgi-htmlurl').textContent = '—';
+    document.getElementById('bilgi-mevzuatno').textContent = '—';
+    document.getElementById('bilgi-tertip').textContent = '5';
+
+    // Bildirim ve test sonucunu sıfırla
+    document.getElementById('test-sonuc').className = 'test-sonuc';
+    document.getElementById('test-sonuc').textContent = '';
+    document.getElementById('link-bilgi').classList.remove('acik', 'basarili', 'uyari', 'hata');
+
+    // Gelişmiş accordion kapalı başlasın
+    document.getElementById('gelismis-accordion').classList.remove('acik');
+
+    document.getElementById('form-modal').classList.add('acik');
+
+    // Fokus link alanına
+    setTimeout(() => document.getElementById('form-link').focus(), 100);
+}
+
+function duzenleModalAc(mevzuat) {
+    document.getElementById('form-modal-baslik').textContent = 'Mevzuatı Düzenle';
+    document.getElementById('form-modal-aciklama').textContent = 'Yeni link yapıştırın veya mevcut bilgileri güncelleyin';
+    document.getElementById('form-buton-yazi').textContent = 'Değişikliği Kaydet';
+    document.getElementById('form-id').value = mevzuat._id;
+
+    // ⭐ LİNK ALANI BOŞ — kullanıcı yenisini yapıştırması için
+    document.getElementById('form-link').value = '';
+
+    document.getElementById('form-ad').value = mevzuat.ad || '';
+    document.getElementById('form-aciklama').value = mevzuat.aciklama || '';
+    document.getElementById('form-kategori').value = mevzuat.kategori || 'Yönetmelik';
+
+    // Mevcut bilgiler hidden alanlarda kalır (yeni link yapıştırılmazsa korunur)
+    document.getElementById('form-anahtar').value = mevzuat.anahtar;
+    document.getElementById('form-pdfurl').value = mevzuat.pdfURL || '';
+    document.getElementById('form-htmlurl').value = mevzuat.htmlURL || '';
+    document.getElementById('form-mevzuatno').value = mevzuat.mevzuatNo || '';
+    document.getElementById('form-tur').value = mevzuat.tur || '7';
+
+    // Gelişmiş alanda mevcut değerleri göster
+    document.getElementById('bilgi-anahtar').textContent = mevzuat.anahtar || '—';
+    document.getElementById('bilgi-pdfurl').textContent = mevzuat.pdfURL || '—';
+    document.getElementById('bilgi-htmlurl').textContent = mevzuat.htmlURL || '—';
+    document.getElementById('bilgi-mevzuatno').textContent = mevzuat.mevzuatNo || '—';
+    document.getElementById('bilgi-tertip').textContent = mevzuat.tertip || '5';
+
+    // Bilgi mesajı: mevcut link korunuyor
+    document.getElementById('test-sonuc').className = 'test-sonuc';
+    document.getElementById('test-sonuc').textContent = '';
+
+    const bilgiEl = document.getElementById('link-bilgi');
+    const bilgiYazi = document.getElementById('link-bilgi-yazi');
+    bilgiEl.classList.remove('basarili', 'hata');
+    bilgiEl.classList.add('acik', 'uyari');
+    bilgiYazi.innerHTML = `<i class="fa-solid fa-info-circle"></i> Mevcut bağlantı korunacak. Değiştirmek isterseniz yeni bir link yapıştırın.`;
+
+    document.getElementById('gelismis-accordion').classList.remove('acik');
+    document.getElementById('form-modal').classList.add('acik');
+}
+
+function formModalKapat() {
+    document.getElementById('form-modal').classList.remove('acik');
+}
+
+// ─── URL TEST ET ────────────────────────────────────────────────────────────
+async function urlTestEt() {
+    // Önce form-link'te yeni bir URL var mı kontrol et — varsa parse et
+    const link = document.getElementById('form-link').value.trim();
+    if (link) {
+        const sonuc = urlAnaliz(link);
+        if (sonuc) {
+            document.getElementById('form-pdfurl').value = sonuc.pdfURL;
+            document.getElementById('form-htmlurl').value = sonuc.htmlURL;
+            document.getElementById('form-mevzuatno').value = sonuc.mevzuatNo;
+            if (sonuc.anahtar && !document.getElementById('form-anahtar').value) {
+                document.getElementById('form-anahtar').value = sonuc.anahtar;
+            }
+        }
+    }
+
+    const pdfURL = document.getElementById('form-pdfurl').value.trim();
+    const htmlURL = document.getElementById('form-htmlurl').value.trim();
+    const mevzuatNo = document.getElementById('form-mevzuatno').value.trim();
+    const tur = document.getElementById('form-tur').value;
+
+    if (!pdfURL && !htmlURL) {
+        toastGoster('Önce bir mevzuat linki yapıştırın', true);
+        return;
+    }
+
+    const sonucEl = document.getElementById('test-sonuc');
+    sonucEl.className = 'test-sonuc basarili';
+    sonucEl.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Bağlantı doğrulanıyor, lütfen bekleyin...';
+
+    try {
+        const res = await AUTH.apiFetch('/api/mevzuat-takip/test-url', {
+            method: 'POST',
+            body: JSON.stringify({ pdfURL, htmlURL, mevzuatNo, tur, tertip: '5' })
+        });
+        const data = await res.json();
+
+        if (data.basarili) {
+            sonucEl.className = 'test-sonuc basarili';
+            sonucEl.innerHTML = `
+                <i class="fa-solid fa-check-circle"></i>
+                <strong>✓ Bağlantı doğrulandı!</strong> PDF indirildi: ${data.detay.boyutKB} KB, ${data.detay.indirmeSuresiMs}ms
+                <br><small style="opacity:0.8;">Yöntem: ${data.detay.yontem}</small>
+            `;
+        } else {
+            sonucEl.className = 'test-sonuc basarisiz';
+            sonucEl.innerHTML = `<i class="fa-solid fa-circle-exclamation"></i> ${_esc(data.detay || data.hata)}`;
+        }
+    } catch (err) {
+        sonucEl.className = 'test-sonuc basarisiz';
+        sonucEl.innerHTML = `<i class="fa-solid fa-circle-exclamation"></i> Test başarısız: ${_esc(err.message)}`;
+    }
+}
+
+// ─── FORMU KAYDET ───────────────────────────────────────────────────────────
+async function formKaydet() {
+    const id = document.getElementById('form-id').value;
+    const isUpdate = !!id;
+
+    // Yeni link yapıştırılmışsa, payload'a ondan parse et
+    const link = document.getElementById('form-link').value.trim();
+    if (link) {
+        const sonuc = urlAnaliz(link);
+        if (sonuc.gecerli) {
+            document.getElementById('form-pdfurl').value = sonuc.pdfURL;
+            document.getElementById('form-htmlurl').value = sonuc.htmlURL;
+            document.getElementById('form-mevzuatno').value = sonuc.mevzuatNo;
+            if (sonuc.anahtar && !isUpdate) {
+                document.getElementById('form-anahtar').value = sonuc.anahtar;
+            }
+        }
+    }
+
+    const payload = {
+        anahtar:   document.getElementById('form-anahtar').value.trim(),
+        ad:        document.getElementById('form-ad').value.trim(),
+        kategori:  document.getElementById('form-kategori').value,
+        aciklama:  document.getElementById('form-aciklama').value.trim(),
+        pdfURL:    document.getElementById('form-pdfurl').value.trim() || null,
+        htmlURL:   document.getElementById('form-htmlurl').value.trim() || null,
+        mevzuatNo: document.getElementById('form-mevzuatno').value.trim(),
+        tur:       document.getElementById('form-tur').value,
+        tertip:    '5',
+    };
+
+    // Validation
+    if (!payload.ad) {
+        toastGoster('Mevzuat adı zorunludur', true);
+        return;
+    }
+    if (!payload.pdfURL && !payload.htmlURL) {
+        toastGoster('Mevzuat linki gerekli', true);
+        return;
+    }
+
+    // Anahtar yoksa adından üret (slugify)
+    if (!payload.anahtar) {
+        payload.anahtar = payload.ad
+            .toLowerCase()
+            .replace(/ç/g, 'c').replace(/ğ/g, 'g').replace(/ı/g, 'i')
+            .replace(/ö/g, 'o').replace(/ş/g, 's').replace(/ü/g, 'u')
+            .replace(/[^a-z0-9]+/g, '_')
+            .replace(/^_+|_+$/g, '')
+            .slice(0, 50);
+    }
+
+    try {
+        const url = isUpdate ? `/api/mevzuat-takip/guncelle/${id}` : '/api/mevzuat-takip/ekle';
+        const method = isUpdate ? 'PUT' : 'POST';
+
+        const res = await AUTH.apiFetch(url, {
+            method,
+            body: JSON.stringify(payload)
+        });
+        const data = await res.json();
+
+        if (data.basarili) {
+            toastGoster(isUpdate ? 'Mevzuat güncellendi' : 'Mevzuat eklendi');
+            formModalKapat();
+            await verileriYukle();
+        } else {
+            toastGoster(data.hata || 'İşlem başarısız', true);
+        }
+    } catch (err) {
+        toastGoster('Hata: ' + err.message, true);
+    }
+}
+
+// ─── VERSİYON GEÇMİŞİ MODALI ────────────────────────────────────────────────
+async function gecmisAc(anahtar, ad) {
+    document.getElementById('gecmis-mevzuat-adi').textContent = ad;
+    document.getElementById('gecmis-modal').classList.add('acik');
+    document.getElementById('gecmis-icerik').innerHTML =
+        '<div class="durum-mesaji"><i class="fa-solid fa-spinner fa-spin"></i>Yükleniyor...</div>';
+
+    try {
+        const res = await AUTH.apiFetch(`/api/mevzuat-takip/versiyonlar/${anahtar}`);
+        const data = await res.json();
+
+        if (!data.basarili || data.sayi === 0) {
+            document.getElementById('gecmis-icerik').innerHTML =
+                '<div class="durum-mesaji"><i class="fa-solid fa-inbox"></i>Henüz versiyon kaydı yok</div>';
+            return;
+        }
+
+        const html = data.veri.map((v, idx) => {
+            const tarih = new Date(v.olusturmaTarihi).toLocaleString('tr-TR');
+            const boyut = (v.boyutByte / 1024).toFixed(2);
+            const durumRenk = {
+                'yeni': '#16a34a',
+                'onaylandi': '#16a34a',
+                'onay-bekliyor': '#f59e0b',
+                'reddedildi': '#dc2626',
+            }[v.durum] || '#64748b';
+
+            return `
+                <div style="border-left: 3px solid ${durumRenk}; padding: 12px 16px; margin-bottom: 12px; background: #fafafa; border-radius: 0 9px 9px 0;">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+                        <div>
+                            <strong>v${data.sayi - idx}</strong>
+                            <span style="margin-left:8px; padding:2px 8px; background:${durumRenk}; color:#fff; border-radius:4px; font-size:11px;">${v.durum}</span>
+                        </div>
+                        <div style="font-size:12px; color:#64748b;">${tarih}</div>
+                    </div>
+                    <div style="font-size:12px; color:#64748b; font-family:monospace;">
+                        Hash: ${v.hash.substring(0, 24)}... • Boyut: ${boyut} KB
+                    </div>
+                    ${v.dosyaYolu ? `<a href="/api/mevzuat-takip/pdf/${v._id}" target="_blank" style="display:inline-block; margin-top:8px; font-size:12px; color:#2563eb;"><i class="fa-solid fa-file-pdf"></i> PDF'i Görüntüle</a>` : ''}
+                </div>
+            `;
+        }).join('');
+
+        document.getElementById('gecmis-icerik').innerHTML = html;
+    } catch (err) {
+        document.getElementById('gecmis-icerik').innerHTML =
+            `<div class="durum-mesaji" style="color:#dc2626;"><i class="fa-solid fa-circle-exclamation"></i>Hata: ${_esc(err.message)}</div>`;
+    }
+}
+
+function gecmisKapat() {
+    document.getElementById('gecmis-modal').classList.remove('acik');
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// 🔔 ONAY BEKLEYENLER
+// ═══════════════════════════════════════════════════════════════════════════
+
+let mevcutKurallar = [];
+let mevcutKuralSayisi = 0;
+
+async function bekleyenlerToggle() {
+    const bolum = document.getElementById('bekleyenler-bolum');
+    const kart = document.getElementById('stat-bekleyen-kart');
+    const acik = bolum.classList.toggle('acik');
+    kart.classList.toggle('aktif', acik);
+
+    if (acik) {
+        await bekleyenleriYukle();
+    }
+}
+
+async function bekleyenleriYukle() {
+    const listeEl = document.getElementById('bekleyenler-listesi');
+    listeEl.innerHTML = '<div class="durum-mesaji"><i class="fa-solid fa-spinner fa-spin"></i>Yükleniyor...</div>';
+
+    try {
+        const res = await AUTH.apiFetch('/api/mevzuat-takip/bekleyenler');
+        const data = await res.json();
+
+        document.getElementById('bekleyenler-sayi').textContent = data.sayi || 0;
+
+        if (!data.basarili || data.sayi === 0) {
+            listeEl.innerHTML = '<div class="durum-mesaji"><i class="fa-solid fa-inbox"></i>Şu an onay bekleyen değişiklik yok</div>';
+            return;
+        }
+
+        listeEl.innerHTML = data.veri.map(b => {
+            const tarih = new Date(b.olusturmaTarihi).toLocaleString('tr-TR');
+            const boyut = (b.boyutByte / 1024).toFixed(1);
+            const oncekiBilgi = b.onceki
+                ? `Önceki: ${new Date(b.onceki.olusturmaTarihi).toLocaleDateString('tr-TR')} (${(b.onceki.boyutByte/1024).toFixed(1)} KB)`
+                : 'İlk versiyon';
+
+            return `
+                <div class="bekleyen-kart">
+                    <div class="bekleyen-kart-sol">
+                        <div class="ad">${_esc(b.ad)}</div>
+                        <div class="meta">
+                            🆕 Yeni: ${tarih} (${boyut} KB) • ${_esc(oncekiBilgi)}
+                        </div>
+                    </div>
+                    <button class="btn-incele" onclick="onayModalAc('${b._id}')">
+                        <i class="fa-solid fa-clipboard-check"></i> İncele & Onayla
+                    </button>
+                </div>
+            `;
+        }).join('');
+    } catch (err) {
+        listeEl.innerHTML = `<div class="durum-mesaji" style="color:#dc2626;">Hata: ${_esc(err.message)}</div>`;
+    }
+}
+
+async function onayModalAc(versiyonId) {
+    document.getElementById('onay-versiyon-id').value = versiyonId;
+    document.getElementById('kural-satirlari').innerHTML = '<div class="durum-mesaji"><i class="fa-solid fa-spinner fa-spin"></i>Yükleniyor...</div>';
+    document.getElementById('pdf-karsilastirma').innerHTML = '';
+    document.getElementById('onay-genel-not').value = '';
+    document.getElementById('onay-modal').classList.add('acik');
+    mevcutKuralSayisi = 0;
+
+    diffYuklenmis = false;
+    document.getElementById('diff-bolum').classList.remove('acik');
+    document.getElementById('diff-istatistik').innerHTML = '<span style="opacity:0.6; font-size:11px;">tıklayın</span>';
+
+    try {
+        const res = await AUTH.apiFetch(`/api/mevzuat-takip/bekleyen-detay/${versiyonId}`);
+        const data = await res.json();
+
+        if (!data.basarili) {
+            toastGoster(data.hata || 'Detay alınamadı', true);
+            onayModalKapat();
+            return;
+        }
+
+        document.getElementById('onay-modal-baslik').textContent =
+            data.versiyon.ad || 'Değişikliği İncele';
+        document.getElementById('onay-modal-aciklama').textContent =
+            data.takipliMevzuat?.aciklama || 'Mevzuat değişikliğini detaylı incele';
+
+        const yeniTarih = new Date(data.versiyon.olusturmaTarihi).toLocaleString('tr-TR');
+        const yeniBoyut = (data.versiyon.boyutByte / 1024).toFixed(1);
+        let pdfHtml = `
+            <a href="/api/mevzuat-takip/pdf/${data.versiyon._id}" target="_blank"
+               style="flex:1; min-width:200px; padding:10px 14px; background:#fef3c7; color:#b45309;
+                      border:1px solid #fcd34d; border-radius:8px; text-decoration:none;
+                      font-size:12.5px; display:flex; align-items:center; gap:8px;">
+                <i class="fa-solid fa-file-pdf"></i>
+                <div>
+                    <div style="font-weight:700;">🆕 Yeni Versiyon</div>
+                    <div style="font-size:11px; opacity:0.85;">${yeniTarih} • ${yeniBoyut} KB</div>
+                </div>
+            </a>
+        `;
+        if (data.onceki) {
+            const eskiTarih = new Date(data.onceki.olusturmaTarihi).toLocaleString('tr-TR');
+            const eskiBoyut = (data.onceki.boyutByte / 1024).toFixed(1);
+            pdfHtml += `
+                <a href="/api/mevzuat-takip/pdf/${data.onceki._id}" target="_blank"
+                   style="flex:1; min-width:200px; padding:10px 14px; background:#dbeafe; color:#1e40af;
+                          border:1px solid #93c5fd; border-radius:8px; text-decoration:none;
+                          font-size:12.5px; display:flex; align-items:center; gap:8px;">
+                    <i class="fa-solid fa-file-pdf"></i>
+                    <div>
+                        <div style="font-weight:700;">📜 Önceki Versiyon</div>
+                        <div style="font-size:11px; opacity:0.85;">${eskiTarih} • ${eskiBoyut} KB</div>
+                    </div>
+                </a>
+            `;
+        }
+        document.getElementById('pdf-karsilastirma').innerHTML = pdfHtml;
+
+        mevcutKurallar = data.kurallar || [];
+
+        document.getElementById('kural-satirlari').innerHTML = '';
+        kuralSatiriEkle();
+
+    } catch (err) {
+        toastGoster('Hata: ' + err.message, true);
+    }
+}
+
+function onayModalKapat() {
+    document.getElementById('onay-modal').classList.remove('acik');
+}
+
+function kuralSatiriEkle() {
+    mevcutKuralSayisi++;
+    const no = mevcutKuralSayisi;
+
+    let optionsHtml = '<option value="">— Kural seçin —</option>';
+    const gruplar = {};
+    mevcutKurallar.forEach(k => {
+        if (!gruplar[k.grup]) gruplar[k.grup] = [];
+        gruplar[k.grup].push(k);
+    });
+    Object.keys(gruplar).sort().forEach(grup => {
+        optionsHtml += `<optgroup label="${_esc(grup)}">`;
+        gruplar[grup].forEach(k => {
+            optionsHtml += `<option value="${k._id}" data-deger="${k.deger}" data-birim="${k.birim}">${_esc(k.kuralAdi)} — ${_esc(k.tehlikeSinifi)} (${k.deger} ${k.birim})</option>`;
+        });
+        optionsHtml += '</optgroup>';
+    });
+
+    const satirHtml = `
+        <div class="kural-satir" id="kural-satir-${no}">
+            <div class="kural-satir-baslik">
+                <div class="kural-satir-no">Kural #${no}</div>
+                <button class="btn-kural-sil" onclick="kuralSatiriSil(${no})" title="Kaldır">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <div class="form-grup" style="margin-bottom:8px;">
+                <label style="font-size:11.5px;">Etkilenen Kural</label>
+                <select id="kural-secim-${no}" onchange="kuralSecildi(${no})">
+                    ${optionsHtml}
+                </select>
+            </div>
+
+            <div id="kural-eski-${no}" class="kural-bilgi-eski" style="display:none;">
+                <strong>Mevcut değer:</strong> <span id="kural-eski-yazi-${no}">—</span>
+            </div>
+
+            <div class="yeni-deger-row">
+                <div class="form-grup" style="margin-bottom:0;">
+                    <label style="font-size:11.5px;">Yeni Değer</label>
+                    <input type="number" id="kural-yeni-deger-${no}" min="0" placeholder="örn: 3">
+                </div>
+                <div class="form-grup" style="margin-bottom:0;">
+                    <label style="font-size:11.5px;">Yeni Birim</label>
+                    <select id="kural-yeni-birim-${no}">
+                        <option value="yıl">yıl</option>
+                        <option value="ay">ay</option>
+                        <option value="saat">saat</option>
+                        <option value="oran">oran</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="form-grup" style="margin-bottom:0; margin-top:8px;">
+                <label style="font-size:11.5px;">Değişiklik Sebebi <small>(opsiyonel)</small></label>
+                <input type="text" id="kural-sebep-${no}" placeholder="örn: MADDE 13 değişti, R.G. tarihi vs.">
+            </div>
+        </div>
+    `;
+    document.getElementById('kural-satirlari').insertAdjacentHTML('beforeend', satirHtml);
+}
+
+function kuralSatiriSil(no) {
+    document.getElementById(`kural-satir-${no}`).remove();
+}
+
+function kuralSecildi(no) {
+    const select = document.getElementById(`kural-secim-${no}`);
+    const opt = select.selectedOptions[0];
+    const eskiDeger = opt.getAttribute('data-deger');
+    const eskiBirim = opt.getAttribute('data-birim');
+
+    if (eskiDeger && eskiBirim) {
+        document.getElementById(`kural-eski-${no}`).style.display = 'block';
+        document.getElementById(`kural-eski-yazi-${no}`).textContent = `${eskiDeger} ${eskiBirim}`;
+        document.getElementById(`kural-yeni-birim-${no}`).value = eskiBirim;
+    } else {
+        document.getElementById(`kural-eski-${no}`).style.display = 'none';
+    }
+}
+
+async function onaylaVeUygula() {
+    const versiyonId = document.getElementById('onay-versiyon-id').value;
+    const genelNot = document.getElementById('onay-genel-not').value.trim();
+
+    const etkilenenKurallar = [];
+    const satirlar = document.querySelectorAll('[id^="kural-satir-"]');
+    for (const satir of satirlar) {
+        const no = satir.id.replace('kural-satir-', '');
+        const mevzuatId = document.getElementById(`kural-secim-${no}`).value;
+        const yeniDeger = document.getElementById(`kural-yeni-deger-${no}`).value;
+        const yeniBirim = document.getElementById(`kural-yeni-birim-${no}`).value;
+        const sebep = document.getElementById(`kural-sebep-${no}`).value.trim();
+
+        if (mevzuatId && yeniDeger !== '') {
+            etkilenenKurallar.push({
+                mevzuatId,
+                yeniDeger: Number(yeniDeger),
+                yeniBirim,
+                degisiklikSebebi: sebep,
+            });
+        }
+    }
+
+    if (etkilenenKurallar.length === 0) {
+        if (!confirm('Hiçbir kural seçmediniz. Bu sadece PDF onayı olarak kaydedilecek.\n\nDevam etmek istiyor musunuz?')) {
+            return;
+        }
+    }
+
+    try {
+        const res = await AUTH.apiFetch(`/api/mevzuat-takip/onayla-ve-uygula/${versiyonId}`, {
+            method: 'POST',
+            body: JSON.stringify({ etkilenenKurallar, genelNot }),
+        });
+        const data = await res.json();
+
+        if (data.basarili) {
+            toastGoster(data.mesaj || 'Onaylandı ve kurallar güncellendi');
+            onayModalKapat();
+            await verileriYukle();
+            await bekleyenleriYukle();
+        } else {
+            toastGoster(data.hata || 'İşlem başarısız', true);
+        }
+    } catch (err) {
+        toastGoster('Hata: ' + err.message, true);
+    }
+}
+
+async function sadeceOnayla() {
+    const versiyonId = document.getElementById('onay-versiyon-id').value;
+    if (!confirm('PDF değişikliği onaylanacak ama Mevzuat kuralları güncellenmeyecek.\n\nDevam etmek istiyor musunuz?')) {
+        return;
+    }
+
+    try {
+        const res = await AUTH.apiFetch(`/api/mevzuat-takip/onayla/${versiyonId}`, { method: 'POST' });
+        const data = await res.json();
+
+        if (data.basarili) {
+            toastGoster('PDF onaylandı (kural güncellemesi yapılmadı)');
+            onayModalKapat();
+            await verileriYukle();
+            await bekleyenleriYukle();
+        } else {
+            toastGoster(data.hata || 'Onaylanamadı', true);
+        }
+    } catch (err) {
+        toastGoster('Hata: ' + err.message, true);
+    }
+}
+
+async function degisikligiReddet() {
+    const versiyonId = document.getElementById('onay-versiyon-id').value;
+    if (!confirm('Bu PDF değişikliğini reddediyorsunuz. Bir sonraki taramada tekrar tespit edilebilir.\n\nDevam etmek istiyor musunuz?')) {
+        return;
+    }
+
+    try {
+        const res = await AUTH.apiFetch(`/api/mevzuat-takip/reddet/${versiyonId}`, { method: 'POST' });
+        const data = await res.json();
+
+        if (data.basarili) {
+            toastGoster('Değişiklik reddedildi');
+            onayModalKapat();
+            await verileriYukle();
+            await bekleyenleriYukle();
+        } else {
+            toastGoster(data.hata || 'Reddedilemedi', true);
+        }
+    } catch (err) {
+        toastGoster('Hata: ' + err.message, true);
+    }
+}
+
+// ⚙️ CRON AYAR MODALI
+function ayarModalAc() {
+    if (scheduler && scheduler.cronIfadesi) {
+        const select = document.getElementById('ayar-siklik');
+        let bulundu = false;
+        for (const opt of select.options) {
+            if (opt.value === scheduler.cronIfadesi) {
+                opt.selected = true;
+                bulundu = true;
+                break;
+            }
+        }
+        if (!bulundu) {
+            select.value = '0 3 * * 0';
+        }
+    }
+
+    onizlemeyiGuncelle();
+    document.getElementById('ayar-modal').classList.add('acik');
+}
+
+function ayarModalKapat() {
+    document.getElementById('ayar-modal').classList.remove('acik');
+}
+
+function onizlemeyiGuncelle() {
+    const select = document.getElementById('ayar-siklik');
+    const opt = select.selectedOptions[0];
+    const yazi = opt.getAttribute('data-yazi') || opt.textContent;
+    document.getElementById('ayar-onizleme-yazi').textContent = yazi;
+}
+
+async function ayarKaydet() {
+    const select = document.getElementById('ayar-siklik');
+    const opt = select.selectedOptions[0];
+
+    const payload = {
+        tip: 'sablon',
+        cronIfadesi: select.value,
+        okunabilir: opt.getAttribute('data-yazi'),
+    };
+
+    try {
+        const res = await AUTH.apiFetch('/api/mevzuat-takip/ayar/cron', {
+            method: 'POST',
+            body: JSON.stringify(payload),
+        });
+        const data = await res.json();
+
+        if (data.basarili) {
+            toastGoster('✅ Tarama sıklığı güncellendi: ' + data.aktifAyar.cronAciklama);
+            ayarModalKapat();
+            await verileriYukle();
+        } else {
+            toastGoster(data.hata || 'Ayar kaydedilemedi', true);
+        }
+    } catch (err) {
+        toastGoster('Hata: ' + err.message, true);
+    }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// 🔍 İÇERİK FARKLILIKLARI / DIFF
+// ═══════════════════════════════════════════════════════════════════════════
+
+let diffYuklenmis = false;
+
+async function diffToggle() {
+    const bolum = document.getElementById('diff-bolum');
+    if (!bolum) {
+        console.error('❌ diff-bolum elementi bulunamadı!');
+        return;
+    }
+    const acik = bolum.classList.toggle('acik');
+
+    if (acik && !diffYuklenmis) {
+        await diffYukle();
+    }
+}
+
+async function diffYukle() {
+    const versiyonId = document.getElementById('onay-versiyon-id').value;
+    const innerEl = document.getElementById('diff-icerik-inner');
+    const istatistikEl = document.getElementById('diff-istatistik');
+
+    if (!versiyonId) {
+        console.error('❌ versiyonId boş');
+        return;
+    }
+
+    innerEl.innerHTML = '<div class="diff-yukleniyor"><i class="fa-solid fa-spinner fa-spin"></i> Yükleniyor...</div>';
+
+    try {
+        const res = await AUTH.apiFetch(`/api/mevzuat-takip/fark/${versiyonId}`);
+        const data = await res.json();
+
+        if (!data.basarili) {
+            innerEl.innerHTML = `<div class="diff-bos"><i class="fa-solid fa-exclamation-circle"></i><div>${_esc(data.hata || 'Fark hesaplanamadı')}</div></div>`;
+            return;
+        }
+
+        if (data.mesaj) {
+            innerEl.innerHTML = `
+                <div class="diff-bos">
+                    <i class="fa-solid fa-circle-info"></i>
+                    <div style="font-weight:600; margin-bottom:6px;">${_esc(data.mesaj)}</div>
+                    <div style="font-size:12px; color:#94a3b8;">
+                        Bu durum, eski versiyonların text içeriği özelliği eklenmeden önce indirilmiş olmasından kaynaklanır. Bir sonraki taramada otomatik düzelir.
+                    </div>
+                </div>`;
+            return;
+        }
+
+        const ist = data.istatistik;
+        istatistikEl.innerHTML = `
+            <span class="diff-rozet eklenen">+${ist.eklenen} eklenen</span>
+            <span class="diff-rozet silinen">−${ist.silinen} silinen</span>
+            <span class="diff-rozet aynı">${ist.degismeyen} aynı</span>
+        `;
+
+        if (data.farklar.length === 0 || (ist.eklenen === 0 && ist.silinen === 0)) {
+            innerEl.innerHTML = `
+                <div class="diff-bos">
+                    <i class="fa-solid fa-circle-check" style="color:#16a34a;"></i>
+                    <div style="font-weight:600;">İçerik birebir aynı</div>
+                    <div style="font-size:12px;">PDF metadata değişti ama metin içeriği aynı kaldı.</div>
+                </div>`;
+            return;
+        }
+
+        const html = data.farklar.map(f => {
+            const sinif = `diff-parca ${f.tip}`;
+            const metin = _esc(f.metin);
+            return `<div class="${sinif}">${metin}</div>`;
+        }).join('');
+
+        innerEl.innerHTML = html;
+        diffYuklenmis = true;
+
+    } catch (err) {
+        console.error('💥 Diff hatası:', err);
+        innerEl.innerHTML = `<div class="diff-bos" style="color:#dc2626;"><i class="fa-solid fa-triangle-exclamation"></i><div>Hata: ${_esc(err.message)}</div></div>`;
+    }
+}
+
+// ─── TOAST ─────────────────────────────────────────────────────────────────
+function toastGoster(mesaj, hata = false) {
+    const t = document.getElementById('toast');
+    t.textContent = mesaj;
+    t.className = 'toast gor' + (hata ? ' hata' : '');
+    setTimeout(() => { t.className = 'toast'; }, 3500);
+}
+
+// ─── XSS guard ─────────────────────────────────────────────────────────────
+function _esc(str) {
+    return (str || '').toString()
+        .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+        .replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+}
+</script>
+
+<%- include('partials/profil-modal') %>
+
+<script src="/profil.js?v=1"></script>
+</body>
+</html>

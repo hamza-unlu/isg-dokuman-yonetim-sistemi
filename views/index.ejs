@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Giriş Yap - İSG Doküman Yönetim Sistemi</title>
+    <link rel="stylesheet" href="/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <style>
+        /* Şifremi Unuttum Modal */
+        .modal-arkaplan {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(15, 23, 42, 0.6);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+        .modal-arkaplan.acik { display: flex; }
+        .modal-kutu {
+            background: #fff;
+            border-radius: 12px;
+            padding: 32px;
+            width: 90%;
+            max-width: 440px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+        .modal-baslik { margin: 0 0 8px; color: #1e293b; font-size: 20px; }
+        .modal-aciklama { color: #64748b; margin: 0 0 20px; font-size: 14px; line-height: 1.6; }
+        .modal-kapat-btn {
+            float: right;
+            background: none;
+            border: none;
+            font-size: 22px;
+            cursor: pointer;
+            color: #94a3b8;
+            padding: 0;
+            line-height: 1;
+        }
+        .modal-butonlar { display: flex; gap: 12px; margin-top: 20px; }
+        .btn-iptal, .btn-gonder {
+            flex: 1;
+            padding: 10px 16px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            border: none;
+        }
+        .btn-iptal { background: #f1f5f9; color: #475569; }
+        .btn-gonder { background: #3b82f6; color: #fff; }
+        .btn-gonder:disabled { opacity: 0.6; cursor: not-allowed; }
+        .modal-mesaj {
+            padding: 10px 14px;
+            border-radius: 8px;
+            font-size: 13px;
+            margin-top: 12px;
+            display: none;
+        }
+        .modal-mesaj.basarili { background: #dcfce7; color: #166534; border: 1px solid #86efac; display: block; }
+        .modal-mesaj.hata { background: #fef2f2; color: #dc2626; border: 1px solid #fecaca; display: block; }
+    </style>
+</head>
+<body>
+
+    <div class="giris-kapsayici">
+
+        <div class="giris-baslik">
+            <h2 class="logo-yazisi">🛡️ ÜNLÜ İSG</h2>
+            <h3>Hesabınıza Girin</h3>
+            <p>İSG Doküman Yönetim Sistemi'ne Hoşgeldiniz</p>
+        </div>
+
+        <form class="giris-formu" id="giris-formu">
+
+            <div class="form-grubu">
+                <label for="email">E-posta Adresi</label>
+                <input type="email" id="email" name="email" placeholder="hamza.unlu@unluosgb.com" required>
+            </div>
+
+            <div class="form-grubu">
+                <label for="password">Şifre</label>
+                <input type="password" id="password" name="password" placeholder="******" required>
+            </div>
+
+            <div id="hata-mesaj" style="
+                display:none;
+                background:#fef2f2;
+                border:1px solid #fecaca;
+                border-radius:8px;
+                padding:10px 14px;
+                font-size:13px;
+                color:#dc2626;
+                margin-bottom:12px;">
+            </div>
+
+            <button type="submit" class="giris-butonu" id="giris-btn">GİRİŞ YAP</button>
+
+            <div class="form-alt-linkler">
+                <a href="#" id="sifremi-unuttum-link">Şifremi Unuttum</a> | <a href="/kayit">Kayıt Ol</a>
+            </div>
+        </form>
+    </div>
+
+    <!-- ŞİFREMİ UNUTTUM MODALI -->
+    <div class="modal-arkaplan" id="sifre-modal">
+        <div class="modal-kutu">
+            <button class="modal-kapat-btn" id="modal-kapat">&times;</button>
+            <h3 class="modal-baslik">Şifremi Unuttum</h3>
+            <p class="modal-aciklama">
+                Kayıtlı e-posta adresinizi girin, size şifre sıfırlama bağlantısı göndereceğiz.
+                Bağlantı <strong>15 dakika</strong> boyunca geçerlidir.
+            </p>
+
+            <form id="sifre-unuttum-formu">
+                <div class="form-grubu">
+                    <label for="unutma-email">E-posta Adresi</label>
+                    <input type="email" id="unutma-email" required placeholder="ornek@unluosgb.com">
+                </div>
+
+                <div id="modal-mesaj" class="modal-mesaj"></div>
+
+                <div class="modal-butonlar">
+                    <button type="button" class="btn-iptal" id="modal-iptal">İptal</button>
+                    <button type="submit" class="btn-gonder" id="modal-gonder">Bağlantı Gönder</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+<script>
+// ─────────────────────────────────────────
+// GİRİŞ FORMU
+// ─────────────────────────────────────────
+document.getElementById('giris-formu').addEventListener('submit', async function(e) {
+    e.preventDefault();
+
+    const email  = document.getElementById('email').value.trim();
+    const sifre  = document.getElementById('password').value;
+    const hataEl = document.getElementById('hata-mesaj');
+    const btn    = document.getElementById('giris-btn');
+
+    hataEl.style.display = 'none';
+    btn.disabled    = true;
+    btn.textContent = 'Giriş yapılıyor...';
+
+    try {
+        const res  = await fetch('/api/auth/giris', {
+            method:  'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body:    JSON.stringify({ eposta: email, sifre }),
+        });
+        const veri = await res.json();
+
+        if (!res.ok) throw new Error(veri.hata || veri.mesaj || 'E-posta veya şifre hatalı.');
+
+        localStorage.setItem('isg_token',     veri.token);
+        localStorage.setItem('isg_kullanici', JSON.stringify(veri.kullanici));
+
+        window.location.href = '/anasayfa';
+
+    } catch (hata) {
+        hataEl.textContent    = hata.message;
+        hataEl.style.display  = 'block';
+        btn.disabled    = false;
+        btn.textContent = 'GİRİŞ YAP';
+    }
+});
+
+// Zaten giriş yapıldıysa direkt yönlendir
+if (localStorage.getItem('isg_token')) {
+    window.location.href = '/anasayfa';
+}
+
+// ─────────────────────────────────────────
+// ŞİFREMİ UNUTTUM MODALI
+// ─────────────────────────────────────────
+const modal       = document.getElementById('sifre-modal');
+const modalAc     = document.getElementById('sifremi-unuttum-link');
+const modalKapat  = document.getElementById('modal-kapat');
+const modalIptal  = document.getElementById('modal-iptal');
+const modalMesaj  = document.getElementById('modal-mesaj');
+const modalForm   = document.getElementById('sifre-unuttum-formu');
+const modalGonder = document.getElementById('modal-gonder');
+
+function modalAcFn() {
+    modal.classList.add('acik');
+    document.getElementById('unutma-email').value = document.getElementById('email').value || '';
+    modalMesaj.className = 'modal-mesaj';
+    modalMesaj.style.display = 'none';
+}
+function modalKapatFn() {
+    modal.classList.remove('acik');
+    modalForm.reset();
+    modalGonder.disabled = false;
+    modalGonder.textContent = 'Bağlantı Gönder';
+}
+
+modalAc.addEventListener('click', (e) => { e.preventDefault(); modalAcFn(); });
+modalKapat.addEventListener('click', modalKapatFn);
+modalIptal.addEventListener('click', modalKapatFn);
+modal.addEventListener('click', (e) => { if (e.target === modal) modalKapatFn(); });
+
+modalForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+
+    const eposta = document.getElementById('unutma-email').value.trim();
+    modalGonder.disabled = true;
+    modalGonder.textContent = 'Gönderiliyor...';
+    modalMesaj.className = 'modal-mesaj';
+    modalMesaj.style.display = 'none';
+
+    try {
+        const res  = await fetch('/api/auth/sifre-unuttum', {
+            method:  'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body:    JSON.stringify({ eposta }),
+        });
+        const veri = await res.json();
+
+        if (!res.ok) throw new Error(veri.hata || 'İstek gönderilemedi.');
+
+        modalMesaj.textContent = veri.mesaj || 'Sıfırlama bağlantısı e-posta adresinize gönderildi.';
+        modalMesaj.classList.add('basarili');
+        modalMesaj.style.display = 'block';
+
+        modalGonder.textContent = 'Gönderildi ✓';
+        // 3 saniye sonra modalı kapat
+        setTimeout(modalKapatFn, 3000);
+
+    } catch (hata) {
+        modalMesaj.textContent = hata.message;
+        modalMesaj.classList.add('hata');
+        modalMesaj.style.display = 'block';
+        modalGonder.disabled = false;
+        modalGonder.textContent = 'Bağlantı Gönder';
+    }
+});
+</script>
+</body>
+</html>

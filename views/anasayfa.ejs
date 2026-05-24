@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Anasayfa - İSG Doküman Yönetim Sistemi</title>
+    <link rel="stylesheet" href="/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8fafc;
+        }
+
+        /* Kurumsal Kart Tasarımı */
+        .tablo-bolumu { 
+            background-color: #ffffff; 
+            border-radius: 12px;
+            border: 1px solid #e2e8f0;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+            padding: 24px;
+            margin-bottom: 24px;
+        }
+
+        /* Şık Tablo Başlıkları */
+        .tablo-baslik-alani {
+            display: flex;
+            align-items: center;
+            padding-bottom: 16px;
+            margin-bottom: 16px;
+            border-bottom: 1px solid #f1f5f9;
+        }
+        .tablo-baslik-alani .ikon-kutu {
+            width: 40px; height: 40px;
+            border-radius: 10px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1.2rem;
+            margin-right: 14px;
+        }
+        .kirmizi-ikon { background-color: #fef2f2; color: #dc2626; }
+        .turuncu-ikon { background-color: #fff7ed; color: #ea580c; }
+        
+        .tablo-baslik-alani h3 {
+            margin: 0; color: #0f172a; font-size: 1.15rem; font-weight: 700;
+        }
+        .tablo-baslik-alani span {
+            font-size: 0.8rem; color: #64748b; font-weight: 500;
+        }
+
+        /* Modern Tablo Thead */
+        table { width: 100%; border-collapse: collapse; }
+        .acil-tablo-thead th {
+            background-color: #f8fafc !important;
+            color: #475569 !important;
+            font-size: 0.75rem !important;
+            font-weight: 600 !important;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            padding: 14px 16px !important;
+            border-bottom: 2px solid #e2e8f0 !important;
+            text-align: left;
+        }
+
+        /* Tablo Satırları */
+        #anasayfa-acil-tablo td,
+        #anasayfa-yaklasan-egitimler td {
+            padding: 14px 16px !important;
+            font-size: 0.85rem;
+            border-bottom: 1px solid #f1f5f9;
+            color: #334155;
+            vertical-align: middle;
+            transition: background 0.2s;
+        }
+        #anasayfa-acil-tablo td:first-child,
+        #anasayfa-yaklasan-egitimler td:first-child {
+            color: #94a3b8 !important; font-size: 12px !important; width: 40px; font-weight: 500;
+        }
+
+        /* Satır Hover Efekti (Zarif) */
+        #anasayfa-acil-tablo tr:hover td,
+        #anasayfa-yaklasan-egitimler tr:hover td {
+            background-color: #f8fafc !important;
+        }
+
+        .dokuman-adi, .egitim-adi { color: #1e293b !important; font-weight: 600 !important; font-size: 0.9rem; }
+        #anasayfa-acil-tablo td small, #anasayfa-yaklasan-egitimler td small {
+            color: #64748b !important; font-size: 0.75rem !important; font-weight: 400; display: block; margin-top: 3px;
+        }
+
+        #anasayfa-acil-tablo tr.ayrac-kritik td,
+        #anasayfa-yaklasan-egitimler tr.ayrac-kritik td {
+            background-color: #dc2626 !important;
+            color: #f3f2f2 !important;
+            border-radius: 15px !important;
+            font-size: 0.75rem !important;
+            font-weight: 700 !important;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            padding: 12px 16px !important;
+        }
+        
+        #anasayfa-acil-tablo tr.ayrac-uyari td,
+        #anasayfa-yaklasan-egitimler tr.ayrac-uyari td {
+            background-color: #ec8852 !important;
+            color: #f3f2f2 !important;
+            font-size: 0.75rem !important;
+            font-weight: 700 !important;
+            text-transform: uppercase;
+            border-radius: 15px !important;
+            letter-spacing: 0.04em;
+            padding: 12px 16px !important;
+        }
+
+        /* Rozetler (Badges) - Animasyonlu Nokta İle */
+        .kalan-sure-badge {
+            display: inline-flex; align-items: center; gap: 6px;
+            padding: 5px 12px; border-radius: 6px; 
+            font-size: 0.75rem; font-weight: 600;
+            border: 1px solid transparent;
+        }
+        .kalan-sure-badge.kritik {
+            background: #fef2f2; color: #dc2626; border-color: #fecaca;
+        }
+        .kalan-sure-badge.kritik::before {
+            content: ''; display: inline-block; width: 6px; height: 6px; border-radius: 50%; 
+            background-color: #dc2626;
+            animation: pulse-red 2s infinite;
+        }
+        .kalan-sure-badge.uyari {
+            background: #fff7ed; color: #ea580c; border-color: #fed7aa;
+        }
+        .kalan-sure-badge.uyari::before {
+            content: ''; display: inline-block; width: 6px; height: 6px; border-radius: 50%; 
+            background-color: #ea580c;
+        }
+
+        @keyframes pulse-red { 
+            0% { box-shadow: 0 0 0 0 rgba(220, 38, 38, 0.5); } 
+            70% { box-shadow: 0 0 0 5px rgba(220, 38, 38, 0); } 
+            100% { box-shadow: 0 0 0 0 rgba(220, 38, 38, 0); } 
+        }
+
+        /* Kullanıcı Yönetimi Kısayol Butonu */
+        #menu-kullanicilar {
+            display: flex;
+            justify-content: flex-end;
+            margin-bottom: 4px;
+        }
+        #menu-kullanicilar a {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 9px 18px;
+            background-color: #1f305a;
+            color: #ffffff !important;
+            border-radius: 8px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-decoration: none;
+            letter-spacing: 0.03em;
+            transition: background 0.2s, transform 0.1s;
+            box-shadow: 0 2px 6px rgba(29, 28, 66, 0.12);
+        }
+        #menu-kullanicilar a:hover {
+            background-color: #2c54b3;
+            transform: translateY(-1px);
+        }
+        /* "Mevzuat Takip" özel butonu — otomasyon vurgusu */
+#menu-kullanicilar a.otomasyon-butonu {
+    background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%);
+    box-shadow: 0 2px 8px rgba(2, 132, 199, 0.25);
+    position: relative;
+}
+#menu-kullanicilar a.otomasyon-butonu:hover {
+    background: linear-gradient(135deg, #0369a1 0%, #075985 100%);
+    transform: translateY(-1px);
+}
+
+/* "CANLI" rozeti — sistemin otomatik çalıştığını gösterir */
+.canli-rozet {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    background: #ef4444;
+    color: #fff;
+    padding: 2px 7px;
+    border-radius: 5px;
+    font-size: 0.65rem;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    margin-left: 4px;
+    position: relative;
+}
+.canli-rozet::before {
+    content: '';
+    display: inline-block;
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background: #fff;
+    animation: canli-yanip-soner 1.5s infinite;
+}
+@keyframes canli-yanip-soner {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.4; transform: scale(0.8); }
+}
+        #menu-kullanicilar a i {
+            font-size: 0.9rem;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="panel-kapsayici">
+        
+        <nav class="yan-menu">
+            <div class="yan-menu-baslik">
+                <h2>🛡️ ÜNLÜ İSG</h2>
+            </div>
+            <ul class="menu-ogeleri">
+                <li class="aktif"><a href="anasayfa"><i class="fa-solid fa-home"></i> ANA SAYFA</a></li>
+                <li><a href="firmalar"><i class="fa-solid fa-building"></i> FİRMALAR</a></li>
+                <li><a href="personel"><i class="fa-solid fa-users"></i> PERSONEL</a></li>
+                <li><a href="egitimler"><i class="fa-solid fa-graduation-cap"></i> EĞİTİMLER</a></li>
+                <li><a href="dokumanlar"><i class="fa-solid fa-file-alt"></i> DOKÜMANLAR</a></li>
+                <li><a href="raporlar"><i class="fa-solid fa-chart-pie"></i> RAPORLAR</a></li>
+                <li class="sadece-yonetici" style="display:none;"><a href="mevzuat-takip"><i class="fa-solid fa-satellite-dish"></i> MEVZUAT.GOV.TR TAKİBİ</a></li>
+                <li class="menu-alt"><a href="index"><i class="fa-solid fa-sign-out-alt"></i> ÇIKIŞ</a></li>
+            </ul>
+        </nav>
+
+        <main class="ana-icerik">
+            
+            <header class="ust-bar">
+                <div class="hosgeldin-metni">
+                    <h3>Hoş Geldiniz, <span id="hosgeldin-isim">...</span></h3>
+                </div>
+                <div class="arama-kutusu">
+                    <i class="fa-solid fa-search"></i>
+                    <input type="text" placeholder="Firma veya Doküman Ara...">
+                </div>
+                <div class="kullanici-profili">
+                    <div class="kullanici-bilgisi">
+                        <span class="isim" id="header-isim">...</span>
+                        <span class="rol"  id="header-rol">...</span>
+                    </div>
+                    <div class="kullanici-avatar" id="header-avatar">...</div>
+                </div>
+            </header>
+
+            <div style="display: flex; flex-direction: column; gap: 20px; padding: 10px 0;">
+
+                <!-- Sistem Yönetimi butonları: JS tarafından rol kontrolüyle gösterilir/gizlenir -->
+<div id="menu-kullanicilar" style="display: none; gap: 10px;">
+    <a href="mevzuat-takip" class="otomasyon-butonu">
+     <i class="fa-solid fa-satellite-dish"></i> mevzuat.gov.tr Takibi
+     <span class="canli-rozet">CANLI</span>
+    </a>
+    <a href="mevzuat-yonetimi">
+     <i class="fa-solid fa-scale-balanced"></i> Mevzuat Yönetimi (Manuel)
+    </a>
+    <a href="nace-yonetimi">
+     <i class="fa-solid fa-list-check"></i> NACE Yönetimi
+    </a>
+    <a href="kullanicilar">
+     <i class="fa-solid fa-users-gear"></i> Kullanıcı Yönetimi
+    </a>
+</div>
+
+                <div class="tablo-bolumu">
+                    <div class="tablo-baslik-alani">
+                        <div class="ikon-kutu kirmizi-ikon">
+                            <i class="fa-solid fa-file-circle-exclamation"></i>
+                        </div>
+                        <div>
+                            <h3>Acil Dokümanlar</h3>
+                            <span>Geçerlilik süresi dolan veya dolmak üzere olan evraklar</span>
+                        </div>
+                    </div>
+                    <div class="tablo-kapsayici">
+                        <table>
+                            <thead class="acil-tablo-thead">
+                                <tr>
+                                    <th>#</th>
+                                    <th>Doküman / Firma</th>
+                                    <th>Tür</th>
+                                    <th>Son Geçerlilik</th>
+                                    <th>Durum</th>
+                                </tr>
+                            </thead>
+                            <tbody id="anasayfa-acil-tablo"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="tablo-bolumu">
+                    <div class="tablo-baslik-alani">
+                        <div class="ikon-kutu turuncu-ikon">
+                            <i class="fa-solid fa-user-graduate"></i>
+                        </div>
+                        <div>
+                            <h3>Eğitim Takibi</h3>
+                            <span>Süresi dolan veya yaklaşan personel İSG eğitimleri</span>
+                        </div>
+                    </div>
+                    <div class="tablo-kapsayici">
+                        <table>
+                            <thead class="acil-tablo-thead">
+                                <tr>
+                                    <th>#</th>
+                                    <th>Eğitim / Personel</th>
+                                    <th>Geçerlilik Tarihi</th>
+                                    <th>Durum</th>
+                                </tr>
+                            </thead>
+                            <tbody id="anasayfa-yaklasan-egitimler"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+            </div>
+
+        </main>
+    </div>
+    
+    <%- include('partials/profil-modal') %>
+    <script src="/auth.js"></script>
+    <script src="/profil.js?v=1"></script>
+    <script src="/anasayfa.js"></script>
+    <%- include('partials/ai-asistan') %>
+</body>
+</html>
