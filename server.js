@@ -281,7 +281,7 @@ app.use((err, req, res, next) => {
 // BAŞLATMA
 // ─────────────────────────────────────────
 const PORT = process.env.PORT || 5500;
-app.listen(5500, '0.0.0.0', () => {
+app.listen(PORT, '0.0.0.0', () => {
   console.log(`🚀 Sunucu http://localhost:${PORT} adresinde çalışıyor`);
   console.log(`📄 Swagger UI  → http://localhost:${PORT}/api-docs`);
 });
