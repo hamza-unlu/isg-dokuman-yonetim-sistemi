@@ -192,3 +192,211 @@ describe('firmaIstatistik()', () => {
     );
   });
 });
+
+// ─────────────────────────────────────────────────────────────────────────────
+// firmaController.test.js dosyasının SONUNA eklenecek testler
+// (mevcut describe bloklarının dışına, dosyanın en altına yapıştır)
+// ─────────────────────────────────────────────────────────────────────────────
+
+// ─── firmaGetir — ek branch'ler ───────────────────────────────────────────────
+describe('firmaGetir() — yetki kontrolleri', () => {
+  test('isveren kendi firması değilse 403 döner', async () => {
+    const firma = {
+      _id: 'f99',
+      firmaAdi: 'Başka Firma',
+      ekleyenKullanici: { _id: 'baska' },
+    };
+    const inner = { populate: jest.fn().mockResolvedValue(firma) };
+    Firma.findById = jest.fn().mockReturnValue({ populate: jest.fn().mockReturnValue(inner) });
+
+    const req = {
+      kullanici: { _id: 'iv1', rol: 'isveren', isverenFirma: 'f1' }, // f99 değil
+      params: { id: 'f99' },
+      query: {},
+      body: {},
+    };
+    const res = mockRes();
+    await firmaGetir(req, res);
+
+    expect(res.status).toHaveBeenCalledWith(403);
+  });
+
+  test('isg_uzmani başkasının firmasını göremez → 403', async () => {
+    const firma = {
+      _id: 'f2',
+      firmaAdi: 'Uzman Firma',
+      ekleyenKullanici: { _id: 'baska_uzman' },
+    };
+    const inner = { populate: jest.fn().mockResolvedValue(firma) };
+    Firma.findById = jest.fn().mockReturnValue({ populate: jest.fn().mockReturnValue(inner) });
+
+    const req = {
+      kullanici: { _id: 'uzman1', rol: 'isg_uzmani' },
+      params: { id: 'f2' },
+      query: {},
+      body: {},
+    };
+    const res = mockRes();
+    await firmaGetir(req, res);
+
+    expect(res.status).toHaveBeenCalledWith(403);
+  });
+});
+
+// ─── firmaEkle — ek branch'ler ────────────────────────────────────────────────
+describe('firmaEkle() — ek senaryolar', () => {
+  test('ValidationError → 400 ve hata mesajı döner', async () => {
+    const valErr = {
+      name: 'ValidationError',
+      errors: {
+        firmaAdi: { message: 'Firma adı zorunludur.' },
+      },
+    };
+    Firma.create = jest.fn().mockRejectedValue(valErr);
+
+    const req = {
+      kullanici: { _id: 'uzman1', rol: 'isg_uzmani' },
+      params: {},
+      query: {},
+      body: { tehlikeSinifi: 'Tehlikeli' },
+    };
+    const res = mockRes();
+    await firmaEkle(req, res);
+
+    expect(res.status).toHaveBeenCalledWith(400);
+    expect(res.json).toHaveBeenCalledWith(
+      expect.objectContaining({ basari: false })
+    );
+  });
+
+  test('eposta varsa ve kullanıcı zaten mevcutsa yeni kullanıcı oluşturulmaz', async () => {
+    const yeniFirma = { _id: 'f3', firmaAdi: 'Mevcut Ltd' };
+    Firma.create = jest.fn().mockResolvedValue(yeniFirma);
+
+    const Kullanici = require('../models/User');
+    Kullanici.findOne = jest.fn().mockResolvedValue({ _id: 'var', eposta: 'var@test.com' });
+    Kullanici.create  = jest.fn();
+
+    const req = {
+      kullanici: { _id: 'uzman1', rol: 'isg_uzmani' },
+      params: {},
+      query: {},
+      body: { firmaAdi: 'Mevcut Ltd', eposta: 'var@test.com' },
+    };
+    const res = mockRes();
+    await firmaEkle(req, res);
+
+    expect(Kullanici.create).not.toHaveBeenCalled();
+    expect(res.status).toHaveBeenCalledWith(201);
+  });
+
+  test('tehlikeSinifi "cok tehlikeli" → "Çok Tehlikeli" normalize edilir', async () => {
+    const yeniFirma = { _id: 'f4', firmaAdi: 'Çok Ltd', tehlikeSinifi: 'Çok Tehlikeli' };
+    Firma.create = jest.fn().mockResolvedValue(yeniFirma);
+
+    const Kullanici = require('../models/User');
+    Kullanici.findOne = jest.fn().mockResolvedValue(null);
+    Kullanici.create  = jest.fn().mockResolvedValue({});
+
+    const req = {
+      kullanici: { _id: 'uzman1', rol: 'isg_uzmani' },
+      params: {},
+      query: {},
+      body: { firmaAdi: 'Çok Ltd', tehlikeSinifi: 'cok tehlikeli' },
+    };
+    const res = mockRes();
+    await firmaEkle(req, res);
+
+    expect(req.body.tehlikeSinifi).toBe('Çok Tehlikeli');
+    expect(res.status).toHaveBeenCalledWith(201);
+  });
+});
+
+// ─── firmaGuncelle ────────────────────────────────────────────────────────────
+describe('firmaGuncelle()', () => {
+  test('geçersiz id (undefined string) → 400', async () => {
+    const req = adminReq({ params: { id: 'undefined' } });
+    const res = mockRes();
+    await firmaGuncelle(req, res);
+
+    expect(res.status).toHaveBeenCalledWith(400);
+  });
+
+  test('firma bulunamazsa → 404', async () => {
+    Firma.findById = jest.fn().mockResolvedValue(null);
+
+    const req = adminReq({ params: { id: '507f1f77bcf86cd799439011' } });
+    const res = mockRes();
+    await firmaGuncelle(req, res);
+
+    expect(res.status).toHaveBeenCalledWith(404);
+  });
+
+  test('isveren rolü firma güncelleyemez → 403', async () => {
+    Firma.findById = jest.fn().mockResolvedValue({ _id: 'f1', ekleyenKullanici: 'uzman1' });
+
+    const req = {
+      kullanici: { _id: 'iv1', rol: 'isveren' },
+      params: { id: '507f1f77bcf86cd799439011' },
+      query: {},
+      body: {},
+    };
+    const res = mockRes();
+    await firmaGuncelle(req, res);
+
+    expect(res.status).toHaveBeenCalledWith(403);
+  });
+
+  test('isg_uzmani başkasının firmasını güncelleyemez → 403', async () => {
+    Firma.findById = jest.fn().mockResolvedValue({
+      _id: 'f1',
+      ekleyenKullanici: 'baska_uzman', // farklı kullanıcı
+    });
+
+    const req = {
+      kullanici: { _id: 'uzman1', rol: 'isg_uzmani' },
+      params: { id: '507f1f77bcf86cd799439011' },
+      query: {},
+      body: { firmaAdi: 'Yeni Ad' },
+    };
+    const res = mockRes();
+    await firmaGuncelle(req, res);
+
+    expect(res.status).toHaveBeenCalledWith(403);
+  });
+
+  test('yönetici firmayı başarıyla günceller', async () => {
+    Firma.findById = jest.fn().mockResolvedValue({ _id: 'f1', ekleyenKullanici: 'admin1' });
+    Firma.findByIdAndUpdate = jest.fn().mockResolvedValue({ _id: 'f1', firmaAdi: 'Güncellendi' });
+
+    const req = adminReq({
+      params: { id: '507f1f77bcf86cd799439011' },
+      body: { firmaAdi: 'Güncellendi' },
+    });
+    const res = mockRes();
+    await firmaGuncelle(req, res);
+
+    expect(res.json).toHaveBeenCalledWith(
+      expect.objectContaining({ basari: true })
+    );
+  });
+
+  test('isg alt alanı varsa $set ile güncellenir', async () => {
+    Firma.findById = jest.fn().mockResolvedValue({ _id: 'f1', ekleyenKullanici: 'admin1' });
+    Firma.findByIdAndUpdate = jest.fn().mockResolvedValue({ _id: 'f1' });
+
+    const req = adminReq({
+      params: { id: '507f1f77bcf86cd799439011' },
+      body: { isg: { uzmanAdi: 'Yeni Uzman' } },
+    });
+    const res = mockRes();
+    await firmaGuncelle(req, res);
+
+    // $set içeren query ile çağrılmalı
+    expect(Firma.findByIdAndUpdate).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.objectContaining({ $set: expect.objectContaining({ 'isg.uzmanAdi': 'Yeni Uzman' }) }),
+      expect.anything()
+    );
+  });
+});

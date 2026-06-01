@@ -646,6 +646,9 @@ function gruplariRenderle() {
         // Kural adına göre grupla (aynı kural 3 farklı sınıf için olabilir)
         const kuralGruplari = {};
         grupKurallar.forEach(k => {
+            if (k.aciklama) {
+                k.aciklama = aciklamaGuncelle(k.aciklama, k.deger, k.birim);
+            }
             if (!kuralGruplari[k.kuralAdi]) kuralGruplari[k.kuralAdi] = [];
             kuralGruplari[k.kuralAdi].push(k);
         });
@@ -657,10 +660,10 @@ function gruplariRenderle() {
                 // Kural adını sadece ilk satırda göster, ama açıklamayı HER satırda göster
                 const kuralAdiHucresi = idx === 0
                  ? `<div class="kural-adi">${_esc(k.kuralAdi)}</div>
-                  ${k.aciklama ? `<div class="kural-aciklama">${_esc(k.aciklama)}</div>` : ''}`
+                  ${k.aciklama ? `<div class="kural-aciklama">${_esc(aciklamaGuncelle(k.aciklama, k.deger, k.birim))}</div>` : ''}`
                   : `<div class="kural-adi" style="color:#cbd5e1; display:flex; align-items:center; gap:8px;">
                   <span>↳</span>
-                   ${k.aciklama ? `<span class="kural-aciklama" style="color:#64748b; margin:0; font-weight:normal;">${_esc(k.aciklama)}</span>` : ''}
+                   ${k.aciklama ? `<span class="kural-aciklama" style="color:#64748b; margin:0; font-weight:normal;">${_esc(aciklamaGuncelle(k.aciklama, k.deger, k.birim))}</span>` : ''}
                     </div>`;
                 return `
                 <tr>
@@ -857,6 +860,10 @@ document.getElementById('gecmis-modal').addEventListener('click', function(e) {
     if (e.target === this) gecmisKapat();
 });
 
+function aciklamaGuncelle(aciklama, deger, birim) {
+    if (!aciklama || deger === undefined) return aciklama;
+    return aciklama.replace(/\d+(\.\d+)?/, String(deger));
+}
 function _esc(str) {
     return (str || '').toString().replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
 }
