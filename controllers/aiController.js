@@ -7,12 +7,12 @@ if (!process.env.GEMINI_API_KEY) {
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || 'dummy-key');
 
 const modelSiniflandirma = genAI.getGenerativeModel({
-    model: 'gemini-1.5-flash',
+    model: 'gemini-1.5-flash-002',
     generationConfig: { responseMimeType: 'application/json', temperature: 0.2 },
 });
 
 const modelSohbet = genAI.getGenerativeModel({
-    model: 'gemini-1.5-flash',
+    model: 'gemini-1.5-flash-002',
     generationConfig: { temperature: 0.4, maxOutputTokens: 2500 },
 });
 
@@ -170,7 +170,7 @@ exports.saglikKontrol = async (req, res) => {
         if (!process.env.GEMINI_API_KEY)
             return res.json({ saglik: 'hatali', mesaj: 'GEMINI_API_KEY tanımlı değil' });
         const sonuc = await modelSiniflandirma.generateContent('Sadece "OK" yaz.');
-        res.json({ saglik: 'iyi', mesaj: 'Gemini API erişilebilir', testYaniti: sonuc.response.text().trim().substring(0, 50), model: 'gemini-2.5-flash-lite', kategoriSayisi: ISG_KATEGORILERI.length });
+        res.json({ saglik: 'iyi', mesaj: 'Gemini API erişilebilir', testYaniti: sonuc.response.text().trim().substring(0, 50), model: 'gemini-1.5-flash-002', kategoriSayisi: ISG_KATEGORILERI.length });
     } catch (err) {
         res.status(500).json({ saglik: 'hatali', mesaj: 'Gemini API erişilemedi', detay: err.message });
     }
