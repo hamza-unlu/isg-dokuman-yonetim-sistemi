@@ -7,12 +7,17 @@ if (!process.env.GEMINI_API_KEY) {
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || 'dummy-key');
 
 const modelSiniflandirma = genAI.getGenerativeModel({
-    model: 'gemini-1.5-flash-8b',
+    model: 'gemini-1.5-flash-latest',
     generationConfig: { responseMimeType: 'application/json', temperature: 0.2 },
 });
 
 const modelSohbet = genAI.getGenerativeModel({
-    model: 'gemini-1.5-flash',
+    model: 'gemini-1.5-flash-latest',
+    generationConfig: { temperature: 0.4, maxOutputTokens: 2500 },
+});
+
+const modelSohbet = genAI.getGenerativeModel({
+    model: 'gemini-1.5-flash-latest',
     generationConfig: { temperature: 0.4, maxOutputTokens: 2500 },
 });
 
