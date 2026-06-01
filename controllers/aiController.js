@@ -7,15 +7,14 @@ if (!process.env.GEMINI_API_KEY) {
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || 'dummy-key');
 
 const modelSiniflandirma = genAI.getGenerativeModel({
-    model: 'gemini-1.5-flash-latest',
+    model: 'gemini-2.0-flash-lite',
     generationConfig: { responseMimeType: 'application/json', temperature: 0.2 },
 });
 
 const modelSohbet = genAI.getGenerativeModel({
-    model: 'gemini-1.5-flash-latest',
+    model: 'gemini-2.0-flash-lite',
     generationConfig: { temperature: 0.4, maxOutputTokens: 2500 },
 });
-
 
 const TUR_ETIKETLERI = {
     risk_degerlendirmesi: 'Risk Değerlendirmesi',
