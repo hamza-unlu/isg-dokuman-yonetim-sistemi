@@ -16,10 +16,6 @@ const modelSohbet = genAI.getGenerativeModel({
     generationConfig: { temperature: 0.4, maxOutputTokens: 2500 },
 });
 
-const modelSohbet = genAI.getGenerativeModel({
-    model: 'gemini-1.5-flash-latest',
-    generationConfig: { temperature: 0.4, maxOutputTokens: 2500 },
-});
 
 const TUR_ETIKETLERI = {
     risk_degerlendirmesi: 'Risk Değerlendirmesi',
