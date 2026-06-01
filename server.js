@@ -17,7 +17,7 @@ mongoose.connect(MONGO_URI)
     process.exit(1);
   });
 
-  
+
 
 // ── BAŞLATMA ──
 const PORT = process.env.PORT || 5500;
@@ -29,3 +29,10 @@ app.listen(PORT, '0.0.0.0', () => {
 // ── Mevzuat Otomatik Takip Sistemi ──
 const mevzuatScheduler = require('./services/mevzuatScheduler');
 mevzuatScheduler.baslat();
+
+const https = require('https');
+https.get('https://api.ipify.org?format=json', (res) => {
+    let data = '';
+    res.on('data', chunk => data += chunk);
+    res.on('end', () => console.log('Sunucu IP:', data));
+});
