@@ -1,5 +1,5 @@
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY || 'dummy-key';
-const GEMINI_MODEL = 'gemini-1.5-flash';
+const GEMINI_MODEL = 'gemini-2.0-flash';
 const GEMINI_URL = `https://generativelanguage.googleapis.com/v1/models/${GEMINI_MODEL}:generateContent?key=${GEMINI_API_KEY}`;
 
 async function geminiCagir(prompt, jsonMod = false) {
@@ -179,7 +179,7 @@ exports.saglikKontrol = async (req, res) => {
         if (!process.env.GEMINI_API_KEY)
             return res.json({ saglik: 'hatali', mesaj: 'GEMINI_API_KEY tanımlı değil' });
         const testYaniti = await geminiCagir('Sadece "OK" yaz.');
-        res.json({ saglik: 'iyi', mesaj: 'Gemini API erişilebilir', testYaniti: testYaniti.trim().substring(0, 50), model: 'gemini-1.5-flash', kategoriSayisi: ISG_KATEGORILERI.length });
+        res.json({ saglik: 'iyi', mesaj: 'Gemini API erişilebilir', testYaniti: testYaniti.trim().substring(0, 50), model: 'gemini-2.0-flash', kategoriSayisi: ISG_KATEGORILERI.length });
     } catch (err) {
         res.status(500).json({ saglik: 'hatali', mesaj: 'Gemini API erişilemedi', detay: err.message });
     }
