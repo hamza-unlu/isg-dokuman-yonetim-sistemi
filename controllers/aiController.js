@@ -1,29 +1,20 @@
-const GEMINI_API_KEY = process.env.GEMINI_API_KEY || 'dummy-key';
-const GEMINI_MODEL = 'gemini-2.5-flash';
-const GEMINI_URL = `https://generativelanguage.googleapis.com/v1/models/${GEMINI_MODEL}:generateContent?key=${GEMINI_API_KEY}`;
+const { GoogleGenerativeAI } = require('@google/generative-ai');
 
-async function geminiCagir(prompt, jsonMod = false) {
-    const apiKey = process.env.GEMINI_API_KEY || 'dummy-key';
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
-
-    const body = {
-        contents: [{ parts: [{ text: prompt }] }],
-        generationConfig: {
-            temperature: jsonMod ? 0.2 : 0.4,
-            maxOutputTokens: 2500,
-        },
-    };
-
-    const res = await fetch(url, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(body),
-    });
-
-    const data = await res.json();
-    if (!res.ok) throw new Error(JSON.stringify(data));
-    return data.candidates[0].content.parts[0].text;
+if (!process.env.GEMINI_API_KEY) {
+    console.warn('⚠️  [AI] GEMINI_API_KEY tanımlı değil. AI özelliği çalışmayacak.');
 }
+
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || 'dummy-key');
+
+const modelSiniflandirma = genAI.getGenerativeModel({
+    model: 'gemini-2.5-flash-lite',
+    generationConfig: { responseMimeType: 'application/json', temperature: 0.2 },
+});
+
+const modelSohbet = genAI.getGenerativeModel({
+    model: 'gemini-2.5-flash',
+    generationConfig: { temperature: 0.4, maxOutputTokens: 2500 },
+});
 
 const TUR_ETIKETLERI = {
     risk_degerlendirmesi: 'Risk Değerlendirmesi',
@@ -80,7 +71,7 @@ const Dokuman      = require('../models/Dokuman');
 const Egitim       = require('../models/Egitim');
 const VeriDepo     = require('../models/VeriDepo');
 const Kullanici    = require('../models/User');
-const MevzuatParca = require('../models/MevzuatParca');
+const MevzuatParca = require('../models/MevzuatParca'); 
 
 async function _firmaAdlariniAl(kullanici) {
     try {
@@ -156,8 +147,8 @@ exports.dokumaniSiniflandir = async (req, res) => {
             return res.status(500).json({ basarili: false, hata: 'Yapay zeka servisi yapılandırılmamış.' });
 
         const firmaAdlari = await _firmaAdlariniAl(req.kullanici);
-        const rawText = await geminiCagir(_promptOlustur(metin, firmaAdlari), true);
-        const ayiklanmis = _yanitiAyikla(rawText);
+        const sonuc  = await modelSiniflandirma.generateContent(_promptOlustur(metin, firmaAdlari));
+        const ayiklanmis = _yanitiAyikla(sonuc.response.text());
 
         if (!ISG_KATEGORILERI.includes(ayiklanmis.kategori)) {
             ayiklanmis.kategori = 'Diğer / Sınıflandırılamadı';
@@ -178,8 +169,8 @@ exports.saglikKontrol = async (req, res) => {
     try {
         if (!process.env.GEMINI_API_KEY)
             return res.json({ saglik: 'hatali', mesaj: 'GEMINI_API_KEY tanımlı değil' });
-        const testYaniti = await geminiCagir('Sadece "OK" yaz.');
-        res.json({ saglik: 'iyi', mesaj: 'Gemini API erişilebilir', testYaniti: testYaniti.trim().substring(0, 50), model: 'gemini-2.5-flash', kategoriSayisi: ISG_KATEGORILERI.length });
+        const sonuc = await modelSiniflandirma.generateContent('Sadece "OK" yaz.');
+        res.json({ saglik: 'iyi', mesaj: 'Gemini API erişilebilir', testYaniti: sonuc.response.text().trim().substring(0, 50), model: 'gemini-2.5-flash-lite', kategoriSayisi: ISG_KATEGORILERI.length });
     } catch (err) {
         res.status(500).json({ saglik: 'hatali', mesaj: 'Gemini API erişilemedi', detay: err.message });
     }
@@ -209,8 +200,8 @@ exports.mobilSiniflandir = async (req, res) => {
             return res.status(500).json({ basarili: false, hata: 'Yapay zeka servisi yapılandırılmamış.' });
 
         const firmaAdlari = await _firmaAdlariniAl(req.kullanici);
-        const rawText = await geminiCagir(_promptOlustur(metin, firmaAdlari), true);
-        const ayiklanmis = _yanitiAyikla(rawText);
+        const sonuc = await modelSiniflandirma.generateContent(_promptOlustur(metin, firmaAdlari));
+        const ayiklanmis = _yanitiAyikla(sonuc.response.text());
 
         if (!ISG_KATEGORILERI.includes(ayiklanmis.kategori)) {
             ayiklanmis.kategori = 'Diğer / Sınıflandırılamadı';
@@ -372,80 +363,154 @@ async function _kullaniciListesiniHazirla(kullanici) {
     }
 }
 
+
 async function _mevzuatAra(soru) {
     try {
         if (!process.env.HUGGINGFACE_API_KEY) return [];
 
+        
         const soruKucuk = soru.toLowerCase();
         const zorunluMaddeler = [];
 
-        let arananMaddeNo = null;
-        const ileriMatch = soruKucuk.match(/madde\w*\s+(\d+(?:\/[a-zçşğüöı])?)/i);
-        if (ileriMatch) arananMaddeNo = ileriMatch[1].toUpperCase();
+        // Madde numarasını her iki yazım biçiminde de yakala
+let arananMaddeNo = null;
 
-        if (!arananMaddeNo) {
-            const geriMatch = soruKucuk.match(/(\d+(?:\/[a-zçşğüöı])?)\s*(?:\.|['']?(?:inci|nci|üncü|uncu|ıncı|incı))\s*madde/i);
-            if (geriMatch) arananMaddeNo = geriMatch[1].toUpperCase();
-        }
+// İleri pattern: "madde 13", "maddesi 13", "Madde 25/A"
+const ileriMatch = soruKucuk.match(/madde\w*\s+(\d+(?:\/[a-zçşğüöı])?)/i);
+if (ileriMatch) {
+    arananMaddeNo = ileriMatch[1].toUpperCase();
+}
 
-        if (arananMaddeNo) {
-            const dogrudanMadde = await MevzuatParca.findOne({ maddeNo: `MADDE ${arananMaddeNo}` }).lean();
-            if (dogrudanMadde) zorunluMaddeler.push({ ...dogrudanMadde, skor: 1.0 });
-        }
+// Geri pattern: "13. madde", "13. maddesi", "13. maddesini",
+// "13'üncü madde", "25/A. maddesinde" gibi Türkçe doğal yazımlar
+if (!arananMaddeNo) {
+    const geriMatch = soruKucuk.match(/(\d+(?:\/[a-zçşğüöı])?)\s*(?:\.|['’]?(?:inci|nci|üncü|uncu|ıncı|incı))\s*madde/i);
+    if (geriMatch) {
+        arananMaddeNo = geriMatch[1].toUpperCase();
+    }
+}
 
+if (arananMaddeNo) {
+    const dogrudanMadde = await MevzuatParca.findOne({ maddeNo: `MADDE ${arananMaddeNo}` }).lean();
+    if (dogrudanMadde) {
+        zorunluMaddeler.push({ ...dogrudanMadde, skor: 1.0 });
+    }
+}
+
+        // Anahtar kelime → madde eşleştirmesi
         const anahtarMaddeler = {
-            'işverenin yükümlülük': '4', 'işveren sorumluluk': '4',
-            'korunma ilkeleri': '5', 'risklerden korunma': '5',
-            'kaynağında mücadele': '5', 'tehlikeli olanı': '5',
-            'isg hizmetleri': '6', 'iş sağlığı hizmeti': '6',
-            'isg destek': '7', 'iş sağlığı ve güvenliği hizmetleri destek': '7',
-            'iş güvenliği uzmanı': '8', 'isg uzmanı': '8',
-            'işyeri hekimi': '8', 'ortak sağlık': '8', 'destek elemanı': '8',
-            'risk değerlendirme': '10', 'risk analizi': '10', 'ölçüm': '10',
-            'acil durum': '11', 'acil eylem': '11',
-            'yangınla mücadele': '11', 'ilk yardım': '11',
-            'tahliye': '11', 'yangın': '11', 'ilkyardım': '11',
-            'çalışmaktan kaçınma': '13', 'kaçınma hakkı': '13',
-            'ciddi ve yakın tehlike': '13', 'işyerini terk': '13',
-            'tehlikeli bölge': '13',
-            'iş kazası': '14', 'meslek hastalığı': '14',
-            'kayıt ve bildirim': '14', 'sgk bildirim': '14',
-            'sağlık gözetimi': '15', 'periyodik muayene': '15',
-            'sağlık muayenesi': '15', 'işe giriş muayene': '15',
-            'bilgilendirme': '16', 'çalışanları bilgilendir': '16',
-            'eğitim': '17', 'isg eğitimi': '17', 'temel eğitim': '17',
-            'görüş alma': '18', 'görüşlerinin alınması': '18',
-            'çalışan görüşü': '18', 'katılım': '18',
-            'çalışan yükümlülük': '19', 'çalışanın sorumluluğu': '19',
-            'kişisel koruyucu': '19', 'kkd': '19', 'kişisel koruyucu donanım': '19',
-            'çalışan temsilcisi': '20', 'isg temsilcisi': '20',
-            'temsilci seçimi': '20',
-            'kurul': '22', 'kurullar': '22', 'isg kurulu': '22',
-            'iş sağlığı ve güvenliği kurulu': '22',
-            'koordinasyon': '23', 'aynı işyeri': '23',
-            'denetim': '24', 'isg denetimi': '24',
-            'işin durdurulması': '25', 'durdurma': '25',
-            'para cezası': '26', 'idari ceza': '26', 'ceza': '26',
-            'muafiyet': '27', 'hüküm bulunmayan': '27',
-            'damga vergisi': '27', 'harç': '27',
-            'alkol': '28', 'uyuşturucu': '28', 'bağımlılık': '28', 'sarhoş': '28',
-            'tehlikeye düşüren davranış': '29', 'tehlikeli davranış': '29',
-            'yürürlük': '30', 'geçici hükümler': '30', 'geçici madde': '30',
-            'belgelendirme': '31', 'ihtar': '31', 'askı': '31', 'iptal': '31',
-            'sağlık raporu': '37', 'rapor': '37', 'işe giriş raporu': '37',
+            // MADDE 4 - İşverenin genel yükümlülüğü
+    'işverenin yükümlülük': '4', 'işveren sorumluluk': '4',
+    
+    // MADDE 5 - Risklerden korunma ilkeleri
+    'korunma ilkeleri': '5', 'risklerden korunma': '5',
+    'kaynağında mücadele': '5', 'tehlikeli olanı': '5',
+    'kaynağında mücadele': '5',
+            'tehlikeli olanı': '5', 
+    
+    // MADDE 6 - İSG hizmetleri
+    'isg hizmetleri': '6', 'iş sağlığı hizmeti': '6',
+
+    // MADDE 7 - iş SAĞLIĞI VE GÜVENLİĞİ HİZM. DESTEKLENMESİ
+    'isg destek': '7', 'iş sağlığı ve güvenliği hizmetleri destek': '7',
+    
+    // MADDE 8 - İşyeri hekimi ve iş güvenliği uzmanı
+    'iş güvenliği uzmanı': '8', 'isg uzmanı': '8', 
+    'işyeri hekimi': '8', 'ortak sağlık': '8', 'destek elemanı': '8',
+    
+    // MADDE 10 - Risk değerlendirmesi
+    'risk değerlendirme': '10', 'risk analizi': '10', 'ölçüm': '10',
+    
+    // MADDE 11 - Acil durum planları
+    'acil durum': '11', 'acil eylem': '11', 
+    'yangınla mücadele': '11', 'ilk yardım': '11',
+    'tahliye': '11', 'yangın': '11', 'ilkyardım': '11',
+    
+    // MADDE 12 - Tahliye
+    'tahliye': '12',
+    
+    // MADDE 13 - Çalışmaktan kaçınma hakkı ✅
+    'çalışmaktan kaçınma': '13', 'kaçınma hakkı': '13',
+    'ciddi ve yakın tehlike': '13', 'işyerini terk': '13',
+    'tehlikeli bölge': '13', 
+    
+    // MADDE 14 - İş kazası ve meslek hastalığı bildirimi
+    'iş kazası': '14', 'meslek hastalığı': '14', 
+    'kayıt ve bildirim': '14', 'sgk bildirim': '14',
+    
+    // MADDE 15 - Sağlık gözetimi
+    'sağlık gözetimi': '15', 'periyodik muayene': '15',
+    'sağlık muayenesi': '15', 'işe giriş muayene': '15',
+    
+    // MADDE 16 - Çalışanların bilgilendirilmesi
+    'bilgilendirme': '16', 'çalışanları bilgilendir': '16',
+    
+    // MADDE 17 - Çalışanların eğitimi
+    'eğitim': '17', 'isg eğitimi': '17', 'temel eğitim': '17',
+    
+    // MADDE 18 - Görüş alma ve katılım ✅ YENİ
+    'görüş alma': '18', 'görüşlerinin alınması': '18',
+    'çalışan görüşü': '18', 'katılım': '18', 
+    'katılımının sağlanması': '18', 'görüş': '18',
+    
+    // MADDE 19 - Çalışanların yükümlülükleri
+    'çalışan yükümlülük': '19', 'çalışanın sorumluluğu': '19',
+     'kişisel koruyucu': '19', 'kkd': '19', 'kişisel koruyucu donanım': '19',
+    
+    // MADDE 20 - Çalışan temsilcisi
+    'çalışan temsilcisi': '20', 'isg temsilcisi': '20',
+    'temsilci seçimi': '20',
+    
+    // MADDE 22 - İSG kurulu
+    'kurul': '22', 'kurullar': '22', 'isg kurulu': '22',
+    'iş sağlığı ve güvenliği kurulu': '22',
+    
+    // MADDE 23 - Koordinasyon
+    'koordinasyon': '23', 'aynı işyeri': '23',
+
+    //MADDE 24 - Denetim
+    'denetim': '24', 'isg denetimi': '24', 'iş sağlığı ve güvenliği denetimi': '24',
+    
+    // MADDE 25 - İşin durdurulması
+    'işin durdurulması': '25', 'durdurma': '25',
+    
+    // MADDE 26 - İdari para cezaları
+    'para cezası': '26', 'idari ceza': '26', 'ceza': '26',
+    
+    // MADDE 27 - Hüküm bulunmayan haller, muafiyet
+    'muafiyet': '27', 'hüküm bulunmayan': '27',
+    'damga vergisi': '27', 'harç': '27', 
+'alkol': '28', 'uyuşturucu': '28', 'bağımlılık': '28', 'sarhoş': '28',
+
+    // MADDE 29 - Çalışanların sağlık ve güvenliğini tehlikeye düşüren davranışlar
+    'tehlikeye düşüren davranış': '29', 'tehlikeli davranış': '29',
+    'sağlık ve güvenlik tehlikesi': '29', 'tehlikeye düşürme': '29',
+
+    // MADDE 30 - Yürürlük ve geçici hükümler
+    'yürürlük': '30', 'geçici hükümler': '30', 'geçici madde': '30',    
+
+    //  MADDE 31 - Belgelendirme, ihtar, askı ve iptaller
+    'belgelendirme': '31', 'ihtar': '31', 'askı': '31', 'iptal': '31',
+    
+    //MADDE 37 - Sağlık raporları
+    'sağlık raporu': '37', 'rapor': '37', 'işe giriş raporu': '37',
+   
         };
+
+
 
         for (const [kelime, maddeNo] of Object.entries(anahtarMaddeler)) {
             if (soruKucuk.includes(kelime)) {
-                const madde = await MevzuatParca.findOne({
-                    maddeNo: { $regex: `^MADDE ${maddeNo}$`, $options: 'i' }
-                }).lean();
+                const madde = await MevzuatParca.findOne({ 
+                maddeNo: { $regex: `^MADDE ${maddeNo}$`, $options: 'i' } 
+                 }).lean();
                 if (madde) zorunluMaddeler.push({ ...madde, skor: 1.0 });
             }
         }
 
         const zenginlestirilmisSoru = soru + ' iş sağlığı güvenliği kanun madde yükümlülük';
 
+        // Soruyu embedding'e çevir
         const response = await fetch(
             'https://router.huggingface.co/hf-inference/models/sentence-transformers/paraphrase-multilingual-mpnet-base-v2/pipeline/feature-extraction',
             {
@@ -461,6 +526,7 @@ async function _mevzuatAra(soru) {
         const soruEmbedding = await response.json();
         if (!Array.isArray(soruEmbedding) || soruEmbedding.length === 0) return [];
 
+        // MongoDB'den tüm maddeleri al
         const maddeler = await MevzuatParca.find(
             { kanunNo: '6331' },
             { maddeNo: 1, metin: 1, embedding: 1 }
@@ -468,6 +534,7 @@ async function _mevzuatAra(soru) {
 
         if (maddeler.length === 0) return [];
 
+        // Kosinüs benzerliği hesapla
         const skorlar = maddeler.map(m => {
             if (!m.embedding || m.embedding.length === 0) return { ...m, skor: 0 };
             const dot   = m.embedding.reduce((acc, val, i) => acc + val * (soruEmbedding[i] || 0), 0);
@@ -477,7 +544,8 @@ async function _mevzuatAra(soru) {
             return { maddeNo: m.maddeNo, metin: m.metin, skor };
         });
 
-        const embedingMaddeler = skorlar
+        // En benzer 5 maddeyi döndür (min benzerlik: 0.10)
+         const embedingMaddeler = skorlar
             .sort((a, b) => b.skor - a.skor)
             .slice(0, 5)
             .filter(m => m.skor > 0.10);
@@ -494,6 +562,7 @@ async function _mevzuatAra(soru) {
     }
 }
 
+
 async function _takipliMevzuatlariHazirla() {
     try {
         const TakipliMevzuat  = require('../models/TakipliMevzuat');
@@ -508,6 +577,7 @@ async function _takipliMevzuatlariHazirla() {
             }
         ).lean();
 
+        // İstatistikler
         const istatistik = {
             toplam: mevzuatlar.length,
             aktif: mevzuatlar.filter(m => m.takipDurumu === 'aktif').length,
@@ -519,6 +589,7 @@ async function _takipliMevzuatlariHazirla() {
             istatistik.kategoriDagilimi[kat] = (istatistik.kategoriDagilimi[kat] || 0) + 1;
         });
 
+        // Onay bekleyen değişiklik sayısı
         istatistik.onayBekleyenDegisiklik = await MevzuatVersiyon.countDocuments({
             durum: 'onay-bekliyor',
         });
@@ -633,45 +704,66 @@ async function _firmaVerileriniHazirla(kullanici) {
     }));
 }
 
+// ✅ GÜNCELLENDİ: ilgiliMaddeler parametresi eklendi
 function _sohbetPromptOlustur(soru, firmaVerileri, gecmisMesajlar, kullaniciKapsami, ilgiliMaddeler = [], takipliMevzuatlar = null) {
     const bugun = new Date().toLocaleDateString('tr-TR');
 
     const veriOzeti = firmaVerileri.length === 0
         ? '(Henüz kayıtlı firma bulunmuyor)'
         : firmaVerileri.map(f => {
+
             const muayeneDetay = f.personel.muayene.detaylar.length === 0
                 ? '    (kayıt yok)'
-                : f.personel.muayene.detaylar.filter(d => d.durum !== 'geçerli').slice(0, 25)
+                : f.personel.muayene.detaylar.filter(d => d.durum !== 'geçerli')   // sadece yaklaşan + dolmuş
+.slice(0, 25)
                     .map(d => `    • ${d.personel}: ${d.tarih} → ${d.durum}`).join('\n');
+
             const egitimDetay = f.personel.egitim.detaylar.length === 0
                 ? '    (kayıt yok)'
-                : f.personel.egitim.detaylar.filter(d => d.durum !== 'geçerli').slice(0, 25)
+                : f.personel.egitim.detaylar.filter(d => d.durum !== 'geçerli')   // sadece yaklaşan + dolmuş
+.slice(0, 25)
                     .map(d => `    • ${d.personel}: ${d.tarih} → ${d.durum}`).join('\n');
+
             const ilkyardimDetay = f.personel.ilkyardim.detaylar.length === 0
                 ? '    (kayıt yok)'
-                : f.personel.ilkyardim.detaylar.filter(d => d.durum !== 'geçerli').slice(0, 25)
+                : f.personel.ilkyardim.detaylar.filter(d => d.durum !== 'geçerli')   // sadece yaklaşan + dolmuş
+.slice(0, 25)
                     .map(d => `    • ${d.personel}: ${d.tarih} → ${d.durum}`).join('\n');
+
             const olcumKisim = f.olcumler.detaylar.length === 0
                 ? '  (Kayıtlı ortam ölçümü bulunmuyor)'
-                : f.olcumler.detaylar.map(o => `  • ${o.ekipman} (${o.kontrolFirma}): ${o.gecerlilikTarihi} → ${o.durum}`).join('\n');
+                : f.olcumler.detaylar
+                    .map(o => `  • ${o.ekipman} (${o.kontrolFirma}): ${o.gecerlilikTarihi} → ${o.durum}`).join('\n');
+
             const temsilciKisim = f.temsilciler.length === 0
                 ? '  (Kayıtlı çalışan temsilcisi yok)'
                 : f.temsilciler.map(t => `  • ${t.personel} (atama: ${t.atamaTarihi})`).join('\n');
+
             const destekKisim = f.destekElemanlari.length === 0
                 ? '  (Kayıtlı destek elemanı yok)'
-                : f.destekElemanlari.map(t => `  • ${t.personel}${t.ekip ? ' [' + t.ekip + ' ekibi]' : ''} (atama: ${t.atamaTarihi})`).join('\n');
+                : f.destekElemanlari
+                    .map(t => `  • ${t.personel}${t.ekip ? ' [' + t.ekip + ' ekibi]' : ''} (atama: ${t.atamaTarihi})`)
+                    .join('\n');
+
             const planEgitimKisim = f.planlananEgitimler.length === 0
                 ? '  (Hiç eğitim planlanmamış)'
-                : f.planlananEgitimler.map(e => `  • ${e.konu}: ${e.bitisTarihi} → ${e.durum}`).join('\n');
+                : f.planlananEgitimler
+                    .map(e => `  • ${e.konu}: ${e.bitisTarihi} → ${e.durum}`).join('\n');
+
             const isgDosyaKisim = f.isgDosyalar.length === 0
                 ? '  (Henüz İSG belgesi yüklenmemiş)'
-                : f.isgDosyalar.map(d => `  • ${d.kategori}: ${d.sayi} belge${d.ornekler.length ? ' (' + d.ornekler.join(', ') + ')' : ''}`).join('\n');
+                : f.isgDosyalar
+                    .map(d => `  • ${d.kategori}: ${d.sayi} belge${d.ornekler.length ? ' (' + d.ornekler.join(', ') + ')' : ''}`).join('\n');
+
             const dokumanKisim = f.dokumanlar.length === 0
                 ? '  (Kayıtlı doküman yok)'
-                : f.dokumanlar.map(d => `  • ${d.kategori}: ${d.toplam} belge (geçerli: ${d.gecerli}, yaklaşan: ${d.yaklasan}, süresi dolmuş: ${d.suresiDolmus})`).join('\n');
+                : f.dokumanlar
+                    .map(d => `  • ${d.kategori}: ${d.toplam} belge (geçerli: ${d.gecerli}, yaklaşan: ${d.yaklasan}, süresi dolmuş: ${d.suresiDolmus})`).join('\n');
+
             const digerVeriKisim = Object.keys(f.digerVeriler).length === 0 ? '' :
                 '\nDİĞER VERİLER:\n' + Object.entries(f.digerVeriler)
-                    .map(([a, d]) => `  • ${a}: ${typeof d === 'object' ? Object.keys(d).length + ' kayıt' : String(d).substring(0, 100)}`).join('\n');
+                    .map(([a, d]) => `  • ${a}: ${typeof d === 'object' ? Object.keys(d).length + ' kayıt' : String(d).substring(0, 100)}`)
+                    .join('\n');
 
             return `
 ─── ${f.firmaAdi} ───
@@ -718,6 +810,7 @@ ${dokumanKisim}
 ${digerVeriKisim}`;
         }).join('\n');
 
+    // ─── KULLANICI LİSTESİ BÖLÜMÜ ───────────────────────────────────────
     let kullaniciOzeti;
     if (kullaniciKapsami === null) {
         kullaniciOzeti = '(Kullanıcı listesini görme yetkiniz yok.)';
@@ -729,26 +822,44 @@ ${digerVeriKisim}`;
             'kendi_firmalari': 'Sizin yönettiğiniz firmaların yetkilileri (işverenler)',
             'sadece_kendi':    'Sadece kendi hesabınız',
         }[kullaniciKapsami.kapsam] || 'Yetkiniz dahilindeki kullanıcılar';
+
         kullaniciOzeti = `Görüntüleme kapsamı: ${kapsamMetni}\nToplam ${kullaniciKapsami.kullanicilar.length} kullanıcı:\n` +
-            kullaniciKapsami.kullanicilar.map(k => `  • ${k.adSoyad} (${k.eposta}) — Rol: ${k.rol}`).join('\n');
+            kullaniciKapsami.kullanicilar
+                .map(k => `  • ${k.adSoyad} (${k.eposta}) — Rol: ${k.rol}`)
+                .join('\n');
     }
 
+    // ✅ YENİ: İlgili mevzuat maddeleri bölümü
     const mevzuatKismi = ilgiliMaddeler.length > 0
         ? '\n## İLGİLİ MEVZUAT (6331 Sayılı İSG Kanunu):\n' +
           ilgiliMaddeler.map(m => `### ${m.maddeNo}\n${m.metin.substring(0, 1500)}`).join('\n\n')
         : '';
 
-    let takipliMevzuatKismi = '';
-    if (takipliMevzuatlar && takipliMevzuatlar.istatistik.toplam > 0) {
+    // ✅ YENİ: Takipli mevzuat listesi bölümü
+    let takipliMevzuatKismi;
+    if (!takipliMevzuatlar || takipliMevzuatlar.istatistik.toplam === 0) {
+        takipliMevzuatKismi = '';  // Boş — gerekirse "yok" yazmak yerine hiç gösterme
+    } else {
         const ist = takipliMevzuatlar.istatistik;
-        const katSatiri = Object.entries(ist.kategoriDagilimi).map(([k, v]) => `${k}: ${v}`).join(', ');
+        const katSatiri = Object.entries(ist.kategoriDagilimi)
+            .map(([k, v]) => `${k}: ${v}`).join(', ');
+
         const mevzuatListesi = takipliMevzuatlar.liste
             .map(m => `  • ${m.ad} [${m.kategori}${m.mevzuatNo !== '—' ? ', No: ' + m.mevzuatNo : ''}] — ${m.aciklama !== '—' ? m.aciklama + ' • ' : ''}son tarama: ${m.sonTaramaTarihi}`)
             .join('\n');
+
         takipliMevzuatKismi = `
-## OTOMATİK MEVZUAT TAKİP SİSTEMİ:
-- Toplam: ${ist.toplam} | Aktif: ${ist.aktif} | Hatalı: ${ist.hatali} | Onay bekleyen: ${ist.onayBekleyenDegisiklik}
-- Kategoriler: ${katSatiri}
+## OTOMATİK MEVZUAT TAKİP SİSTEMİ (mevzuat.gov.tr Takibi sekmesi):
+Bu sistem, mevzuat.gov.tr'deki resmi yönetmelik ve kanunları otomatik takip eder, değişiklikleri yöneticinin onayına sunar.
+
+İstatistikler:
+- Toplam takipli mevzuat: ${ist.toplam}
+- Aktif takipte: ${ist.aktif}
+- URL hatalı: ${ist.hatali}
+- Onay bekleyen değişiklik: ${ist.onayBekleyenDegisiklik}
+- Kategori dağılımı: ${katSatiri}
+
+Takipli mevzuatların listesi:
 ${mevzuatListesi}`;
     }
 
@@ -758,20 +869,87 @@ ${mevzuatListesi}`;
         : '';
 
     return `Sen bir İş Sağlığı ve Güvenliği (İSG) Doküman Yönetim Sistemi'nin yapay zeka asistanısın.
+Görevin: kullanıcının doğal dilde sorduğu soruları, AŞAĞIDAKİ GERÇEK SİSTEM VERİLERİNE dayanarak yanıtlamak.
+
 ## BUGÜNÜN TARİHİ: ${bugun}
+
 ## SİSTEMDEKİ VERİLER:
 ${veriOzeti}
 ${mevzuatKismi}
 ${takipliMevzuatKismi}
-## SİSTEM KULLANICILARI:
+
+
+## SİSTEM KULLANICILARI (yetki kapsamınız dahilinde):
 ${kullaniciOzeti}
+
 ## TANIMLAR:
-- "Geçerli" = 30 günden fazla süre var | "Yaklaşan" = 30 gün içinde dolacak | "Süresi Dolmuş" = geçmiş | "Kaydı Yok" = sisteme girilmemiş
-## TEHLİKE SINIFI vs EĞİTİM: Az Tehlikeli: 36ay | Tehlikeli: 24ay | Çok Tehlikeli: 12ay
-## TEHLİKE SINIFI vs MUAYENE: Az Tehlikeli: 60ay | Tehlikeli: 36ay | Çok Tehlikeli: 12ay
+- "Geçerli" = Tarihi 30 günden daha geç sürecek (sorun yok)
+- "Yaklaşan" = 30 gün içinde sürecek (UYARI gerekli)
+- "Süresi Dolmuş" = Süresi geçmiş (KRİTİK)
+- "Kaydı Yok" = Sisteme henüz kaydedilmemiş
+
+## VERİ KAYNAKLARI:
+- "YÜKLENMİŞ İSG BELGELERİ" = VeriDepo'daki belgeler
+- "DOKÜMANLAR" = Doküman koleksiyonundaki belgeler
+- Bir firmada belge sorulduğunda HER İKİ kaynağa da bak!
+
+## TEHLİKE SINIFI vs EĞİTİM SÜRESİ:
+- Az Tehlikeli: 36 ay (3 yıl) | Tehlikeli: 24 ay (2 yıl) | Çok Tehlikeli: 12 ay (1 yıl)
+
+## TEHLİKE SINIFI vs MUAYENE SÜRESİ:
+- Az Tehlikeli: 60 ay (5 yıl) | Tehlikeli: 36 ay (3 yıl) | Çok Tehlikeli: 12 ay (1 yıl)
+
 ${gecmis}
-## KULLANICININ SORUSU: ${soru}
-## KURALLAR: Sadece sistem verilerine dayan. Türkçe yanıt ver. Kritik durumları ⚠️ ile vurgula. 400 kelimeyi geçme ama yarıda bırakma.`;
+
+## KULLANICININ SORUSU:
+${soru}
+
+## CEVAP KURALLARI:
+1. SADECE yukarıdaki "SİSTEMDEKİ VERİLER" bölümüne bakarak cevap ver. ASLA tahmin yürütme, varsayım yapma, bilgi uydurma.
+2. Belge sorularında hem "YÜKLENMİŞ İSG BELGELERİ" hem de "DOKÜMANLAR" bölümüne bak. ÖNEMLİ: Sistem bu iki kaynakta aynı belgeyi tutar (mimari nedeniyle) — sayıları TOPLAMA. 
+Aynı kategoride iki kaynakta da kayıt varsa, daha yüksek olan sayıyı kullan ve TEK CEVAP ver. Örnek: "VeriDepo'da 3, Doküman'da 3" görüyorsan kullanıcıya "3 belge var" de, "6 belge" deme. Çift kayıt detayını kullanıcıya açıklama.
+3. Tehlike sınıfını yukarıdaki değerden okuyup AYNEN aktarın.
+4. Çalışan sayısı için "Toplam Çalışan Sayısı" ve "Sistemde Detaylı Personel Sayısı"ndan uygun olanı kullan.
+5. Personel muayene/eğitim detaylarını isim isim listele.
+6. Ortam ölçümü sorularında "ORTAM ÖLÇÜMLERİ" bölümündeki verileri kullan.
+7. Çalışan temsilcisi sorularında "ÇALIŞAN TEMSİLCİLERİ" bölümündeki verileri kullan.
+8. Destek elemanı sorularında "DESTEK ELEMANLARI" bölümündeki verileri kullan.
+9. Türkçe, samimi ve profesyonel bir dille konuş.
+10. Acil/kritik durumları ⚠️ emojisiyle vurgula.
+11. FORMAT KURALLARI: Her firma için ayrı paragraf. Personel listelerini "Ad: tarih (durum)" formatında yaz. Kritik olanları en üste al. Gereksiz tekrar etme.
+12. Cevap 400 kelimeyi geçmesin ama ASLA yarıda bırakma. Veri çoksa en kritikleri özetle.
+13. Eğer kullanıcı bir firma adı söyledi ama listede yoksa: "Bu isimle bir firma sistemde kayıtlı değil" de.
+14. SORGULAMA ODAKLI YANITLA: Belirli bir konuyla ilgili soru geldiğinde SADECE o konuda kaydı olan firmaları yaz. ASLA kaydı olmayan firmaların adını yazma. Sadece "Diğer firmalarda bu konuda kayıt bulunmamaktadır." yaz ve bitir.
+15. "Süresi yaklaşan" sorularında süresi dolmuşları da listele — ⚠️ KRİTİK olarak vurgula.
+16. Personel muayene/eğitim verileri için "PERSONEL MUAYENELERİ" bölümündeki detaylara bak.
+17. EŞANLAMLI TERİMLERE DİKKAT: Kullanıcı aynı belgeyi farklı isimlerle sorabilir. Aşağıdaki ifadeleri AYNI şey olarak kabul et:
+    - "acil durum planı" = "acil eylem planı" = "acil durum eylem planı" = "ADP"
+    - "risk değerlendirmesi" = "risk analizi" = "risk raporu" = "RV"
+    - "periyodik sağlık muayenesi" = "muayene" = "sağlık kontrolü" = "periyodik kontrol"
+    - "İSG eğitimi" = "iş sağlığı eğitimi" = "güvenlik eğitimi" = "temel İSG eğitimi"
+    - "ortam ölçümü" = "çevre ölçümü" = "ekipman kontrolü" = "ölçüm raporu"
+    - "tatbikat" = "acil durum tatbikatı" = "yangın tatbikatı"
+    - "DİF" = "DÖF" = "düzeltici faaliyet" = "iyileştirici faaliyet"
+    - "KKD" = "kişisel koruyucu donanım" = "iş güvenliği ekipmanı"
+    - "İSG temsilcisi" = "çalışan temsilcisi" = "güvenlik temsilcisi"
+    - "destek elemanı" = "ekip üyesi" = "koruma/kurtarma/söndürme/ilkyardım ekibi"
+    - "ilkyardım sertifikası" = "ilkyardımcı belgesi" = "ilkyardım eğitimi"
+        - "tehlike sınıfı" = "tehlike grubu" = "risk sınıfı"
+    -"İSG kurulu"= "iş güvenliği kurulu" = "iş sağlığı ve güvenliği kurulu"
+    Tipo (yazım hatası) varsa da en yakın anlama göre yorumla. Örnek: "muyene" → "muayene".
+18. KULLANICI vs YETKİLİ KARIŞIKLIĞI:
+    - "Sistemdeki kullanıcılar", "kayıtlı kullanıcılar", "kim sisteme giriş yapabilir" gibi sorular için "SİSTEM KULLANICILARI" bölümüne bak.
+    - "Firmaların yetkilileri", "ABC İnşaat'ın yetkilisi kim" gibi sorular için her firmanın "Yetkili" alanına bak.
+    - Bu ikisi FARKLI şeylerdir, asla karıştırma.
+19. KULLANICI LİSTESİ GİZLİLİĞİ (KVKK): "SİSTEM KULLANICILARI" bölümündeki "Görüntüleme kapsamı"na göre yanıt ver.
+    - "Tüm sistemdeki kullanıcılar" → tüm listeyi ver
+    - "Sizin yönettiğiniz firmaların yetkilileri" → "Sizin yönettiğiniz firmaların yetkili kullanıcıları" diye giriş yap
+    - "Sadece kendi hesabınız" → "Görüntüleyebileceğiniz tek kullanıcı kendi hesabınızdır" de
+    - Kullanıcı yetkisi yoksa: "Bu bilgiyi görme yetkiniz yok. Sistem yöneticinize başvurabilirsiniz" de.
+    - ASLA yetki kapsamı dışındaki kullanıcı bilgisini sızdırma.
+20. MEVZUAT SORULARI: "İLGİLİ MEVZUAT" bölümünde madde varsa, kullanıcı sistem verisi sormasa bile bu maddeleri kullanarak yanıt ver. Madde numarasını belirt. ANCAK kullanıcı açıkça bir firma veya sistemdeki durum hakkında sormadıysa, firma verilerini ve "sistemdeki firmaların durumu" bilgisini ASLA ekleme. Sadece mevzuat bilgisini ver ve bitir.
+21. OTOMATİK MEVZUAT TAKİP SORULARI: Kullanıcı "mevzuat.gov.tr takibi", "takipli mevzuat", "kaç yönetmelik takip ediliyor", "kayıtlı yönetmelik", "hangi kanunlar var", "sistemde hangi mevzuat var" gibi sorduğunda "OTOMATİK MEVZUAT TAKİP SİSTEMİ" bölümündeki verileri kullan. Sayı sorulduysa istatistikleri ver (toplam, aktif, kategori dağılımı). Liste istendiyse adları kategori ile sırala. "Onay bekleyen değişiklik var mı" sorulduğunda istatistikten cevapla. Bu sistem 6331 Kanunu'nun MADDE içeriği ile KARIŞTIRILMAMALIDIR — "OTOMATİK MEVZUAT TAKİP" bütün mevzuatların PDF takibidir, "İLGİLİ MEVZUAT" sadece 6331 kanununun madde içeriklerinden alınır.
+Şimdi yanıt ver:`;
 }
 
 exports.sohbet = async (req, res) => {
@@ -785,6 +963,7 @@ exports.sohbet = async (req, res) => {
         if (!process.env.GEMINI_API_KEY)
             return res.status(500).json({ basarili: false, hata: 'Yapay zeka servisi yapılandırılmamış.' });
 
+        // ✅ GÜNCELLENDİ: Paralel olarak firma verileri, kullanıcı listesi ve mevzuat araması
         const [firmaVerileri, kullaniciKapsami, ilgiliMaddeler, takipliMevzuatlar] = await Promise.all([
             _firmaVerileriniHazirla(req.kullanici),
             _kullaniciListesiniHazirla(req.kullanici),
@@ -793,11 +972,12 @@ exports.sohbet = async (req, res) => {
         ]);
 
         const prompt = _sohbetPromptOlustur(soru, firmaVerileri, gecmisMesajlar, kullaniciKapsami, ilgiliMaddeler, takipliMevzuatlar);
-        const yanit = await geminiCagir(prompt, false);
+        const sonuc  = await modelSohbet.generateContent(prompt);
+        const yanit  = sonuc.response.text().trim();
 
         const sure = Date.now() - baslangic;
-        console.log(`💬 [AI Sohbet] ${sure}ms | Mevzuat: ${ilgiliMaddeler.length} madde | Soru: "${soru.substring(0, 50)}..."`);
-        res.json({ basarili: true, yanit: yanit.trim(), sureMs: sure });
+        console.log(`💬 [AI Sohbet] ${sure}ms | Mevzuat: ${ilgiliMaddeler.length} madde | Takip: ${takipliMevzuatlar?.istatistik?.toplam || 0} | Soru: "${soru.substring(0, 50)}..."`);
+        res.json({ basarili: true, yanit, sureMs: sure });
     } catch (err) {
         console.error('[AI Sohbet] Hata:', err.message);
         res.status(500).json({ basarili: false, hata: 'Yapay zeka yanıt verirken hata oluştu.', detay: err.message });
