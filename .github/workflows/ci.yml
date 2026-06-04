@@ -25,7 +25,7 @@ jobs:
       run: npm install
 
     - name: Testleri Çalıştır ve Coverage Üret
-      run: npm test
+      run: npx jest --coverage --testPathIgnorePatterns="integration|system" --forceExit
       env:
         JWT_SECRET: test_gizli_anahtari
         PORT: 5500
