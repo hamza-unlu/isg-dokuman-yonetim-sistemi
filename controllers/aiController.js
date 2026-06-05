@@ -405,8 +405,6 @@ if (arananMaddeNo) {
     // MADDE 5 - Risklerden korunma ilkeleri
     'korunma ilkeleri': '5', 'risklerden korunma': '5',
     'kaynağında mücadele': '5', 'tehlikeli olanı': '5',
-    'kaynağında mücadele': '5',
-            'tehlikeli olanı': '5', 
     
     // MADDE 6 - İSG hizmetleri
     'isg hizmetleri': '6', 'iş sağlığı hizmeti': '6',
@@ -424,7 +422,7 @@ if (arananMaddeNo) {
     // MADDE 11 - Acil durum planları
     'acil durum': '11', 'acil eylem': '11', 
     'yangınla mücadele': '11', 'ilk yardım': '11',
-    'tahliye': '11', 'yangın': '11', 'ilkyardım': '11',
+    'yangın': '11', 'ilkyardım': '11',
     
     // MADDE 12 - Tahliye
     'tahliye': '12',
