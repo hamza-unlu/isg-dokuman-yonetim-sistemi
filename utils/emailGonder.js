@@ -1,47 +1,23 @@
 // utils/emailGonder.js
-// Çevreye göre otomatik geçiş: Mailtrap (test) veya SMTP (production - Brevo/Gmail)
+// Çevreye göre otomatik geçiş: Mailtrap (test) | Brevo HTTP API (production)
 
-const dns = require('dns');
-try {
-    dns.setDefaultResultOrder('ipv4first');
-} catch (e) { /* sessiz */ }
-
-const nodemailer = require('nodemailer');
+const axios = require('axios');
 
 // ─────────────────────────────────────────
 // SAĞLAYICI KARARI: .env'deki MAIL_PROVIDER değişkeni
 // ─────────────────────────────────────────
-const SAGLAYICI = (process.env.MAIL_PROVIDER || 'smtp').toLowerCase();
+const SAGLAYICI = (process.env.MAIL_PROVIDER || 'brevo').toLowerCase();
 console.log(`📬 Mail sağlayıcı: ${SAGLAYICI.toUpperCase()}`);
 
 let mailtrapClient = null;
-let smtpTransporter = null;
 
-// ─── Mailtrap (HTTP API) ─────────────────────────────────────
+// ─── Mailtrap (HTTP API — test/sandbox) ─────────────────────
 if (SAGLAYICI === 'mailtrap') {
     const { MailtrapClient } = require('mailtrap');
     mailtrapClient = new MailtrapClient({
         token:       process.env.MAILTRAP_API_TOKEN,
         testInboxId: parseInt(process.env.MAILTRAP_INBOX_ID),
         sandbox:     true,
-    });
-}
-
-// ─── SMTP (Brevo, Gmail, vs.) ────────────────────────────────
-if (SAGLAYICI === 'smtp') {
-    const portNo = parseInt(process.env.SMTP_PORT) || 587;
-    smtpTransporter = nodemailer.createTransport({
-        host:   process.env.SMTP_HOST,
-        port:   portNo,
-        secure: portNo === 465,
-        auth: {
-            user: process.env.SMTP_USER,
-            pass: process.env.SMTP_PASS,
-        },
-        family: 4,
-        tls: { rejectUnauthorized: false },
-        connectionTimeout: 15000,
-        greetingTimeout:   10000,
     });
 }
 
@@ -55,8 +31,12 @@ const baglantiTest = async () => {
             }
             console.log('✅ Mailtrap API hazır (test modu — HTTP üzerinden)');
         } else {
-            await smtpTransporter.verify();
-            console.log(`✅ SMTP bağlantısı hazır (${process.env.SMTP_HOST}:${process.env.SMTP_PORT})`);
+            // Brevo API anahtarı varlık kontrolü
+            if (!process.env.BREVO_API_KEY) {
+                console.error('❌ BREVO_API_KEY eksik');
+                return;
+            }
+            console.log('✅ Brevo HTTP API hazır');
         }
     } catch (err) {
         console.error('❌ Mail servisi bağlantı hatası:', err.message);
@@ -77,20 +57,35 @@ const emailGonder = async ({ kime, konu, html, text, attachments }) => {
             console.log(`📧 [Mailtrap] E-posta gönderildi → ${kime}`);
             return info;
         } else {
-            const info = await smtpTransporter.sendMail({
-                from:    process.env.SMTP_FROM || `"ÜNLÜ İSG" <${process.env.SMTP_USER}>`,
-                to:      kime,
-                subject: konu,
-                html,
-                text:    text || html.replace(/<[^>]*>/g, ''),
-                ...(attachments && attachments.length ? { attachments } : {}),
-            });
-            console.log(`📧 [SMTP] E-posta gönderildi → ${kime} (id: ${info.messageId})`);
-            return info;
+            // ─── Brevo Transactional Email HTTP API ───────────────
+            const payload = {
+                sender:      { name: 'ÜNLÜ İSG', email: process.env.BREVO_FROM_EMAIL || 'hamzaunlu57@gmail.com' },
+                to:          [{ email: kime }],
+                subject:     konu,
+                htmlContent: html,
+                textContent: text || html.replace(/<[^>]*>/g, ''),
+            };
+
+            const response = await axios.post(
+                'https://api.brevo.com/v3/smtp/email',
+                payload,
+                {
+                    headers: {
+                        'api-key':      process.env.BREVO_API_KEY,
+                        'Content-Type': 'application/json',
+                        'Accept':       'application/json',
+                    },
+                    timeout: 15000,
+                }
+            );
+
+            console.log(`📧 [Brevo API] E-posta gönderildi → ${kime} (messageId: ${response.data.messageId})`);
+            return response.data;
         }
     } catch (err) {
-        console.error(`❌ Mail gönderim hatası (${kime}):`, err.message);
-        throw err;
+        const detay = err.response?.data || err.message;
+        console.error(`❌ Mail gönderim hatası (${kime}):`, detay);
+        throw new Error(typeof detay === 'object' ? JSON.stringify(detay) : detay);
     }
 };
 
