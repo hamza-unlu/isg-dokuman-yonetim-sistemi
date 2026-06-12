@@ -1017,3 +1017,61 @@ exports.dokumanMailGonder = async (req, res) => {
         res.status(500).json({ basari: false, mesaj: err.message });
     }
 };
+
+// ═══════════════════════════════════════════════════════════════════
+// İSG KURUL TOPLANTI BİLDİRİM MAILI
+// POST /api/dokumanlar/kurul-mail-gonder
+// ═══════════════════════════════════════════════════════════════════
+exports.kurulMailGonder = async (req, res) => {
+    try {
+        const { firmaId, toplantıTarih } = req.body;
+
+        const firma = await Firma.findById(firmaId).lean();
+        if (!firma) return res.status(404).json({ basari: false, mesaj: 'Firma bulunamadı' });
+
+        const eposta = firma.eposta || firma.email;
+        if (!eposta) return res.status(400).json({ basari: false, mesaj: 'Firma için kayıtlı e-posta yok.' });
+
+        const html = `
+        <div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;padding:24px;color:#1e293b;">
+            <div style="text-align:center;padding-bottom:16px;border-bottom:2px solid #3b82f6;">
+                <h2 style="color:#1e40af;margin:0;">🛡️ ÜNLÜ İSG</h2>
+                <p style="color:#64748b;margin:4px 0 0;">İSG Doküman Yönetim Sistemi</p>
+            </div>
+            <div style="padding:24px 0;">
+                <h3 style="color:#1e293b;margin-top:0;">📅 İSG Kurul Toplantısı Planlandı</h3>
+                <p style="color:#334155;line-height:1.6;">
+                    Sayın İlgili,<br><br>
+                    <strong>${firma.firmaAdi || firma.adi}</strong> firması için İSG Kurul Toplantısı planlanmıştır.
+                </p>
+                <table style="width:100%;border-collapse:collapse;margin:20px 0;background:#f8fafc;border-radius:8px;overflow:hidden;">
+                    <tr>
+                        <td style="padding:12px 16px;border-bottom:1px solid #e2e8f0;font-weight:600;color:#475569;width:40%;">Firma</td>
+                        <td style="padding:12px 16px;border-bottom:1px solid #e2e8f0;">${firma.firmaAdi || firma.adi}</td>
+                    </tr>
+                    <tr>
+                        <td style="padding:12px 16px;font-weight:600;color:#475569;">Planlanan Toplantı Tarihi</td>
+                        <td style="padding:12px 16px;">${_trTarih(toplantıTarih) || '-'}</td>
+                    </tr>
+                </table>
+                <p style="color:#64748b;font-size:13px;line-height:1.6;margin-top:24px;">
+                    Toplantı ile ilgili soru veya talebiniz için lütfen bizimle iletişime geçin.
+                </p>
+            </div>
+            <div style="border-top:1px solid #e2e8f0;padding-top:16px;text-align:center;color:#94a3b8;font-size:12px;">
+                Bu e-posta <strong>ÜNLÜ İSG Doküman Yönetim Sistemi</strong> tarafından otomatik olarak gönderilmiştir.
+            </div>
+        </div>`;
+
+        await emailGonder({
+            kime: eposta,
+            konu: `📅 İSG Kurul Toplantısı Bildirimi — ${firma.firmaAdi || firma.adi}`,
+            html,
+        });
+
+        res.json({ basari: true, mesaj: 'Mail gönderildi.', eposta });
+    } catch (err) {
+        console.error('[kurulMailGonder] HATA:', err);
+        res.status(500).json({ basari: false, mesaj: err.message });
+    }
+};

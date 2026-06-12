@@ -2562,10 +2562,9 @@ async function kurulTamamlandi() {
 async function kurulKaydet(sessiz) {
     if (!aktifFirma || aktifFirmaIdx === null) return;
 
-    // ✅ _id kontrolü
-    const firmaId = aktifFirma._id || aktifFirma.id;
+    const firmaId = aktifFirmaId || aktifFirma?._id || aktifFirma?.id;
     if (!firmaId || firmaId === 'undefined') {
-        console.error('[kurulKaydet] Firma _id yok:', aktifFirma);
+        console.error('[kurulKaydet] Firma _id yok:', aktifFirma, 'aktifFirmaId:', aktifFirmaId);
         return;
     }
 
@@ -2575,7 +2574,7 @@ async function kurulKaydet(sessiz) {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
                 isg: {
-                    ...(aktifFirma.isg || {}),          // mevcut isg verilerini koru
+                    ...(aktifFirma.isg || {}),
                     kurulZorunluDegil:      cb('kurul-zorunlu-degil'),
                     kurulToplanti:          v('kurul-toplanti'),
                     kurulGecmisToplantılar: [...kurulGecmisToplantılar],
@@ -2588,18 +2587,22 @@ async function kurulKaydet(sessiz) {
             return;
         }
 
-        // ✅ Local state'i de güncelle
-        aktifFirma.isg = {
-            ...(aktifFirma.isg || {}),
-            kurulZorunluDegil:      cb('kurul-zorunlu-degil'),
-            kurulToplanti:          v('kurul-toplanti'),
-            kurulGecmisToplantılar: [...kurulGecmisToplantılar],
-        };
+        if (aktifFirma && typeof aktifFirma === 'object') {
+            aktifFirma.isg = {
+                ...(aktifFirma.isg || {}),
+                kurulZorunluDegil:      cb('kurul-zorunlu-degil'),
+                kurulToplanti:          v('kurul-toplanti'),
+                kurulGecmisToplantılar: [...kurulGecmisToplantılar],
+            };
+        }
 
     } catch (err) {
         console.error('[kurulKaydet] Fetch hatası:', err);
         return;
     }
+
+    // Mail gönderimi
+    if (cb('kurul-mail-at')) await _kurulMailGonder();
 
     await kartGuncelle('kart-kurul');
     firmaKlasorleriYukle();
@@ -2612,6 +2615,33 @@ async function kurulKaydet(sessiz) {
             btn.style.background = '#15803d';
             setTimeout(() => { btn.innerHTML = orijinal; btn.style.background = ''; }, 1800);
         }
+    }
+}
+
+async function _kurulMailGonder() {
+    if (!aktifFirmaId) {
+        alert('⚠️ Firma ID bulunamadı, e-posta gönderilemedi.');
+        return;
+    }
+    const payload = {
+        firmaId:       aktifFirmaId,
+        toplantıTarih: v('kurul-toplanti') || '',
+    };
+    try {
+        const res   = await AUTH.apiFetch('/api/dokumanlar/kurul-mail-gonder', {
+            method:  'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body:    JSON.stringify(payload),
+        });
+        const sonuc = await res.json().catch(() => ({}));
+        if (res.ok && sonuc.basari) {
+            alert(`📧 Toplantı bildirimi gönderildi: ${sonuc.eposta}`);
+        } else {
+            alert(`⚠️ E-posta gönderilemedi: ${sonuc.mesaj || `HTTP ${res.status}`}`);
+        }
+    } catch (err) {
+        console.error('[_kurulMailGonder] Hata:', err);
+        alert('⚠️ E-posta gönderilirken bir hata oluştu: ' + err.message);
     }
 }
 

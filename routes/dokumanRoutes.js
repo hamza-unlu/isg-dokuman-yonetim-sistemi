@@ -146,6 +146,11 @@ router.post('/mail-gonder',
   dokumanController.dokumanMailGonder
 );
 
+router.post('/kurul-mail-gonder',
+  rolIzinVer('sistem_yoneticisi', 'isg_uzmani','isyeri_hekimi'),
+  dokumanController.kurulMailGonder
+);
+
 // ═══════════════════════════════════════════════════════════════════════
 // GENEL ROUTE'LAR
 // ═══════════════════════════════════════════════════════════════════════
