@@ -2947,9 +2947,9 @@ function rvKartDosyaYukle(input) {
 }
 
 async function _isgAlaniKaydet(isgGuncelleme) {
-    const firmaId = aktifFirma._id || aktifFirma.id;
+    const firmaId = aktifFirmaId || aktifFirma?._id || aktifFirma?.id;
     if (!firmaId || firmaId === 'undefined') {
-        console.error('[_isgAlaniKaydet] Firma _id yok:', aktifFirma);
+        console.error('[_isgAlaniKaydet] Firma _id yok:', aktifFirma, 'aktifFirmaId:', aktifFirmaId);
         throw new Error('Firma ID bulunamadı');
     }
     const res = await AUTH.apiFetch(`/api/firmalar/${firmaId}`, {
@@ -2962,8 +2962,10 @@ async function _isgAlaniKaydet(isgGuncelleme) {
         console.error('[_isgAlaniKaydet] Sunucu hatası:', hata);
         throw new Error(`HTTP ${res.status}`);
     }
-    if (!aktifFirma.isg) aktifFirma.isg = {};
-    Object.assign(aktifFirma.isg, isgGuncelleme);
+    if (aktifFirma && typeof aktifFirma === 'object') {
+        if (!aktifFirma.isg) aktifFirma.isg = {};
+        Object.assign(aktifFirma.isg, isgGuncelleme);
+    }
 }
 
 async function rvKaydet() {
