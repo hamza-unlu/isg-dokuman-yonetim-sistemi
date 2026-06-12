@@ -66,6 +66,16 @@ const emailGonder = async ({ kime, konu, html, text, attachments }) => {
                 textContent: text || html.replace(/<[^>]*>/g, ''),
             };
 
+            // Nodemailer formatını Brevo formatına çevir
+            // Nodemailer: { filename, content (base64), encoding, contentType }
+            // Brevo:      { name, content (base64) }
+            if (Array.isArray(attachments) && attachments.length > 0) {
+                payload.attachment = attachments.map(att => ({
+                    name:    att.filename || att.name || 'belge',
+                    content: att.content, // zaten base64
+                }));
+            }
+
             const response = await axios.post(
                 'https://api.brevo.com/v3/smtp/email',
                 payload,
