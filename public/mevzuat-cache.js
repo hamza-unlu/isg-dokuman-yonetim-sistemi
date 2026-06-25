@@ -84,8 +84,8 @@ const MevzuatCache = (function() {
         if (!sinif) return '';
         const s = sinif.toString().toLowerCase().trim();
         if (s.includes('çok tehlikeli') || s.includes('cok tehlikeli')) return 'Çok Tehlikeli';
-        if (s.includes('tehlikeli')) return 'Tehlikeli';
         if (s.includes('az tehlikeli')) return 'Az Tehlikeli';
+        if (s.includes('tehlikeli')) return 'Tehlikeli';
         return sinif; // Eşleşme yoksa orijinal değeri döndür
     }
 
