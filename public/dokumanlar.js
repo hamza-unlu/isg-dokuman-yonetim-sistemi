@@ -1426,6 +1426,7 @@ function muayeneSonrakiOtomatikHesapla() {
         const sinif = (aktifFirmaSinifi || '').toLowerCase();
         yil = 5;
         if (sinif.includes('çok tehlikeli')) yil = 1;
+        else if (sinif.includes('az tehlikeli')) yil = 5;
         else if (sinif.includes('tehlikeli')) yil = 3;
     }
 
@@ -1546,6 +1547,7 @@ async function muayeneModalMuayeneTarihDegisti(inputEl, key, firmaAdi) {
         const sinif = (aktifFirmaSinifi || '').toLowerCase();
         yil = 5;
         if (sinif.includes('çok tehlikeli')) yil = 1;
+        else if (sinif.includes('az tehlikeli')) yil = 5;
         else if (sinif.includes('tehlikeli')) yil = 3;
     }
 
@@ -1703,6 +1705,7 @@ function egitimPeriyotGetir() {
     // Cache yoksa sabit değerlere düş (geri dönüş güvenliği)
     const sinif = (aktifFirmaSinifi || '').toLowerCase();
     if (sinif.includes('çok tehlikeli')) return 1;
+    if (sinif.includes('az tehlikeli'))  return 3;
     if (sinif.includes('tehlikeli'))     return 2;
     return 3;
 }
@@ -2053,6 +2056,7 @@ async function ilkyardimZorunluSayiGetir() {
     if (oran === null) {
         oran = 20;
         if (sinif.includes('çok tehlikeli')) oran = 10;
+        else if (sinif.includes('az tehlikeli')) oran = 20;
         else if (sinif.includes('tehlikeli')) oran = 15;
     }
 
@@ -2254,7 +2258,7 @@ async function _ilkyardimUyariGuncelle() {
     const sinif = (aktifFirmaSinifi || '').toLowerCase();
     let sinifYazi = 'Az Tehlikeli'; let oranYazi = '20 kişide 1';
     if (sinif.includes('çok tehlikeli')) { sinifYazi = 'Çok Tehlikeli'; oranYazi = '10 kişide 1'; }
-    else if (sinif.includes('tehlikeli')) { sinifYazi = 'Tehlikeli'; oranYazi = '15 kişide 1'; }
+    else if (!sinif.includes('az tehlikeli') && sinif.includes('tehlikeli')) { sinifYazi = 'Tehlikeli'; oranYazi = '15 kişide 1'; }
 
     if (mevcutSayi < zorunluSayi) {
         uyariEl.style.display = 'flex';
@@ -2297,7 +2301,7 @@ async function ilkyardimModalAc() {
         const sinif      = (aktifFirmaSinifi || '').toLowerCase();
         let sinifYazi = 'Az Tehlikeli'; let oranYazi = '20 kişide 1';
         if (sinif.includes('çok tehlikeli')) { sinifYazi = 'Çok Tehlikeli'; oranYazi = '10 kişide 1'; }
-        else if (sinif.includes('tehlikeli')) { sinifYazi = 'Tehlikeli'; oranYazi = '15 kişide 1'; }
+        else if (!sinif.includes('az tehlikeli') && sinif.includes('tehlikeli')) { sinifYazi = 'Tehlikeli'; oranYazi = '15 kişide 1'; }
         periyotEl.textContent = `${sinifYazi} — Zorunlu: ${zorunlu} kişi (${oranYazi}) | Periyot: 3 yılda 1`;
     }
 
@@ -2881,6 +2885,7 @@ function _rvAdpYilGetir() {
     // Cache yoksa sabit değerlere düş
     const sinif = (aktifFirmaSinifi || '').toLowerCase();
     if (sinif.includes('çok tehlikeli')) return 2;
+    if (sinif.includes('az tehlikeli'))  return 6;
     if (sinif.includes('tehlikeli'))     return 4;
     return 6;
 }
