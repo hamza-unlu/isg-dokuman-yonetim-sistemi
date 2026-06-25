@@ -2256,9 +2256,16 @@ async function _ilkyardimUyariGuncelle() {
     if (sayacEl) sayacEl.textContent = mevcutSayi;
 
     const sinif = (aktifFirmaSinifi || '').toLowerCase();
-    let sinifYazi = 'Az Tehlikeli'; let oranYazi = '20 kişide 1';
-    if (sinif.includes('çok tehlikeli')) { sinifYazi = 'Çok Tehlikeli'; oranYazi = '10 kişide 1'; }
-    else if (!sinif.includes('az tehlikeli') && sinif.includes('tehlikeli')) { sinifYazi = 'Tehlikeli'; oranYazi = '15 kişide 1'; }
+    let sinifYazi = 'Az Tehlikeli';
+    // Oran değerini cache'den al, yoksa sabit değer kullan
+    const _ilkyardimKural = (typeof MevzuatCache !== 'undefined') && MevzuatCache.kuralAl('İlkyardımcı Oranı', aktifFirmaSinifi);
+    const _ilkyardimOran = (_ilkyardimKural && _ilkyardimKural.birim === 'oran') ? _ilkyardimKural.deger
+        : sinif.includes('çok tehlikeli') ? 10
+        : (!sinif.includes('az tehlikeli') && sinif.includes('tehlikeli')) ? 15
+        : 20;
+    let oranYazi = `${_ilkyardimOran} kişide 1`;
+    if (sinif.includes('çok tehlikeli')) { sinifYazi = 'Çok Tehlikeli'; }
+    else if (!sinif.includes('az tehlikeli') && sinif.includes('tehlikeli')) { sinifYazi = 'Tehlikeli'; }
 
     if (mevcutSayi < zorunluSayi) {
         uyariEl.style.display = 'flex';
@@ -2299,9 +2306,15 @@ async function ilkyardimModalAc() {
     if (periyotEl) {
         const zorunlu    = await ilkyardimZorunluSayiGetir();
         const sinif      = (aktifFirmaSinifi || '').toLowerCase();
-        let sinifYazi = 'Az Tehlikeli'; let oranYazi = '20 kişide 1';
-        if (sinif.includes('çok tehlikeli')) { sinifYazi = 'Çok Tehlikeli'; oranYazi = '10 kişide 1'; }
-        else if (!sinif.includes('az tehlikeli') && sinif.includes('tehlikeli')) { sinifYazi = 'Tehlikeli'; oranYazi = '15 kişide 1'; }
+        let sinifYazi = 'Az Tehlikeli';
+        const _modalKural = (typeof MevzuatCache !== 'undefined') && MevzuatCache.kuralAl('İlkyardımcı Oranı', aktifFirmaSinifi);
+        const _modalOran = (_modalKural && _modalKural.birim === 'oran') ? _modalKural.deger
+            : sinif.includes('çok tehlikeli') ? 10
+            : (!sinif.includes('az tehlikeli') && sinif.includes('tehlikeli')) ? 15
+            : 20;
+        let oranYazi = `${_modalOran} kişide 1`;
+        if (sinif.includes('çok tehlikeli')) { sinifYazi = 'Çok Tehlikeli'; }
+        else if (!sinif.includes('az tehlikeli') && sinif.includes('tehlikeli')) { sinifYazi = 'Tehlikeli'; }
         periyotEl.textContent = `${sinifYazi} — Zorunlu: ${zorunlu} kişi (${oranYazi}) | Periyot: 3 yılda 1`;
     }
 
