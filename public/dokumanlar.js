@@ -2470,8 +2470,8 @@ function kurulPeriyotGetir() {
     // Cache yoksa sabit değerlere düş
     const sinif = (aktifFirmaSinifi || '').toLowerCase();
     if (sinif.includes('çok tehlikeli')) return 1;
-    if (sinif.includes('tehlikeli'))     return 2;
     if (sinif.includes('az tehlikeli'))  return 3;
+    if (sinif.includes('tehlikeli'))     return 2;
     return null;
 }
 
