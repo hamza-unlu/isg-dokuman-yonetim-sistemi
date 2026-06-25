@@ -25,7 +25,7 @@ app.use(cors({ origin: '*', credentials: true }));
 app.use(express.json({ limit: '100mb' }));
 app.use(express.urlencoded({ extended: true, limit: '100mb' }));
 
-// Statik dosyalar
+// Statik dosyalar. dosya sistemini URL yapısına yansıtıyor.
 app.use(express.static(path.join(__dirname, 'public')));
 app.use('/api/veri/isg_dosyalar', express.static(path.join(__dirname, 'isg_dosyalar')));
 app.use('/api/veri/olcum_ekipman_verileri', express.static(path.join(__dirname, 'isg_dosyalar/olcum')));

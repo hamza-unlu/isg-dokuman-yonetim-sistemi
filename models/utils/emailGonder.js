@@ -11,7 +11,7 @@ const nodemailer = require('nodemailer');
  *   3. Çıkan 16 karakterlik şifreyi SMTP_PASS olarak .env'e ekle
  *
  * OUTLOOK/HOTMAIL:
- *   SMTP_HOST=smtp-mail.outlook.com  SMTP_PORT=587
+ *   SMTP_HOST=smtp-mail.outlook.com  SMTP_PORT=465
  */
 const transporter = nodemailer.createTransport({
   host:   process.env.SMTP_HOST,

@@ -1,18 +1,4 @@
-// controllers/mevzuatTakipController.js
-// ═══════════════════════════════════════════════════════════════════════════
-// MEVZUAT TAKİP CONTROLLER
-// ───────────────────────────────────────────────────────────────────────────
-// Mevzuat otomatik takip sisteminin REST API endpoint'leri.
-//
-// Bölümler:
-//   1. DURUM VE LİSTELEME
-//   2. CRUD (TakipliMevzuat)
-//   3. İŞLEMLER (tarama, test)
-//   4. ONAY YÖNETİMİ (basit)
-//   5. CRON AYAR YÖNETİMİ
-//   6. KURAL GÜNCELLEME & AUDIT
-//   7. ⭐ DİFF GÖRÜNTÜLEME (Adım 7.B)
-// ═══════════════════════════════════════════════════════════════════════════
+
 
 const fs = require('fs');
 const diff = require('diff');   // ⭐ YENİ — jsdiff kütüphanesi
@@ -26,9 +12,7 @@ const takipServisi    = require('../services/mevzuatTakipServisi');
 const scheduler       = require('../services/mevzuatScheduler');
 const MevzuatScraper  = require('../services/mevzuatScraper');
 
-// ═══════════════════════════════════════════════════════════════════════════
-// 📊 DURUM VE LİSTELEME
-// ═══════════════════════════════════════════════════════════════════════════
+//  DURUM VE LİSTELEME
 
 exports.durum = async (req, res) => {
     try {
@@ -75,9 +59,8 @@ exports.detay = async (req, res) => {
     }
 };
 
-// ═══════════════════════════════════════════════════════════════════════════
-// ✏️ CRUD
-// ═══════════════════════════════════════════════════════════════════════════
+//  CRUD
+
 
 exports.ekle = async (req, res) => {
     try {
@@ -172,9 +155,9 @@ exports.aktifPasifYap = async (req, res) => {
     }
 };
 
-// ═══════════════════════════════════════════════════════════════════════════
-// 🔧 İŞLEMLER
-// ═══════════════════════════════════════════════════════════════════════════
+
+// İŞLEMLER
+
 
 exports.urlTestEt = async (req, res) => {
     try {
@@ -229,9 +212,8 @@ exports.tekrarDene = async (req, res) => {
     }
 };
 
-// ═══════════════════════════════════════════════════════════════════════════
-// 🔔 ONAY YÖNETİMİ
-// ═══════════════════════════════════════════════════════════════════════════
+
+// ONAY YÖNETİMİ
 
 exports.bekleyenler = async (req, res) => {
     try {
@@ -347,9 +329,9 @@ exports.pdfIndir = async (req, res) => {
     }
 };
 
-// ═══════════════════════════════════════════════════════════════════════════
-// ⭐ CRON AYAR YÖNETİMİ
-// ═══════════════════════════════════════════════════════════════════════════
+
+//  CRON AYAR YÖNETİMİ
+
 
 exports.cronAyariGetir = async (req, res) => {
     try {
@@ -440,9 +422,8 @@ exports.cronAyariKaydet = async (req, res) => {
 
 function _iki(n) { return String(n).padStart(2, '0'); }
 
-// ═══════════════════════════════════════════════════════════════════════════
-// ⭐ KURAL GÜNCELLEME & AUDIT
-// ═══════════════════════════════════════════════════════════════════════════
+//  KURAL GÜNCELLEME & AUDIT
+
 
 exports.mevzuatKurallariniGetir = async (req, res) => {
     try {
@@ -580,26 +561,9 @@ exports.onaylaVeUygula = async (req, res) => {
     }
 };
 
-// ═══════════════════════════════════════════════════════════════════════════
-// ⭐ DİFF GÖRÜNTÜLEME (Adım 7.B)
-// ═══════════════════════════════════════════════════════════════════════════
 
-// ─── GET /api/mevzuat-takip/fark/:id ──────────────────────────────────────
-// Bir versiyonun text içeriği ile bir önceki onaylı versiyon arasındaki
-// farkı satır bazında döner. UI'da renkli diff görüntülemek için kullanılır.
-//
-// Yanıt formatı:
-// {
-//   basarili: true,
-//   yeniVersiyon: { _id, ad, olusturmaTarihi, sayfaSayisi },
-//   eskiVersiyon: { _id, ad, olusturmaTarihi, sayfaSayisi },
-//   istatistik: { eklenen: N, silinen: N, degismeyen: N },
-//   farklar: [
-//     { tip: 'esit', metin: '...' },
-//     { tip: 'eklendi', metin: '...' },
-//     { tip: 'silindi', metin: '...' },
-//   ]
-// }
+//  DİFF GÖRÜNTÜLEME 
+
 exports.farkGoster = async (req, res) => {
     try {
         const versiyon = await MevzuatVersiyon.findById(req.params.id).lean();
@@ -655,9 +619,7 @@ exports.farkGoster = async (req, res) => {
             });
         }
 
-        // ⭐ jsdiff ile sentence-level diff
-        // diffSentences çok daha okunabilir sonuç verir (kelime kelime'den farkı:
-        // cümle bazlı karşılaştırır, gereksiz değişiklikleri grupla gösterir)
+       
         const farkParcalari = diff.diffSentences(
             eskiVersiyon.metinIcerik,
             versiyon.metinIcerik

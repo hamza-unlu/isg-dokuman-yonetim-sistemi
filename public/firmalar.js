@@ -239,7 +239,7 @@ async function modalAc(mod, butonElementi) {
     silButon.style.display            = isYeni ? "none" : "block";
 
     // NACE listesini arka planda hazırla (modal açılırken API çağrısı başlasın)
-    // Kullanıcı "Sorgula" butonuna basana kadar zaten hazır olur.
+    // Kullanıcı "Sorgula" butonuna basana kadar hazır olur.
     naceListesiniHazirla();
 
     if (isYeni) {

@@ -14,9 +14,7 @@ const tokenOlustur = (id) => {
 
 // ─────────────────────────────────────────
 // ⭐ AÇIK KAYIT (yeni kullanıcı kendi hesabını oluşturur)
-// Sadece isg_uzmani ve isyeri_hekimi rolüyle kayıt olunabilir.
-// sistem_yoneticisi ve isveren rolleri kayıtla ALINMAZ — atanır.
-// ─────────────────────────────────────────
+
 exports.kayitOl = async (req, res) => {
     try {
         let { adSoyad, eposta, sifre, sifreTekrar, rol } = req.body;
@@ -83,9 +81,9 @@ exports.kayitOl = async (req, res) => {
         res.status(500).json({ hata: 'Kayıt sırasında sunucu hatası oluştu.', detay: error.message });
     }
 };
-// ─────────────────────────────────────────
+
 // GİRİŞ YAP
-// ─────────────────────────────────────────
+
 exports.girisYap = async (req, res) => {
     try {
         let { eposta, sifre } = req.body;
@@ -133,9 +131,9 @@ exports.girisYap = async (req, res) => {
     }
 };
 
-// ─────────────────────────────────────────
+
 // MEVCUT KULLANICI BİLGİSİ
-// ─────────────────────────────────────────
+
 exports.mevcutKullanici = async (req, res) => {
     try {
         res.status(200).json({
@@ -147,10 +145,10 @@ exports.mevcutKullanici = async (req, res) => {
     }
 };
 
-// ═════════════════════════════════════════
+
 // ⭐ YENİ: PROFİL FOTOĞRAFI YÜKLE
 // POST /api/auth/profil-foto
-// ═════════════════════════════════════════
+
 exports.profilFotoYukle = async (req, res) => {
     try {
         if (!req.file) {
@@ -194,10 +192,10 @@ exports.profilFotoYukle = async (req, res) => {
     }
 };
 
-// ═════════════════════════════════════════
-// ⭐ YENİ: PROFİL FOTOĞRAFINI SİL
+
+// PROFİL FOTOĞRAFINI SİL
 // DELETE /api/auth/profil-foto
-// ═════════════════════════════════════════
+
 exports.profilFotoSil = async (req, res) => {
     try {
         const kullanici = await Kullanici.findById(req.kullanici._id);
@@ -224,10 +222,10 @@ exports.profilFotoSil = async (req, res) => {
     }
 };
 
-// ═════════════════════════════════════════
-// ⭐ YENİ: ŞİFRE DEĞİŞTİR (giriş yapmış kullanıcı için)
+
+//  ŞİFRE DEĞİŞTİR (giriş yapmış kullanıcı için)
 // POST /api/auth/sifre-degistir
-// ═════════════════════════════════════════
+
 exports.sifreDegistir = async (req, res) => {
     try {
         const { mevcutSifre, yeniSifre, yeniSifreTekrar } = req.body;
@@ -274,9 +272,9 @@ exports.sifreDegistir = async (req, res) => {
     }
 };
 
-// ─────────────────────────────────────────
+
 // KULLANICI EKLE (sadece sistem_yoneticisi)
-// ─────────────────────────────────────────
+
 exports.kullaniciEkle = async (req, res) => {
     try {
         let { adSoyad, eposta, sifre, rol, isverenFirma } = req.body;
@@ -305,9 +303,9 @@ exports.kullaniciEkle = async (req, res) => {
     }
 };
 
-// ─────────────────────────────────────────
+
 // KULLANICILARI LİSTELE
-// ─────────────────────────────────────────
+
 exports.kullanicilariListele = async (req, res) => {
     try {
         const liste = await Kullanici.find({}, '-sifre').sort({ olusturmaTarihi: -1 });
@@ -317,9 +315,9 @@ exports.kullanicilariListele = async (req, res) => {
     }
 };
 
-// ─────────────────────────────────────────
+
 // ROL GÜNCELLE
-// ─────────────────────────────────────────
+
 exports.rolGuncelle = async (req, res) => {
     try {
         const { rol } = req.body;
@@ -340,9 +338,9 @@ exports.rolGuncelle = async (req, res) => {
     }
 };
 
-// ─────────────────────────────────────────
+
 // KULLANICI SİL
-// ─────────────────────────────────────────
+
 exports.kullaniciSil = async (req, res) => {
     try {
         if (String(req.params.id) === String(req.kullanici._id)) {
@@ -360,9 +358,9 @@ exports.kullaniciSil = async (req, res) => {
     }
 };
 
-// ═════════════════════════════════════════
+
 // ŞİFREMİ UNUTTUM
-// ═════════════════════════════════════════
+
 exports.sifreUnuttum = async (req, res) => {
     try {
         let { eposta } = req.body;
@@ -420,9 +418,9 @@ exports.sifreUnuttum = async (req, res) => {
     }
 };
 
-// ═════════════════════════════════════════
-// ŞİFREYİ SIFIRLA (token ile — oturumsuz)
-// ═════════════════════════════════════════
+
+// ŞİFREYİ SIFIRLA 
+
 exports.sifreSifirla = async (req, res) => {
     try {
         const { token }    = req.params;

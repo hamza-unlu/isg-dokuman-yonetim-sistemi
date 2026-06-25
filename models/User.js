@@ -26,7 +26,7 @@ const KullaniciSema = new mongoose.Schema(
     },
     rol: {
       type: String,
-      enum: ['sistem_yoneticisi', 'isg_uzmani', 'isyeri_hekimi', 'isveren', 'izleyici'],
+      enum: ['sistem_yoneticisi', 'isg_uzmani', 'isyeri_hekimi', 'isveren'],
       default: 'izleyici',
     },
     isverenFirma: {
@@ -43,17 +43,12 @@ const KullaniciSema = new mongoose.Schema(
       default: null,
     },
     // ─────────────────────────────────────────
-    // ⭐ YENİ EKLENEN: PROFİL FOTOĞRAFI
-    // Sunucudaki dosya yolu tutulur (örn: "/uploads/profil/user_64abc.jpg")
-    // Fotoğraf yoksa null kalır, arayüzde baş harfleri gösterilir
-    // ─────────────────────────────────────────
+   
     profilFoto: {
       type: String,
       default: null,
     },
-    // ─────────────────────────────────────────
-    // ŞİFRE SIFIRLAMA ALANLARI
-    // ─────────────────────────────────────────
+    
     sifreSifirlamaToken: {
       type: String,
       select: false,

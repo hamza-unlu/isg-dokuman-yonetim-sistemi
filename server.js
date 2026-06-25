@@ -2,7 +2,7 @@
 require('dotenv').config();
 
 const mongoose = require('mongoose');
-const app      = require('./app');                       // tarifi içeri al
+const app      = require('./app');                       // tarifi içeri alır
 const { baglantiTest } = require('./utils/emailGonder');
 
 // ── MONGODB BAĞLANTISI ──
@@ -10,7 +10,7 @@ const MONGO_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/isg_veri
 mongoose.connect(MONGO_URI)
   .then(() => {
     console.log('✅ MongoDB bağlantısı kuruldu → isg_veritabani');
-    baglantiTest();                                       // SMTP testi (sadece canlıda)
+    baglantiTest();                                       // SMTP testi ( canlıda)
   })
   .catch(err => {
     console.error('❌ MongoDB bağlantı hatası:', err.message);
@@ -30,6 +30,7 @@ app.listen(PORT, '0.0.0.0', () => {
 const mevzuatScheduler = require('./services/mevzuatScheduler');
 mevzuatScheduler.baslat();
 
+// Sunucunun dışarıya açık IP adresini konsola yazar (bulut ortamı için)
 const https = require('https');
 https.get('https://api.ipify.org?format=json', (res) => {
     let data = '';

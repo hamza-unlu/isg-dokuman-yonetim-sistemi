@@ -1,27 +1,3 @@
-// services/mevzuatScraper.js
-// ═══════════════════════════════════════════════════════════════════════════
-// HİBRİT MEVZUAT SCRAPER v2 (Güçlendirilmiş — çoklu mevzuat türü desteği)
-// ───────────────────────────────────────────────────────────────────────────
-// Mevzuat.gov.tr için çok katmanlı fallback'li PDF indirme servisi.
-//
-// KATMAN 1   : Config'teki direkt PDF URL'sini dene
-// KATMAN 2-a : HTML kaynak içinde regex ile "/File/GeneratePdf?..." linki ara
-//              ⭐ EN GÜÇLÜ KATMAN — tüm mevzuat türleri için çalışır
-// KATMAN 2-b : Cheerio ile <a href> içinde .pdf uzantılı link ara
-// KATMAN 3   : htmlURL parametrelerinden GeneratePdf endpoint üret,
-//              bilinen mevzuatTur isimlerini sırayla dene
-// KATMAN 4   : Eski mevzuat.gov.tr URL pattern'leri (son çare)
-//
-// ⭐ Text Extraction:
-//   PDF indirildikten sonra text içeriği çıkarılır, text-hash hesaplanır.
-//   Bu sayede PDF metadata değişikliklerinden etkilenmeyen karşılaştırma.
-//
-// 🆕 v2 değişiklikleri:
-//   - File/GeneratePdf endpoint'i tüm tür için destekleniyor
-//     (KurumVeKurulusYonetmeligi, Teblig, Tuzuk vb.)
-//   - URL parametre parsing ile dinamik endpoint üretimi
-//   - Daha açıklayıcı hata mesajları (her katmanın hatası loglanır)
-// ═══════════════════════════════════════════════════════════════════════════
 
 const axios    = require('axios');
 const cheerio  = require('cheerio');
@@ -240,12 +216,6 @@ class MevzuatScraper {
         };
     }
 
-    // ─── PDF'ten text çıkar ve text-hash hesapla ──────────────────────────
-    // PDF metadata değişikliklerinden etkilenmeyen "anlamsal" karşılaştırma için.
-    //
-    // ⭐ pdfjs-dist'in iç font uyarılarını ("Warning: TT: undefined function: 32"
-    // gibi) sustururuz. Bu uyarılar PDF'lerdeki bazı özel font tablolarından
-    // gelir, text extraction'ı etkilemez ama terminali kirletir.
     async _pdfMetinCikar(dosyaYolu) {
         // Console'u geçici olarak filtrele
         const originalWarn = console.warn;

@@ -47,7 +47,7 @@ exports.kuralGetir = async (req, res) => {
     }
 };
 
-// ─── Anahtar ile kural getir (program içi çağrılar için) ─────────────────
+
 // Örnek kullanım: GET /api/mevzuat/anahtar/egitim_temel_isg_az_tehlikeli
 exports.anahtarIleGetir = async (req, res) => {
     try {
@@ -131,7 +131,7 @@ exports.kuralSil = async (req, res) => {
         const kural = await Mevzuat.findByIdAndDelete(req.params.id);
         if (!kural) return res.status(404).json({ hata: 'Kural bulunamadı.' });
 
-        // İlgili geçmişi de temizle (çöp kalmasın)
+        // İlgili geçmişi de temizle 
         await MevzuatGecmisi.deleteMany({ mevzuat: kural._id });
 
         res.json({ basarili: true, mesaj: 'Kural ve geçmişi silindi.' });
