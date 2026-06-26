@@ -45,16 +45,16 @@
                 </div>
                 <div class="ai-ornek-sorular">
                     <div class="ai-ornek-baslik">💡 Örnek sorular</div>
-                    <button class="ai-ornek-soru" onclick="aiSohbetOrnekSor(this)">
+                    <button class="ai-ornek-soru" data-soru="Hangi firmalar kayıtlı?" onclick="aiSohbetOrnekSor(this)">
                         <i class="fa-solid fa-building"></i> Hangi firmalar kayıtlı?
                     </button>
-                    <button class="ai-ornek-soru" onclick="aiSohbetOrnekSor(this)">
+                    <button class="ai-ornek-soru" data-soru="En çok eksiği olan firma?" onclick="aiSohbetOrnekSor(this)">
                         <i class="fa-solid fa-triangle-exclamation"></i> En çok eksiği olan firma?
                     </button>
-                    <button class="ai-ornek-soru" onclick="aiSohbetOrnekSor(this)">
+                    <button class="ai-ornek-soru" data-soru="Süresi yaklaşan eğitimler var mı?" onclick="aiSohbetOrnekSor(this)">
                         <i class="fa-solid fa-clock"></i> Süresi yaklaşan eğitimler var mı?
                     </button>
-                    <button class="ai-ornek-soru" onclick="aiSohbetOrnekSor(this)">
+                    <button class="ai-ornek-soru" data-soru="Periyodik muayenesi dolan personel?" onclick="aiSohbetOrnekSor(this)">
                         <i class="fa-solid fa-stethoscope"></i> Periyodik muayenesi dolan personel?
                     </button>
                 </div>
@@ -518,8 +518,7 @@
     };
 
     window.aiSohbetOrnekSor = function(buton) {
-        // İkon metnini değil, sadece yazıyı al
-        const soru = buton.innerText.replace(/^\s*\S+\s*/, '').trim() || buton.textContent.trim();
+        const soru = buton.dataset.soru || buton.innerText.trim();
         document.getElementById('ai-sohbet-girdi').value = soru;
         aiSohbetGonder();
     };
