@@ -3271,7 +3271,8 @@ async function olcumEkipmanKaydet() {
     if (!raporTarihi) { alert('Rapor tarihi zorunludur.'); return; }
 
     const storageKey = 'olcum_ekipman_verileri_' + aktifFirma;
-    const ekipmanlar = await _veriOku(storageKey, []);
+    let ekipmanlar = await _veriOku(storageKey, []);
+    if (!Array.isArray(ekipmanlar)) ekipmanlar = [];
 
     // Dropdown'dan seçilen periyodu oku
 const periyotSecim = v('olcum-periyot') || '1yil';
